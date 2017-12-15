@@ -242,8 +242,8 @@ Input Ade
 
 Змінити процедуру
     sleep  2
-    run keyword and ignore error  Click Element  xpath=//*[@data-name="OWNERSHIPTYPE"]
-    run keyword and ignore error  Click Element  xpath=//*[@data-name="KDM2"]
+    Run Keyword And Ignore Error  Click Element  xpath=//*[@data-name="OWNERSHIPTYPE"]
+    Run Keyword And Ignore Error  Click Element  xpath=//*[@data-name="KDM2"]
     sleep  2
     Click Element    jquery=div#CustomDropDownContainer div.dxpcDropDown_DevEx table:eq(2) tr:eq(1) td:eq(0)
 
@@ -631,7 +631,7 @@ Input Ade
     sleep  2s
     Input text  jquery=div#lotAmount0 input  ${value}
     Click Element  jquery=button#submitBidPlease
-    run keyword and ignore error  Wait Until Page Contains  Пропозицію прийнято  60s
+    Run Keyword And Ignore Error  Wait Until Page Contains  Пропозицію прийнято  60s
     ${response}=  smarttender_service.get_bid_response    ${value}
     reload page
     [Return]  ${response}
@@ -893,11 +893,11 @@ Input Ade
     Cancellation offer continue
 
 Cancellation offer continue
-    run keyword and ignore error  click element  ${cancellation offers button}
-    run keyword and ignore error  click element  ${cancel. offers confirm button}
+    Run Keyword And Ignore Error  click element  ${cancellation offers button}
+    Run Keyword And Ignore Error  click element  ${cancel. offers confirm button}
     ${passed}=  run keyword and return status  wait until page contains element  ${ok button}  60
     Run keyword if  '${passed}'=='${False}'  Cancellation offer continue
-    run keyword and ignore error  click element   ${ok button}
+    Run Keyword And Ignore Error  click element   ${ok button}
     ${passed}=  run keyword and return status  wait until page does not contain element   ${ok button}
     Run keyword if  '${passed}'=='${False}'  Cancellation offer continue
 
