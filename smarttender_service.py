@@ -212,7 +212,7 @@ def auction_field_info(field):
             "dgfID": "span.info_dgfId",
             "title": "span.info_orderItem",
             "description": ".container-fluid .page-header .col-sm-7 span:eq(0)",
-            "value.amount": "span.info_budget:eq(0)",
+            "value.amount": "xpath=//*[td/text()='Початкова вартість']/td[2]/text()",
             "value.currency": "span.info_currencyId",
             "value.valueAddedTaxIncluded": "span.info_withVat",
             "auctionID": "span.info_tendernum",
