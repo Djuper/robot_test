@@ -2,10 +2,8 @@
 from iso8601 import parse_date
 from dateutil.parser import parse
 from dateutil.parser import parserinfo
-from datetime import timedelta
 from datetime import datetime
 from pytz import timezone
-from os.path import basename
 import urllib2
 import os
 import string
@@ -168,12 +166,16 @@ def convert_cpv_from_smarttender_format(cpv):
 
 def auction_field_info(field):
     if "items" in field:
-        item_id = re.search("\d",field).group(0)
+        item_id = int(re.search("\d",field).group(0))
+        item_id = item_id + 1
         splitted = field.split(".")
         splitted.remove(splitted[0])
         result = string.join(splitted, '.')
         map = {
-            "description": "span[data-itemid]:eq({0}) span.info_name",
+            "description": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
+            "contractPeriod.startDate": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[last()]",
+            "contractPeriod.endDate": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[last()]",
+
             "classification.scheme": "span[data-itemid]:eq({0}) span.info_cpv",
             "classification.id": "span[data-itemid]:eq({0}) span.info_cpv_code",
             "classification.description": "span[data-itemid]:eq({0}) span.info_cpv_name",
@@ -182,22 +184,21 @@ def auction_field_info(field):
             "quantity": "span[data-itemid]:eq({0}) span.info_count",
             "additionalClassifications[0].scheme": "span[data-itemid]:eq({0}) .info_DKPP",
             "additionalClassifications[0].id": "span[data-itemid]:eq({0}) .info_dkpp_code",
-            "additionalClassifications[0].description": "span[data-itemid]:eq({0}) .info_dkpp_name",
-            "contractPeriod.startDate": "span[data-itemid]:eq({0}) .info_contrfrom",
-            "contractPeriod.endDate": "span[data-itemid]:eq({0}) .info_contrto"
+            "additionalClassifications[0].description": "span[data-itemid]:eq({0}) .info_dkpp_name"
         }
         return (map[result]).format(item_id)
     elif "questions" in field:
-        question_id = re.search("\d",field).group(0)
+        question_id = int(re.search("\d",field).group(0))
+        question_id = question_id + 4
         splitted = field.split(".")
         splitted.remove(splitted[0])
         result = string.join(splitted, '.')
         map = {
-            "description": "div.q-content",
-            "title": "div.title-question span.question-title-inner",
-            "answer": "div.answer div:eq(2)"
+            "title": "xpath=(//*[@id='questions']/div/div[{0}]//span)[1]",
+            "description": "xpath=//*[@id='questions']/div/div[{0}]//div[@class='q-content']",
+            "answer": "xpath=//*[@id='questions']/div/div[{0}]//div[@class='answer']/div[3]"
         }
-        return ("div.question:Contains('{0}') ".format(question_id)) + map[result]
+        return (map[result]).format(question_id)
     elif "awards" in field:
         award_id = re.search("\d",field).group(0)
         splitted = field.split(".")
@@ -209,10 +210,15 @@ def auction_field_info(field):
         return map[result].format(award_id)
     else:
         map = {
+            "value.amount": "xpath=(//*[@class='table-responsive']//td[2])[1]",
+            "tenderPeriod.endDate": "xpath=(//*[@class='popover-content timeline-popover'])[2]//div",
+            "minimalStep.amount": "xpath=(//*[@class='table-responsive']//td[2])[2]",
+            "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
+            "guarantee.amount": "xpath=(//*[@class='table-responsive']//td[2])[3]",
+
             "dgfID": "span.info_dgfId",
             "title": "span.info_orderItem",
             "description": ".container-fluid .page-header .col-sm-7 span:eq(0)",
-            "value.amount": "xpath=//*[td/text()='Початкова вартість']/td[2]/text()",
             "value.currency": "span.info_currencyId",
             "value.valueAddedTaxIncluded": "span.info_withVat",
             "auctionID": "span.info_tendernum",
@@ -220,11 +226,9 @@ def auction_field_info(field):
             "enquiryPeriod.startDate": "span.info_enquirysta",
             "enquiryPeriod.endDate": "span.info_ddm",
             "tenderPeriod.startDate": "span.info_enquirysta",
-            "tenderPeriod.endDate": "span.info_ddm",
             "auctionPeriod.startDate": "span.info_dtauction:eq(0)",
             "auctionPeriod.endDate": "span.info_dtauctionEnd:eq(0)",
             "status": "span.info_tender_status:eq(0)",
-            "minimalStep.amount": "span.info_minstep",
             "cancellations[0].reason": "span.info_cancellation_reason",
             "cancellations[0].status": "span.info_cancellation_status",
             "eligibilityCriteria": "span.info_eligibilityCriteria",
@@ -232,11 +236,47 @@ def auction_field_info(field):
             "dgfDecisionID": "span.info_dgfDecisionId",
             "dgfDecisionDate": "span.info_dgfDecisionDate",
             "tenderAttempts": "span.info_tenderAttempts",
-            "procurementMethodType": "span.info_procurementMethodType",
             "minNumberOfQualifiedBids": ".info_minnumber_qualifiedbids",
-            "guarantee.amount":".info_guarantee"
         }
         return map[field]
+
+
+def convert_result(field, value):
+    if field == "value.amount" \
+            or field == "guarantee.amount" \
+            or field == "minimalStep.amount":
+        ret = float(re.sub(ur'[^\d.]', '', ''.join(re.findall(ur'[\d\s.]+\sгрн', value))))
+    elif field ==  "procurementMethodType":
+        if u"Оренда" in value:
+            ret = 'dgfOtherAssets'
+    elif field == "value.valueAddedTaxIncluded":
+        ret = value == "True"
+    elif field == "value.currency":
+        ret = convert_currency_from_smarttender_format(value)
+    elif "unit.code" in field:
+        ret = convert_edi_from_starttender_format(value)
+    elif "unit.name" in field:
+        ret = convert_unit_from_smarttender_format(value)
+    elif "tenderPeriod.endDate" in field:
+        ret = re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}", value)
+    elif "contractPeriod.startDate" in field \
+            or "contractPeriod.endDate" in field \
+            or "tenderPeriod.startDate" in field \
+            or "auctionPeriod.startDate" in field:
+        ret = convert_date(value)
+    elif "tenderAttempts" in field \
+            or "minNumberOfQualifiedBids" in field:
+        ret = int(value)
+    elif "dgfDecisionDate" in field:
+        ret = convert_date_offset_naive(value)
+    elif "quantity" in field:
+        ret = float(value)
+    elif "description" in field:
+        ret = ''.join(re.findall(ur'\s+[\d.]+\s[\W\w\D\d. ]*', value))
+        ret = re.sub(ret, '', value)
+    else:
+        ret = value
+    return ret
 
 
 def document_fields_info(field,docId,is_cancellation_document):
@@ -283,79 +323,22 @@ def map_from_smarttender_document_type(doctype):
     return map[doctype]
 
 
-def string_contains(check_string,value):
-    if value in check_string:
-        ret = "true"
+def string_contains(value):
+    if "cancellation" in value:
+        ret = "cancellation"
+    if "questions" in value:
+        ret = "questions"
     else:
         ret = "false"
     return ret
 
-
-def convert_result(field, value):
-    if field == "value.amount" or field == "minimalStep.amount":
-        ret = float(value)
-    elif "quantity" in field:
-        ret = float(value)
-    elif field == "value.valueAddedTaxIncluded":
-        ret = value == "True"
-    elif field == "value.currency":
-        ret = convert_currency_from_smarttender_format(value)
-    elif "unit.code" in field:
-        ret = convert_edi_from_starttender_format(value)
-    elif "unit.name" in field:
-        ret = convert_unit_from_smarttender_format(value)
-    elif "auctionPeriod.startDate" in field:
-        ret = convert_date(value)
-    elif "tenderPeriod.endDate" in field:
-        ret = convert_date(value)
-    elif "tenderPeriod.startDate" in field:
-        ret = convert_date(value)
-    elif "contractPeriod.startDate" in field:
-        ret = convert_date(value)
-    elif "contractPeriod.endDate" in field:
-        ret = convert_date(value)
-    elif "tenderAttempts" in field:
-        ret = int(value)
-    elif "dgfDecisionDate" in field:
-        ret = convert_date_offset_naive(value)
-    elif "minNumberOfQualifiedBids" in field:
-        ret = int(value)
-    elif "guarantee.amount" in field:
-        ret = float(value)
-    else:
-        ret = value
-    return ret
-
-
-def auction_screen_field_selector(field):
-    map = {
-        "value.amount": "table[data-name='INITAMOUNT'] input",
-        "minimalStep.amount": "table[data-name='MINSTEP'] input",
-        "auctionPeriod.startDate": "table[data-name='DTAUCTION'] input",
-        "eligibilityCriteria": "",
-        "guarantee": "table[data-name='GUARANTEE_AMOUNT'] input",
-        "dgfDecisionID": "table[data-name='DGFDECISION_NUMBER'] input",
-        "dgfDecisionDate": "table[data-name='DGFDECISION_DATE'] input",
-        "tenderAttempts":"table[data-name='ATTEMPT'] input:eq(1)",
-        "title":"table[data-name='TITLE'] input",
-        "description":"table[data-name='DESCRIPT'] textarea",
-        "procuringEntity.identifier.legalName":"div[data-name='ORG_GPO_2'] input:eq(0)",
-        "tenderPeriod.startDate":"",
-        "guarantee.amount":"table[data-name='GUARANTEE_AMOUNT'] input",
-        "procuringEntity.address.postalCode": "table[data-name='POSTALCODE'] input",
-        "procuringEntity.address.streetAddress": "table[data-name='STREETADDR'] input",
-        "procuringEntity.address.region": "table[data-name='CITY_KOD''] input"
-    }
-    return map[field]
-
-
 def question_field_info(field, id):
     map = {
-        "description": "div.q-content",
+        "description": "xpath=//span[contains(text(),'{0}')]/../following-sibling::div[@class='q-content']",
         "title": "div.title-question span.question-title-inner",
         "answer": "div.answer div:eq(2)"
     }
-    return ("div.question:Contains('{0}') ".format(id)) + map[field]
+    return (map[field]).format(id)
 
 
 def convert_bool_to_text(variable):
