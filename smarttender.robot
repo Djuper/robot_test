@@ -31,6 +31,9 @@ ${cancellation offers button}           ${block}[last()]//div[@class="ivu-poptip
 ${cancel. offers confirm button}        ${block}[last()]//div[@class="ivu-poptip-footer"]/button[2]
 ${ok button}                            xpath=.//div[@class="ivu-modal-body"]/div[@class="ivu-modal-confirm"]//button
 ${loading}                              css=#app .smt-load .box
+${your request is sending}              css=.ivu-message-notice-content-textddd
+${wraploading}                          css=#wrapLoading .load-icon-div i
+
 
 #webclient
 ${owner change}                         css=[data-name="TBCASE____F4"]
@@ -123,8 +126,7 @@ Click Input Enter Wait
 
 Підготувати дані для оголошення тендера
     [Arguments]  ${username}  ${tender_data}  ${role_name}
-    ${tender_data}=  Run Keyword IF  '${username}' != 'SmartTender_Viewer'  adapt_data  ${tender_data}
-    ...  ELSE  Set Variable  ${tender_data}
+    ${tender_data}=  adapt_data  ${tender_data}
     [Return]  ${tender_data}
 
 Створити тендер
@@ -215,7 +217,6 @@ Click Input Enter Wait
     Wait Until Element Is Not Visible    ${webClient loading}  ${wait}
     ${return_value}  Get Text  xpath=(//div[@data-placeid='TENDER']//a[text()])[1]
     Log  ${return_value}
-    Log To Console  ${return_value}
     [Return]  ${return_value}
 
 Додати предмет в тендер при створенні
@@ -303,7 +304,6 @@ _Заповнити поле гарантійного внеску
     ...  ${ARGUMENTS[1]}  tenderID
     ...  ${ARGUMENTS[2]}  path to file
     Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити ілюстрацію
-    log to console  Завантажити ілюстрацію
     Завантажити документ власником  ${username}  ${filepath}  ${tender_uaid}
     Click Element  xpath=(//*[text()="Інший тип"])[last()-1]
     Click Element  xpath=(//*[text()="Інший тип"])[last()-1]
@@ -391,7 +391,6 @@ _Закрити вікно з помилкою
     [Arguments]  ${username}  ${tender_uaid}  ${fieldname}
     smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
     log  ${fieldname}
-    log to console  Отримати інформацію із тендера
     Run Keyword if  '${fieldname}' == 'questions[0].title'  debug
     ${location}=  Run Keyword And Return Status  Location Should Contain  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
     ${type}=  string_contains  ${fieldname}
@@ -471,7 +470,6 @@ _Закрити вікно з помилкою
     smarttender._Створити запитання  ${title}  ${description}
     # TODO  Don't know how to get value from the hidden element with Selenium2Library
     ${question_id}=  Execute JavaScript  return (function() {return $("span.question_idcdb").text() })()
-    # TODO  Don't know how it work
     ${question_data}=  smarttender_service.get_question_data  ${question_id}
     [Return]  ${question_data}
 
@@ -480,19 +478,20 @@ _Створити запитання
     Click Element  css=#questions span[role="presentation"]
     Click Element  css=.select2-results li:nth-child(2)
     Click element  id=add-question
+    Wait Until Element Is Not Visible  ${wraploading}  ${wait}
     Select Frame  ${iframe}
     Input Text  id=subject  ${title}
     Input Text  id=question  ${description}
     Click Element  css=button[type='button']
-    Log To Console  do some thing
-    debug
     ${status}=  get text  xpath=//*[@class='ivu-alert-message']/span
     Log  ${status}
     Wait Until Element Is Not Visible  ${loading}  ${wait}
+    Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
     Should Be Equal  ${status}  Ваше запитання успішно надіслане
     Should Not Be Equal  ${status}  Період обговорення закінчено
-    Reload Page
+    Unselect Frame
     Select Frame  ${iframe}
+    Click Element  css=#inputFormQuestion i[onclick]
 
 Задати запитання на предмет
     [Arguments]  ${username}  ${tender_uaid}  ${item_id}  ${question}
