@@ -46,7 +46,6 @@ ${choice file path}                     xpath=//*[@type='file'][1]
 ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]//span[text()='Завантаження документації']
 
 *** Keywords ***
-
 ####################################
 #        Операції з лотом          #
 ####################################
@@ -264,7 +263,7 @@ Login
   ${location}=  Run Keyword And Return Status  Location Should Contain  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
   ${type}=  string_contains  ${fieldname}
   Run Keyword If  '${type}' == 'questions' and '${location}' == 'True'  smarttender.Відкрити сторінку із даними запитань
-  Run Keyword If  '${type}' == 'cancellation' and '${location}' == 'True'  smarttender.Відкрити сторінку із данними скасування
+  Run Keyword If  '${type}' == 'cancellation' and '${location}' == 'True'  smarttender.Відкрити сторінку із данними скасування_
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
@@ -357,6 +356,145 @@ Login
 ####################################
 #      Робота з документами        #
 ####################################
+Завантажити документ
+  [Arguments]  ${username}  ${filepath}  ${tender_uaid}
+  [Documentation]  Завантажує документ, який знаходиться по шляху filepath, до лоту tender_uaid користувачем username. [Повертає] reply (словник з інформацією про документ).
+  Завантажити документ власником  ${username}  ${filepath}  ${tender_uaid}
+  [Teardown]  Закрити вікно редагування_
+
+Завантажити документ власником_
+  [Arguments]  ${username}  ${filepath}  ${tender_uaid}
+  ${status}=  Run Keyword And Return Status  Location Should Contain  webclient
+  Run Keyword If  '${status}' == '${False}'  smarttender.Підготуватися до редагування_  ${username}  ${tender_uaid}
+  Click Element  ${owner change}
+  Wait Until Page Contains  Завантаження документації  ${wait}
+  Click Element  ${add files tab}
+  Wait Until Page Contains Element  ${add file button}
+  Click Element  ${add file button}
+  Choose File  ${choice file path}  ${filepath}
+  Click Element  ${ok add file}
+
+Завантажити документ в тендер з типом
+  [Arguments]  ${username}  ${tender_uaid}  ${filepath}  ${doc_type}
+  [Documentation]  [Призначення] Завантажує документ, який знаходиться по шляху filepath і має певний documentType
+  ...  (наприклад, x_nda, tenderNotice і т.д), до лоту tender_uaid користувачем username.
+  ...  [Повертає] reply (словник з інформацією про документ).
+  Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити документ в тендер
+  Завантажити документ власником_  ${username}  ${filepath}  ${tender_uaid}
+  Вибрати тип завантаженого документу_  ${doc_type}
+  [Teardown]  Закрити вікно редагування_
+
+Вибрати тип завантаженого документу_
+  [Arguments]  ${doc_type}
+  ${documentTypeNormalized}=  map_to_smarttender_document_type  ${doc_type}
+  Click Element  xpath=(//*[text()="Інший тип"])[last()-1]
+  Click Element  xpath=(//*[text()="Інший тип"])[last()-1]
+  Click Element  xpath=(//*[text()="${documentTypeNormalized}"])[2]
+
+Завантажити ілюстрацію
+  [Arguments]    ${username}  ${tender_uaid}  ${filepath}
+  [Documentation]  Завантажує ілюстрацію, яка знаходиться по шляху filepath
+  ...  і має documentType = illustration, до лоту tender_uaid користувачем username.
+  smarttender.Завантажити документ в тендер з типом  ${username}  ${tender_uaid}  ${filepath}  illustration
+  [Teardown]  _Закрити вікно редагування
+
+Завантажити фінансову ліцензію
+  [Arguments]  ${user}  ${tenderId}  ${license_path}
+  [Documentation]  Завантажує фінансову ліцензію, яка знаходиться по шляху filepath
+  ...  і має documentType = financialLicense, до ставки лоту tender_uaid користувачем username.
+  ...  Фінансова ліцензія вантажиться до ставок лише для лотів типу dgfFinancialAssets на цбд1.
+  smarttender.Завантажити документ в ставку  ${user}  ${license_path}  ${tenderId}
+
+Завантажити протокол аукціону
+  [Arguments]  ${user}  ${tenderId}  ${filePath}  ${index}
+  [Documentation]  Завантажує протокол аукціону, який знаходиться по шляху filepath
+  ...  і має documentType = auctionProtocol, до ставки кандидата на кваліфікацію лоту tender_uaid користувачем username.
+  ...  Ставка, до якої потрібно додавати аукціон протоколу визначається за award_index.
+  ...  [Повертає] reply (словник з інформацією про документ).
+  Run Keyword  smarttender.Пошук тендера по ідентифікатору  ${user}  ${tenderId}
+  ${href}=  Get Element Attribute  jquery=div#auctionResults div.row.well:eq(${index}) a.btn.btn-primary@href
+  Go To  ${href}
+  Click Element  jquery=a.attachment-button:eq(0)
+  ${hrefQualification}=  Get Element Attribute  jquery=a.attachment-button:eq(0)@href
+  go to  ${hrefQualification}
+  Choose File  jquery=input[name='fieldUploaderTender_TextBox0_Input']:eq(0)    ${filePath}
+  Click Element  jquery=div#SubmitButton__1_CD
+  Page Should Contain  Кваліфікаційні документи відправлені
+
+Додати Virtual Data Room
+  [Arguments]  ${user}  ${tenderId}  ${link}
+  [Documentation]  Додає посилання на Virtual Data Room vdr_url з назвою title до лоту tender_uaid користувачем username.
+  ...  Посилання на Virtual Data Room додається лише для лотів типу dgfFinancialAssets на цбд1.
+  Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити ілюстрацію
+  Підготуватися до редагування_  ${user}  ${tenderId}
+  Click Element  ${owner change}
+  Wait Until Page Contains  Завантаження документації
+  Click Element  jquery=#cpModalMode li.dxtc-tab:contains('Завантаження документації')
+  Set Focus To Element  jquery=div#pcModalMode_PWC-1 table[data-name='VDRLINK'] input:eq(0)
+  Input Text  jquery=div#pcModalMode_PWC-1 table[data-name='VDRLINK'] input:eq(0)  ${link}
+  Press Key  jquery=div#pcModalMode_PWC-1 table[data-name='VDRLINK'] input:eq(0)  \\13
+  Click Image  jquery=#cpModalMode div.dxrControl_DevEx a:contains('Зберегти') img
+
+Додати публічний паспорт активу
+  [Arguments]  ${user}  ${tenderId}  ${link}
+  [Documentation]  Додає посилання на публічний паспорт активу certificate_url з назвою title до лоту tender_uaid користувачем username.
+  Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити паспорт активу
+  Підготуватися до редагування_  ${user}  ${tenderId}
+  Click Element  ${owner change}
+  Wait Until Page Contains  Завантаження документації
+  Click Element  jquery=#cpModalMode li.dxtc-tab:contains('Завантаження документації')
+  Set Focus To Element  jquery=div#pcModalMode_PWC-1 table[data-name='PACLINK'] input:eq(0)
+  Input Text  jquery=div#pcModalMode_PWC-1 table[data-name='PACLINK'] input:eq(0)  ${link}
+  Press Key  jquery=div#pcModalMode_PWC-1 table[data-name='PACLINK'] input:eq(0)  \\13
+  Click Image  jquery=#cpModalMode div.dxrControl_DevEx a:contains('Зберегти') img
+
+Додати офлайн документ
+  [Arguments]  ${user}  ${tenderId}  ${description}
+  [Documentation]  Додає документ з назвою title, деталями доступу accessDetails
+  ...  та строго визначеним documentType = x_dgfAssetFamiliarizationдо лоту tender_uaid користувачем username.
+  Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може додати офлайн документ
+  Підготуватися до редагування_  ${user}  ${tenderId}
+  Click Element  ${owner change}
+  Wait Until Page Contains  Завантаження документації  ${wait}
+  Click Element  ${add files tab}
+  Input Text  xpath=(//*[@data-type="EditBox"])[last()]//textarea  ${description}
+  [Teardown]  Закрити вікно редагування_
+
+Отримати інформацію із документа
+  [Arguments]  ${username}  ${tender_uaid}  ${doc_id}  ${field}
+  [Documentation]  Отримує значення поля field документа doc_id з лоту tender_uaid
+  ...  для перевірки правильності відображення цього поля.
+  ...  [Повертає] document['field'] (значення поля field)
+  Run Keyword  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
+  ${isCancellation}=  Set Variable If  '${TEST NAME}' == 'Відображення опису документа до скасування лоту' or '${TEST NAME}' == 'Відображення заголовку документа до скасування лоту' or '${TEST NAME}' == 'Відображення вмісту документа до скасування лоту'  True  False
+  Run Keyword If  ${isCancellation} == True  smarttender.Відкрити сторінку із данними скасування_
+  ${selector}=  run keyword if  '${TEST NAME}' == 'Відображення заголовку документа до скасування лоту'
+  ...    document_fields_info  title1  ${doc_id}  ${isCancellation}
+  ...  ELSE
+  ...    document_fields_info  ${field}  ${doc_id}  ${isCancellation}
+  ${result}=  Execute JavaScript  return (function() { return $("${selector}").text() })()
+  [Return]  ${result}
+
+Отримати інформацію із документа по індексу
+  [Arguments]  ${user}  ${tenderId}  ${doc_index}  ${field}
+  [Documentation]  [Отримує значення поля field документа з індексом document_index з лоту tender_uaid
+  ...  для перевірки правильності відображення цього поля.
+  ...  [Повертає] field_value (значення поля field)
+  ${result}=  Execute JavaScript  return(function(){ return $("div.row.document:eq(${doc_index+1}) span.info_attachment_type:eq(0)").text();})()
+  ${resultDoctype}=  map_from_smarttender_document_type  ${result}
+  [Return]  ${resultDoctype}
+
+Отримати документ
+  [Arguments]  ${user}  ${tenderId}  ${docId}
+  [Documentation]  Завантажує файл з doc_id в заголовку з лоту tender_uaid в директорію ${OUTPUT_DIR}
+  ...  для перевірки вмісту цього файлу.
+  ...  [Повертає] filename (ім'я завантаженого файлу)
+  Run Keyword  smarttender.Пошук тендера по ідентифікатору  ${user}  ${tenderId}
+  ${selector}=  document_fields_info  content  ${docId}  False
+  ${fileUrl}=  Get Element Attribute  jquery=div.row.document:contains('${docId}') a.info_attachment_link:eq(0)@href
+  ${result}=  Execute JavaScript  return (function() { return $("${selector}").text() })()
+  smarttender_service.download_file  ${fileUrl}  ${OUTPUT_DIR}${/}${result}
+  [Return]  ${result}
 
 ####################################
 #     Робота з активами лоту       #
@@ -406,48 +544,6 @@ Click Input Enter Wait
 #          OPEN PROCEDURE          #
 ####################################
 
-Завантажити документ власником
-    [Arguments]  ${username}  ${filepath}  ${tender_uaid}
-    smarttender.Підготуватися до редагування  ${username}  ${tender_uaid}
-    Click Element  ${owner change}
-    Wait Until Page Contains  Завантаження документації  ${wait}
-    Click Element  ${add files tab}
-    Wait Until Page Contains Element  ${add file button}
-    Click Element  ${add file button}
-    Choose File  ${choice file path}  ${filepath}
-    Click Element  ${ok add file}
-
-Завантажити документ
-    [Arguments]  ${username}  ${filepath}  ${tender_uaid}
-    [Documentation]  ${ARGUMENTS[0]}  role
-    ...  ${ARGUMENTS[1]}  path to file
-    ...  ${ARGUMENTS[2]}  tenderID
-    Завантажити документ власником  ${username}  ${filepath}  ${tender_uaid}
-    [Teardown]  _Закрити вікно редагування
-
-Завантажити ілюстрацію
-    [Arguments]    ${username}  ${tender_uaid}  ${filepath}
-    [Documentation]  ${ARGUMENTS[0]}  role
-    ...  ${ARGUMENTS[1]}  tenderID
-    ...  ${ARGUMENTS[2]}  path to file
-    Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити ілюстрацію
-    Завантажити документ власником  ${username}  ${filepath}  ${tender_uaid}
-    Click Element  xpath=(//*[text()="Інший тип"])[last()-1]
-    Click Element  xpath=(//*[text()="Інший тип"])[last()-1]
-    Click Element  xpath=(//*[text()="Ілюстрація"])[2]
-    [Teardown]  _Закрити вікно редагування
-
-Завантажити документ в тендер з типом
-    [Arguments]  ${username}  ${tender_uaid}  ${filepath}  ${doc_type}
-    Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити документ в тендер
-    Завантажити документ власником  ${username}  ${filepath}  ${tender_uaid}
-    log to console  Завантажити документ в тендер з типом
-    debug
-    ${documentTypeNormalized}=    map_to_smarttender_document_type    ${doc_type}
-    click element  xpath=(//*[text()="Інший тип"])[last()-1]
-    click element  xpath=(//*[text()="Інший тип"])[last()-1]
-    click element  xpath=(//*[text()="${documentTypeNormalized}"])[2]
-    [Teardown]  _Закрити вікно редагування
 
 Додати документ
     [Arguments]  ${document}
@@ -519,31 +615,11 @@ Click Input Enter Wait
     go to  ${href}
     Select Frame  ${iframe}
 
-Отримати інформацію із документа
-    [Arguments]  ${username}  ${tender_uaid}  ${doc_id}  ${field}
-    log  ${field}
-    log  ${doc_id}
-    Run Keyword  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-    ${isCancellation}=  Set Variable If  '${TEST NAME}' == 'Відображення опису документа до скасування лоту' or '${TEST NAME}' == 'Відображення заголовку документа до скасування лоту' or '${TEST NAME}' == 'Відображення вмісту документа до скасування лоту'   True    False
-    Run Keyword If  ${isCancellation} == True  smarttender.Відкрити сторінку із данними скасування
-    ${selector}=  run keyword if  '${TEST NAME}' == 'Відображення заголовку документа до скасування лоту'
-    ...    document_fields_info  title1  ${doc_id}  ${isCancellation}
-    ...  ELSE
-    ...    document_fields_info  ${field}  ${doc_id}  ${isCancellation}
-    ${result}=  Execute JavaScript  return (function() { return $("${selector}").text() })()
-    [Return]  ${result}
-
 Перейти до запитань
     [Arguments]  @{ARGUMENTS}
     [Documentation]  ${ARGUMENTS[0]} = username
     ...  ${ARGUMENTS[1]} = ${TENDER_UAID}
     smarttender.Оновити сторінку з тендером  @{ARGUMENTS}
-
-Отримати інформацію із документа по індексу
-    [Arguments]  ${user}  ${tenderId}  ${doc_index}  ${field}
-    ${result}=  Execute JavaScript  return(function(){ return $("div.row.document:eq(${doc_index+1}) span.info_attachment_type:eq(0)").text();})()
-    ${resultDoctype}=  map_from_smarttender_document_type  ${result}
-    [Return]  ${resultDoctype}
 
 Задати запитання на тендер
     [Arguments]  ${USERNAME}  ${TENDER_UAID}  ${QUESTION_DATE}
@@ -754,57 +830,6 @@ _Створити запитання
     Go to  ${href}
     Select Frame  ${iframe}
 
-Отримати документ
-    [Arguments]  ${user}  ${tenderId}  ${docId}
-    Run Keyword  smarttender.Пошук тендера по ідентифікатору  ${user}  ${tenderId}
-    ${selector}=  document_fields_info  content  ${docId}  False
-    ${fileUrl}=  Get Element Attribute  jquery=div.row.document:contains('${docId}') a.info_attachment_link:eq(0)@href
-    ${result}=  Execute JavaScript  return (function() { return $("${selector}").text() })()
-    smarttender_service.download_file  ${fileUrl}  ${OUTPUT_DIR}${/}${result}
-    [Return]  ${result}
-
-Додати Virtual Data Room
-    [Arguments]    ${user}    ${tenderId}     ${link}
-    Pass Execution If      '${role}' == 'provider' or '${role}' == 'viewer'     Даний учасник не може завантажити ілюстрацію
-    Підготуватися до редагування    ${user}     ${tenderId}
-    click element  ${owner change}
-    Wait Until Page Contains    Завантаження документації
-    Click Element     jquery=#cpModalMode li.dxtc-tab:contains('Завантаження документації')
-    Set Focus To Element    jquery=div#pcModalMode_PWC-1 table[data-name='VDRLINK'] input:eq(0)
-    Input Text    jquery=div#pcModalMode_PWC-1 table[data-name='VDRLINK'] input:eq(0)    ${link}
-    Press Key    jquery=div#pcModalMode_PWC-1 table[data-name='VDRLINK'] input:eq(0)    \\13
-    Click Image     jquery=#cpModalMode div.dxrControl_DevEx a:contains('Зберегти') img
-
-Додати публічний паспорт активу
-    [Arguments]    ${user}    ${tenderId}     ${link}
-    Pass Execution If      '${role}' == 'provider' or '${role}' == 'viewer'     Даний учасник не може завантажити паспорт активу
-    Підготуватися до редагування    ${user}     ${tenderId}
-    click element  ${owner change}
-    Wait Until Page Contains    Завантаження документації
-    Click Element     jquery=#cpModalMode li.dxtc-tab:contains('Завантаження документації')
-    Set Focus To Element    jquery=div#pcModalMode_PWC-1 table[data-name='PACLINK'] input:eq(0)
-    Input Text    jquery=div#pcModalMode_PWC-1 table[data-name='PACLINK'] input:eq(0)    ${link}
-    Press Key    jquery=div#pcModalMode_PWC-1 table[data-name='PACLINK'] input:eq(0)    \\13
-    Click Image     jquery=#cpModalMode div.dxrControl_DevEx a:contains('Зберегти') img
-
-Додати офлайн документ
-    [Arguments]    ${user}    ${tenderId}     ${description}
-    Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може додати офлайн документ
-    Підготуватися до редагування    ${user}     ${tenderId}
-    click element  ${owner change}
-    Wait Until Page Contains    Завантаження документації  ${wait}
-    log to console  Додати офлайн документ
-    debug
-    Click Element  ${add files tab}
-    input text  xpath=(//*[@data-type="EditBox"])[last()]//textarea  ${description}
-    [Teardown]  _Закрити вікно редагування
-
-Завантажити фінансову ліцензію
-    [Arguments]    ${user}    ${tenderId}    ${license_path}
-    smarttender.Завантажити документ в ставку    ${user}    ${license_path}    ${tenderId}
-
-
-
 ####################################
 #          CANCELLATION            #
 ####################################
@@ -848,8 +873,8 @@ _Створити запитання
     ${passed}=  run keyword and return status  wait until page does not contain element   ${ok button}
     Run keyword if  '${passed}'=='${False}'  Cancellation offer continue
 
-Відкрити сторінку із данними скасування
-    log to console  Відкрити сторінку із данними скасування(правимо селектори)
+Відкрити сторінку із данними скасування_
+    log to console  Відкрити сторінку із данними скасування_(правимо селектори)
     debug
     Click Element  jquery=a#cancellation:eq(0)  #css=a#cancellation
     Select Frame  jquery=#widgetIframe
@@ -943,18 +968,6 @@ _Створити запитання
     Input Text    jquery=#cpModalMode textarea    ${description}
     click element  xpath=//span[text()="Зберегти"]
     click element  id=IMMessageBoxBtnYes_CD
-
-Завантажити протокол аукціону
-    [Arguments]    ${user}    ${tenderId}    ${filePath}    ${index}
-    Run Keyword    smarttender.Пошук тендера по ідентифікатору    ${user}    ${tenderId}
-    ${href}=    Get Element Attribute    jquery=div#auctionResults div.row.well:eq(${index}) a.btn.btn-primary@href
-    Go To      ${href}
-    Click Element    jquery=a.attachment-button:eq(0)
-    ${hrefQualification}=    Get Element Attribute    jquery=a.attachment-button:eq(0)@href
-    go to  ${hrefQualification}
-    Choose File    jquery=input[name='fieldUploaderTender_TextBox0_Input']:eq(0)    ${filePath}
-    Click Element    jquery=div#SubmitButton__1_CD
-    Page Should Contain     Кваліфікаційні документи відправлені
 
 Завантажити протокол аукціону в авард
     [Arguments]    ${username}    ${tender_uaid}    ${filepath}    ${award_index}
