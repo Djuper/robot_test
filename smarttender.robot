@@ -211,6 +211,16 @@ Login
   Click Input Enter Wait  css=#cpModalMode table[data-name='LATITUDE'] input  ${latitude}
   Click Input Enter Wait  css=#cpModalMode table[data-name='LONGITUDE'] input  ${longitude}
 
+Click Input Enter Wait
+  [Arguments]  ${locator}  ${text}
+  Wait Until Page Contains Element  ${locator}
+  Sleep  .2  # don't touch
+  Click Element At Coordinates  ${locator}  10  5
+  Input Text  ${locator}  ${text}
+  Press Key  ${locator}  \\13
+  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
+  Sleep  .3  # don't touch
+
 Заповнити поле з ціною власником_
   [Arguments]  ${value}
   Click Input Enter Wait  css=#cpModalMode table[data-name='INITAMOUNT'] input  ${value}
@@ -709,6 +719,95 @@ Login
   reload page
   [Return]  ${response}
 
+Скасувати цінову пропозицію
+  [Arguments]  ${username}  ${tender_uaid}
+  [Documentation]  Змінює статус цінової пропозиції до лоту tender_uaid користувача username на cancelled.
+  ...  [Повертає] reply (словник з інформацією про цінову пропозицію). Цей ківорд реалізовуємо лише для процедур на цбд1.
+  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
+  ${href}=  Get Element Attribute  jquery=a:Contains('Подати пропозицію')@href
+  Go To  ${href}
+  Wait Until Page Contains Element  ${cancellation offers button}
+  Run Keyword And Ignore Error  Click Element  ${cancellation offers button}
+  Run Keyword And Ignore Error  Click Element  ${cancel. offers confirm button}
+  Run Keyword And Ignore Error  Click Element  ${ok button}
+
+Завантажити документ в ставку
+  [Arguments]  ${username}  ${path}  ${tender_uaid}
+  [Documentation]  Завантажує документ типу doc_type, який знаходиться за шляхом path,
+  ...  до цінової пропозиції користувача username для тендера tender_uaid.
+  ...  [Повертає] reply (словник з інформацією про завантажений документ).
+  Pass Execution If  '${mode}' == 'dgfOtherAssets'  Для типа 'Продаж майна банків, що ліквідуються' документы не вкладываются
+  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
+  Wait Until Page Contains Element  jquery=a#bid  ${wait}
+  ${href}=  Get Element Attribute  jquery=a#bid@href
+  Go To  ${href}
+  Wait Until Page Contains  Пропозиція  10
+  Wait Until Page Contains Element  jquery=button:contains('Обрати файли')  ${wait}
+  Choose File  jquery=button:contains('Обрати файли')  ${path}
+  Click Element  jquery=button#submitBidPlease
+  Wait Until Page Contains Element  jquery=button:contains('Так')  ${wait}
+  Click Element  jquery=button:contains('Так')
+  Wait Until Page Contains  Пропозицію прийнято  ${wait}
+
+Змінити документ в ставці
+  [Arguments]  ${username}  ${tender_uaid}  ${path}  ${docid}
+  [Documentation]  Змінює документ з doc_id в пропозиції користувача username для лоту tender_uaid на документ,
+  ...  який знаходиться по шляху path.
+  ...  [Повертає] uploaded_file (словник з інформацією про завантажений документ).
+  smarttender.Завантажити документ в ставку  ${username}  ${path}  ${tender_uaid}
+
+Отримати інформацію із пропозиції
+  [Arguments]  ${username}  ${tender_uaid}  ${field}
+  [Documentation]  Отримує значення поля field пропозиції користувача username для лоту tender_uaid.
+  ...  [Повертає] bid['field'] (значення поля).
+  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
+  ${ret}=  smarttender.Отримати інформацію із тендера  ${username}  ${tender_uaid}  ${field}
+  ${ret}=  Execute JavaScript  return (function() { return parseFloat('${ret}') })()
+  [Return]  ${ret}
+
+Отримати кількість документів в ставці
+  [Arguments]  ${username}  ${tenderId}  ${bidIndex}
+  [Documentation]  Отримує кількість документів у ціновій пропозиції з індексом bid_index до лоту tender_uaid.
+  ...  [Повертає] number_of_documents (кількість доданих документів).
+  #TODO удалить джаваскрипт, убить
+  log to console  Отримати кількість документів в ставці
+  debug
+  Run Keyword  smarttender.Підготуватися до редагування  ${username}  ${tenderId}
+  Click Element  jquery=#MainSted2TabPageHeaderLabelActive_1
+  ${normalizedIndex}=  normalize_index  ${bidIndex}  1
+  Click Element  jquery=div[data-placeid='BIDS'] div.objbox.selectable.objbox-scrollable table tbody tr:eq(${normalizedIndex}) td:eq(2)
+  Wait Until Page Contains  Вкладення до пропозиції  ${wait}
+  ${count}=  Execute JavaScript  return(function(){ var counter = 0;var documentSelector = $("#cpModalMode tr label:contains('Кваліфікація')").closest("tr");while (true) { documentSelector = documentSelector.next(); if(documentSelector.length == 0 || documentSelector[0].innerHTML.indexOf("label") === -1){ break;} counter = counter +1;} return counter;})()
+  [Return]  ${count}
+
+Отримати дані із документу пропозиції
+  [Arguments]  ${username}  ${tender_uaid}  ${bid_index}  ${document_index}  ${field}
+  [Documentation]  Отримує значення поля field документу з індексом document_index пропозиції bid_index
+  ...  користувача username для лоту tender_uaid.
+  ...  [Повертає] field_value (значення поля).
+  #TODO удалить джаваскрипт, убить
+  log to console  Отримати дані із документу пропозиції
+  debug
+  Run Keyword  smarttender.Підготуватися до редагування  ${username}  ${tender_uaid}
+  Click Element  jquery=#MainSted2TabPageHeaderLabelActive_1
+  ${normalizedIndex}=  normalize_index  ${bid_index}  1
+  Click Element  jquery=div[data-placeid='BIDS'] div.objbox.selectable.objbox-scrollable table tbody tr:eq(${normalizedIndex}) td:eq(2)
+  Wait Until Page Contains  Вкладення до пропозиції  ${wait}
+  ${selectedType}=  Execute JavaScript  return(function(){ var startElement = $("#cpModalMode tr label:contains('Квалификации')"); var documentSelector = $(startElement).closest("tr").next(); if(${document_index} > 0){ for (i=0;i<=${document_index};i++) {documentSelector = $(documentSelector).next();}}if($(documentSelector).length == 0) {return "";} return "auctionProtocol";})()
+  [Return]  ${selectedType}
+
+Отримати посилання на аукціон для учасника
+  [Arguments]  ${username}  ${tender_uaid}
+  [Documentation]  Отримує посилання на участь в аукціоні для користувача username для лоту tender_uaid.
+  ...  [Повертає] participationUrl (посилання).
+  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
+  Wait Until Page Contains Element  css=a#to-auction
+  Click Element  css=a#to-auction
+  Wait Until Page Contains Element  css=iframe#widgetIframe  ${wait}
+  Select Frame  css=iframe#widgetIframe
+  Wait Until Page Contains Element  jquery=a.link-button:eq(0)  ${wait}
+  ${return_value}=  Get Element Attribute  jquery=a.link-button:eq(0)@href
+  [Return]  ${return_value}
 ####################################
 #     Кваліфікація кандидата       #
 ####################################
@@ -729,16 +828,6 @@ Login
     Execute JavaScript  (function(){$("${selector}").val('');})()
     Input Text  ${selector}  ${content}
     Press Key  ${selector}  \\13
-
-Click Input Enter Wait
-    [Arguments]  ${locator}  ${text}
-    Wait Until Page Contains Element  ${locator}
-    Sleep  .2  # don't touch
-    Click Element At Coordinates  ${locator}  10  5
-    Input Text  ${locator}  ${text}
-    Press Key  ${locator}  \\13
-    Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
-    Sleep  .3  # don't touch
 
 
 ####################################
@@ -794,45 +883,10 @@ Click Input Enter Wait
     ...  ${ARGUMENTS[1]} = ${TENDER_UAID}
     smarttender.Оновити сторінку з тендером  @{ARGUMENTS}
 
-
-
 Заповнити поле значенням
     [Arguments]  ${selector}  ${value}
     Set Focus To Element  ${selector}
     Input Text  ${selector}  ${value}
-
-Отримати інформацію із пропозиції
-    [Arguments]  @{ARGUMENTS}
-    [Documentation]  ${ARGUMENTS[0]} == username
-    ...  ${ARGUMENTS[1]} == TENDER_UAID
-    ...  ${ARGUMENTS[2]} == field
-    smarttender.Пошук тендера по ідентифікатору  ${ARGUMENTS[0]}  ${ARGUMENTS[1]}
-    ${ret}=  smarttender.Отримати інформацію із тендера  ${ARGUMENTS[0]}  ${ARGUMENTS[1]}  ${ARGUMENTS[2]}
-    ${ret}=  Execute JavaScript  return (function() { return parseFloat('${ret}') })()
-    [Return]  ${ret}
-
-Завантажити документ в ставку
-    [Arguments]    @{ARGUMENTS}
-    [Documentation]    ${ARGUMENTS[0]} == username
-    ...    ${ARGUMENTS[1]} == path
-    ...    ${ARGUMENTS[2]} == tenderid
-    Pass Execution If  '${mode}' == 'dgfOtherAssets'  Для типа 'Продаж майна банків, що ліквідуються' документы не вкладываются
-    smarttender.Пошук тендера по ідентифікатору  ${ARGUMENTS[0]}  ${ARGUMENTS[2]}
-    Wait Until Page Contains Element  jquery=a#bid  ${wait}
-    ${href}=  Get Element Attribute  jquery=a#bid@href
-    go to  ${href}
-    Wait Until Page Contains  Пропозиція  10
-    Wait Until Page Contains Element  jquery=button:contains('Обрати файли')  ${wait}
-    Choose File  jquery=button:contains('Обрати файли')  ${ARGUMENTS[1]}
-    Click Element  jquery=button#submitBidPlease
-    Wait Until Page Contains Element  jquery=button:contains('Так')  ${wait}
-    Click Element  jquery=button:contains('Так')
-    Wait Until Page Contains  Пропозицію прийнято  ${wait}
-
-Змінити документ в ставці
-    [Arguments]  @{ARGUMENTS}
-    [Documentation]  ?
-    smarttender.Завантажити документ в ставку  ${ARGUMENTS[0]}  ${ARGUMENTS[2]}  ${TENDER['TENDER_UAID']}
 
 
 
@@ -863,22 +917,6 @@ Click Input Enter Wait
     Wait Until Page Contains    аукціон буде
     Click Element    jquery=#IMMessageBoxBtnYes
 
-Скасувати цінову пропозицію
-    [Arguments]    @{ARGUMENTS}
-    [Documentation]    ${ARGUMENTS[0]} == username
-    ...    ${ARGUMENTS[1]} == ${TENDER_UAID}
-    smarttender.Пошук тендера по ідентифікатору     ${ARGUMENTS[0]}     ${ARGUMENTS[1]}
-    ${href} =     Get Element Attribute      jquery=a:Contains('Подати пропозицію')@href
-    go to  ${href}
-    wait until page contains element  ${cancellation offers button}
-    Run Keyword And Ignore Error  click element  ${cancellation offers button}
-    Run Keyword And Ignore Error  click element  ${cancel. offers confirm button}
-    ${passed}=  run keyword and return status  wait until page contains element  ${ok button}  ${wait}
-    Run keyword if  '${passed}'=='${False}'  Cancellation offer continue
-    Run Keyword And Ignore Error  click element   ${ok button}
-    ${passed}=  run keyword and return status  wait until page does not contain element   ${ok button}
-    Run keyword if  '${passed}'=='${False}'  Cancellation offer continue
-
 Відкрити сторінку із данними скасування_
     log to console  Відкрити сторінку із данними скасування_(правимо селектори)
     debug
@@ -895,16 +933,7 @@ Click Input Enter Wait
 #             AUCTION              #
 ####################################
 
-Отримати посилання на аукціон для учасника
-    [Arguments]  @{ARGUMENTS}
-    smarttender.Пошук тендера по ідентифікатору  ${ARGUMENTS[0]}  ${ARGUMENTS[1]}
-    Wait Until Page Contains Element  css=a#to-auction
-    Click Element  css=a#to-auction
-    Wait Until Page Contains Element  css=iframe#widgetIframe  ${wait}
-    Select Frame  css=iframe#widgetIframe
-    Wait Until Page Contains Element  jquery=a.link-button:eq(0)  ${wait}
-    ${return_value}=  Get Element Attribute  jquery=a.link-button:eq(0)@href
-    [Return]  ${return_value}
+
 
 ####################################
 #          QUALIFICATION           #
@@ -919,15 +948,6 @@ Click Input Enter Wait
     Wait Until Page Contains Element  xpath=//*[@data-name="OkButton"]  ${wait}
     Click Element  xpath=//*[@data-name="OkButton"]
 
-Отримати кількість документів в ставці
-    [Arguments]  ${user}  ${tenderId}  ${bidIndex}
-    Run Keyword  smarttender.Підготуватися до редагування  ${user}  ${tenderId}
-    Click Element  jquery=#MainSted2TabPageHeaderLabelActive_1
-    ${normalizedIndex}=  normalize_index  ${bidIndex}  1
-    Click Element    jquery=div[data-placeid='BIDS'] div.objbox.selectable.objbox-scrollable table tbody tr:eq(${normalizedIndex}) td:eq(2)
-    Wait Until Page Contains    Вкладення до пропозиції  ${wait}
-    ${count}=     Execute JavaScript    return(function(){ var counter = 0;var documentSelector = $("#cpModalMode tr label:contains('Кваліфікація')").closest("tr");while (true) { documentSelector = documentSelector.next(); if(documentSelector.length == 0 || documentSelector[0].innerHTML.indexOf("label") === -1){ break;} counter = counter +1;} return counter;})()
-    [Return]    ${count}
 
 Підтвердити постачальника
     [Arguments]    @{ARGUMENTS}
@@ -941,16 +961,6 @@ Click Input Enter Wait
     Click Element  jquery=div#IMMessageBoxBtnYes
     ${status}=     Execute JavaScript      return  (function() { return $("div[data-placeid='BIDS'] tr.rowselected td:eq(5)").text() } )()
     Should Be Equal       '${status}'      'Визначений переможцем'
-
-Отримати дані із документу пропозиції
-    [Arguments]    ${user}    ${tenderId}    ${bid_index}    ${document_index}    ${field}
-    Run Keyword    smarttender.Підготуватися до редагування    ${user}    ${tenderId}
-    Click Element     jquery=#MainSted2TabPageHeaderLabelActive_1
-    ${normalizedIndex}=     normalize_index    ${bid_index}     1
-    Click Element    jquery=div[data-placeid='BIDS'] div.objbox.selectable.objbox-scrollable table tbody tr:eq(${normalizedIndex}) td:eq(2)
-    Wait Until Page Contains    Вкладення до пропозиції  ${wait}
-    ${selectedType}=     Execute JavaScript    return(function(){ var startElement = $("#cpModalMode tr label:contains('Квалификации')"); var documentSelector = $(startElement).closest("tr").next(); if(${document_index} > 0){ for (i=0;i<=${document_index};i++) {documentSelector = $(documentSelector).next();}}if($(documentSelector).length == 0) {return "";} return "auctionProtocol";})()
-    [Return]    ${selectedType}
 
 Скасування рішення кваліфікаційної комісії
     [Arguments]    ${user}    ${tenderId}    ${index}
