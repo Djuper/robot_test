@@ -1,5 +1,4 @@
-﻿# -*- coding: utf-8 -*-
-*** Settings ***
+﻿*** Settings ***
 Library           String
 Library           DateTime
 Library           smarttender_service.py
@@ -33,7 +32,6 @@ ${ok button}                            xpath=.//div[@class="ivu-modal-body"]/di
 ${loading}                              css=#app .smt-load .box
 ${your request is sending}              css=.ivu-message-notice-content-textddd
 ${wraploading}                          css=#wrapLoading .load-icon-div i
-
 
 #webclient
 ${owner change}                         css=[data-name="TBCASE____F4"]
@@ -173,7 +171,8 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Arguments]  ${username}  ${tender_uaid}  ${fieldname}
   [Documentation]  Отримує значення поля field_name для лоту tender_uaid. [Повертає] tender['field_name'] (значення поля).
   Зайти на потрібну сторінку для отримання данних_  ${username}  ${tender_uaid}  ${fieldname}
-  Отримати та обробити данні із тендера_  ${fieldname}
+  ${response}=  Отримати та обробити данні із тендера_  ${fieldname}
+  [Return]  ${response}
 
 Внести зміни в тендер
   [Arguments]  ${user}  ${tenderId}  ${field}  ${value}
@@ -470,9 +469,10 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію).
   ${amount}=  Get From Dictionary  ${bid.data.value}  amount
   ${amount}=  convert to string  ${amount}
+  debug
   Пройти кваліфікацію для подачі пропозиції_  ${username}  ${tender_uaid}  ${bid}
   smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-
+  ${response}=  Прийняти участь в тендері_  ${username}  ${tender_uaid}  ${bid}
   [Return]  ${response}
 
 Змінити цінову пропозицію

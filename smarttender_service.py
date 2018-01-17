@@ -272,8 +272,11 @@ def convert_result(field, value):
     elif "quantity" in field:
         ret = float(value)
     elif "description" in field:
-        ret = ''.join(re.findall(ur'\s+[\d.]+\s[\W\w\D\d. ]*', value))
-        ret = re.sub(ret, '', value)
+        if "questions" in field:
+            ret = value
+        else:
+            ret = ''.join(re.findall(ur'\s+[\d.]+\s[\W\w\D\d. ]*', value))
+            ret = re.sub(ret, '', value)
     else:
         ret = value
     return ret
