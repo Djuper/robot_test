@@ -66,24 +66,24 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
 Створити тендер
   [Arguments]  ${username}  ${tender_data}
   [Documentation]  Створює лот з початковими даними tender_data.
-  ${items}=                     Get From Dictionary    ${tender_data.data}    items
-  ${procuringEntityName}=       Get From Dictionary    ${tender_data.data.procuringEntity.identifier}    legalName
-  ${title}=                     Get From Dictionary    ${tender_data.data}    title
-  ${description}=               Get From Dictionary    ${tender_data.data}    description
-  ${budget}=                    Get From Dictionary    ${tender_data.data.value}    amount
+  ${items}=                     Get From Dictionary    ${tender_data.data}  items
+  ${procuringEntityName}=       Get From Dictionary    ${tender_data.data.procuringEntity.identifier}  legalName
+  ${title}=                     Get From Dictionary    ${tender_data.data}  title
+  ${description}=               Get From Dictionary    ${tender_data.data}  description
+  ${budget}=                    Get From Dictionary    ${tender_data.data.value}  amount
   ${budget}=                    Convert To String      ${budget}
-  ${step_rate}=                 Get From Dictionary    ${tender_data.data.minimalStep}    amount
+  ${step_rate}=                 Get From Dictionary    ${tender_data.data.minimalStep}  amount
   ${step_rate}=                 Convert To String      ${step_rate}
   # Для фіксування кроку аукціону при зміні початковой вартості лоту
   set global variable           ${step_rate}
-  ${valTax}=                    Get From Dictionary    ${tender_data.data.value}      valueAddedTaxIncluded
-  ${guarantee_amount}=          Get From Dictionary    ${tender_data.data.guarantee}    amount
+  ${valTax}=                    Get From Dictionary    ${tender_data.data.value}  valueAddedTaxIncluded
+  ${guarantee_amount}=          Get From Dictionary    ${tender_data.data.guarantee}  amount
   ${guarantee_amount}=          Convert To String      ${guarantee_amount}
-  ${dgfID}=                     Get From Dictionary    ${tender_data.data}        dgfID
+  ${dgfID}=                     Get From Dictionary    ${tender_data.data}  dgfID
   ${minNumberOfQualifiedBids}=  Get From Dictionary    ${tender_data.data}  minNumberOfQualifiedBids
-  ${auction_start}=             Get From Dictionary    ${tender_data.data.auctionPeriod}    startDate
-  ${auction_start}=             smarttender_service.convert_datetime_to_smarttender_format    ${auction_start}
-  ${tenderAttempts}=            Get From Dictionary    ${tender_data.data}    tenderAttempts
+  ${auction_start}=             Get From Dictionary    ${tender_data.data.auctionPeriod}  startDate
+  ${auction_start}=             smarttender_service.convert_datetime_to_smarttender_format  ${auction_start}
+  ${tenderAttempts}=            Get From Dictionary    ${tender_data.data}  tenderAttempts
   Run Keyword And Ignore Error  Wait Until Page Contains element  id=IMMessageBoxBtnNo_CD
   Run Keyword And Ignore Error  Click Element  id=IMMessageBoxBtnNo_CD
   Wait Until Page Contains element  ${orenda}  ${wait}
@@ -450,7 +450,6 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   ${amount}=  Get From Dictionary  ${bid.data.value}  amount
   ${amount}=  convert to string  ${amount}
   Пройти кваліфікацію для подачі пропозиції_  ${username}  ${tender_uaid}  ${bid}
-  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  proposal
   Прийняти участь в тендері_  ${username}  ${tender_uaid}  ${amount}
   ${response}=  Get Value  css=#lotAmount0>input
   ${response}=  smarttender_service.delete_spaces  ${response}
@@ -886,7 +885,8 @@ Click Input Enter Wait
 
 Прийняти участь в тендері_
   [Arguments]  ${username}  ${tender_uaid}  ${amount}
-  Заповнити дані для подачі пропозиції  ${amount}
+  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  proposal
+  Заповнити дані для подачі пропозиції_  ${amount}
   Закрити валідаційне вікно_
 
 Заповнити дані для подачі пропозиції_
@@ -894,6 +894,7 @@ Click Input Enter Wait
   Wait Until Page Contains Element  jquery=button#submitBidPlease
   Run Keyword If  '${mode}' != 'dgfInsider'  Input Text  jquery=div#lotAmount0 input  ${value}
   Click Element  css=button#submitBidPlease
+  Run Keyword And Ignore Error  Wait Until Page Contains Element  ${loading}
   Wait Until Element Is Not Visible  ${loading}  ${wait}
 
 Закрити валідаційне вікно_
