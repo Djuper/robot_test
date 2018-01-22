@@ -12,7 +12,6 @@ import re
 TZ = timezone(os.environ['TZ'] if 'TZ' in os.environ else 'Europe/Kiev')
 number_of_tabs = 1
 
-
 def get_number_of_tabs():
     return number_of_tabs
 
@@ -21,15 +20,12 @@ def reset_number_of_tabs():
     global number_of_tabs
     number_of_tabs = 1
 
-
 def add_to_number_of_tabs(value):
     global number_of_tabs
     number_of_tabs = number_of_tabs + value
 
-
 def get_now():
     return datetime.now(TZ)
-
 
 def convert_datetime_to_smarttender_format(isodate):
     iso_dt = parse_date(isodate)
@@ -41,12 +37,10 @@ def convert_datetime_to_smarttender_form(isodate):
     date_string = iso_dt.strftime("%d.%m.%Y")
     return date_string
 
-
 def convert_date_to_smarttender_format(isodate):
     iso_dt = parse_date(isodate)
     date_string = iso_dt.strftime("%d.%m.%Y")
     return date_string
-
 
 def get_minutes_to_add(date_end):
     date = parse(date_end)
@@ -57,10 +51,8 @@ def get_minutes_to_add(date_end):
         return 7
     return 0
 
-
 def strip_string(s):
     return s.strip()
-
 
 def adapt_data(tender_data):
     tender_data.data.procuringEntity[
@@ -78,36 +70,36 @@ def adapt_data(tender_data):
             item.unit['name'] = u"шт"
     return tender_data
 
-
 def convert_date(s):
     dt = parse(s, parserinfo(True, False))
     return dt.strftime('%Y-%m-%dT%H:%M:%S+02:00')
-
 
 def convert_date_offset_naive(s):
     dt = parse(s, parserinfo(True, False))
     return dt.strftime('%Y-%m-%d')
 
-
 def get_bid_response(value):
-    return smarttender_munchify({'data': {'value': {'amount': value}}})
-
+    return smarttender_munchify(
+        {
+            'data': {
+                'value': {
+                    'amount': value
+                }
+            }
+        }
+    )
 
 def get_lot_response(value):
     return smarttender_munchify({'data': {'value': {'amount': value}, 'id': 'bcac8d2ceb5f4227b841a2211f5cb646'}})
 
-
 def get_claim_response(id, title, description):
     return smarttender_munchify({'data': {'id': int(id), 'title': title, 'description': description}, 'access': {'token': ''}})
-
 
 def get_bid_status(status):
     return smarttender_munchify({'data': {'status': status}})
 
-
 def get_question_data(id):
     return smarttender_munchify({'data': {'id': id}})
-
 
 def convert_unit_to_smarttender_format(unit):
     map = {
@@ -121,7 +113,6 @@ def convert_unit_to_smarttender_format(unit):
     }
     return map[unit]
 
-
 def convert_edi_from_starttender_format(edi):
     map = {
         u"166": u"KGM",
@@ -130,7 +121,6 @@ def convert_edi_from_starttender_format(edi):
         u"796": u"H87"
     }
     return map[edi]
-
 
 def convert_unit_from_smarttender_format(unit):
     map = {
@@ -142,13 +132,11 @@ def convert_unit_from_smarttender_format(unit):
     }
     return map[unit]
 
-
 def convert_currency_from_smarttender_format(currency):
     map = {
         u"980": "UAH"
     }
     return map[currency]
-
 
 def convert_country_from_smarttender_format(country):
     map = {
@@ -156,13 +144,11 @@ def convert_country_from_smarttender_format(country):
     }
     return map[country]
 
-
 def convert_cpv_from_smarttender_format(cpv):
     map = {
         u"ДК 021:2015": "CPV"
     }
     return map[cpv]
-
 
 def auction_field_info(field):
     if "items" in field:
@@ -238,8 +224,7 @@ def auction_field_info(field):
             "tenderAttempts": "span.info_tenderAttempts",
             "minNumberOfQualifiedBids": ".info_minnumber_qualifiedbids",
         }
-        return map[field]
-
+    return map[field]
 
 def convert_result(field, value):
     if field == "value.amount" \
@@ -258,7 +243,8 @@ def convert_result(field, value):
     elif "unit.name" in field:
         ret = convert_unit_from_smarttender_format(value)
     elif "tenderPeriod.endDate" in field:
-        ret = re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}", value)
+        ret = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}", value)))
+        ret = convert_date(ret)
     elif "contractPeriod.startDate" in field \
             or "contractPeriod.endDate" in field \
             or "tenderPeriod.startDate" in field \
@@ -281,7 +267,6 @@ def convert_result(field, value):
         ret = value
     return ret
 
-
 def document_fields_info(field,docId,is_cancellation_document):
     map = {
         "description": "span.info_attachment_description:eq(0)",
@@ -296,7 +281,6 @@ def document_fields_info(field,docId,is_cancellation_document):
         result = ("div.row.document:contains('{0}') ".format(docId))+map[field]
     return result
 
-
 def map_to_smarttender_document_type(doctype):
     map = {
         u"x_presentation": u"Презентація",
@@ -307,7 +291,6 @@ def map_to_smarttender_document_type(doctype):
         u"x_dgfPublicAssetCertificate": u""
     }
     return map[doctype]
-
 
 def map_from_smarttender_document_type(doctype):
     map = {
@@ -325,14 +308,15 @@ def map_from_smarttender_document_type(doctype):
     }
     return map[doctype]
 
-
-def string_contains(value):
+def location_converter(value):
     if "cancellation" in value:
         ret = "cancellation"
-    if "questions" in value:
-        ret = "questions"
+    elif "questions" in value:
+        ret = "discuss"
+    elif "proposal" in value:
+        ret = "/bid/edit/"
     else:
-        ret = "false"
+        ret = "auktsiony-na-prodazh-aktyviv-derzhpidpryemstv"
     return ret
 
 def question_field_info(field, id):
@@ -342,7 +326,6 @@ def question_field_info(field, id):
         "answer": "div.answer div:eq(2)"
     }
     return (map[field]).format(id)
-
 
 def convert_bool_to_text(variable):
     return str(variable).lower()
@@ -358,9 +341,11 @@ def download_file(url,download_path):
 def unescape_link(link):
     return str(link).replace("%20"," ")
 
-
 def normalize_index(first,second):
     if first == "-1":
         return "2"
     else:
         return str(int(first) + int(second))
+
+def delete_spaces(value):
+    return float(''.join(re.findall(r'\S', '136 470 761.89')))
