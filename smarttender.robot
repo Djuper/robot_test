@@ -11,7 +11,7 @@ ${synchronization}                      http://test.smarttender.biz/ws/webservic
 ${path to find tender}                  http://test.smarttender.biz/test-tenders/
 ${find tender field}                    xpath=//input[@placeholder="Введіть запит для пошуку або номер тендеру"]
 ${tender found}                         xpath=//*[@id="tenders"]/tbody//a[@class="linkSubjTrading"]
-${wait}                                 60
+${wait}                                 120
 ${iframe}                               jquery=iframe:eq(0)
 
 #login
@@ -837,12 +837,10 @@ Click Input Enter Wait
   Input Text  id=subject  ${title}
   Input Text  id=question  ${description}
   Click Element  css=button[type='button']
-  Wait Until Element Is Not Visible  ${loading}  ${wait}
   Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
-  ${status}=  get text  xpath=//*[@class='ivu-alert-message']/span
-  Log  ${status}
+  Wait Until Element Is Not Visible  ${loading}  ${wait}
+  ${status}=  get text  css=.ivu-alert-message span
   Should Be Equal  ${status}  Ваше запитання успішно надіслане
-  Should Not Be Equal  ${status}  Період обговорення закінчено
   Unselect Frame
   Select Frame  ${iframe}
   Click Element  css=#inputFormQuestion i[onclick]
