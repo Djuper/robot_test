@@ -132,12 +132,6 @@ def convert_unit_from_smarttender_format(unit):
     }
     return map[unit]
 
-def convert_currency_from_smarttender_format(currency):
-    map = {
-        u"980": "UAH"
-    }
-    return map[currency]
-
 def convert_country_from_smarttender_format(country):
     map = {
         u"УКРАЇНА": u"Україна"
@@ -159,18 +153,21 @@ def auction_field_info(field):
         result = string.join(splitted, '.')
         map = {
             "description": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
+            "unit.name": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
+            "quantity": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
+
             "contractPeriod.startDate": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[last()]",
             "contractPeriod.endDate": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[last()]",
 
-            "classification.scheme": "span[data-itemid]:eq({0}) span.info_cpv",
-            "classification.id": "span[data-itemid]:eq({0}) span.info_cpv_code",
-            "classification.description": "span[data-itemid]:eq({0}) span.info_cpv_name",
-            "unit.name": "span[data-itemid]:eq({0}) span.info_snedi",
+            "classification.scheme": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[1]",
+            "classification.id": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[1]",
+            "classification.description": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[1]",
+
+            "additionalClassifications[0].description": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
+
             "unit.code": "span[data-itemid]:eq({0}) span.info_edi",
-            "quantity": "span[data-itemid]:eq({0}) span.info_count",
             "additionalClassifications[0].scheme": "span[data-itemid]:eq({0}) .info_DKPP",
             "additionalClassifications[0].id": "span[data-itemid]:eq({0}) .info_dkpp_code",
-            "additionalClassifications[0].description": "span[data-itemid]:eq({0}) .info_dkpp_name"
         }
         return (map[result]).format(item_id)
     elif "questions" in field:
@@ -197,18 +194,20 @@ def auction_field_info(field):
     else:
         map = {
             "value.amount": "xpath=(//*[@class='table-responsive']//td[2])[1]",
+            "value.currency": "xpath=(//*[@class='table-responsive']//td[2])[1]",
+            "value.valueAddedTaxIncluded": "xpath=(//*[@class='table-responsive']//td[2])[1]",
             "tenderPeriod.endDate": "xpath=(//*[@class='popover-content timeline-popover'])[2]//div",
             "minimalStep.amount": "xpath=(//*[@class='table-responsive']//td[2])[2]",
             "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
+            "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
             "guarantee.amount": "xpath=(//*[@class='table-responsive']//td[2])[3]",
+            "title": "css=.page-header h3:nth-of-type(2)",
+            "minNumberOfQualifiedBids": "css=.info_minnumber_qualifiedbids",
+            "dgfID": "css=.page-header h4:nth-of-type(2)",
+            "description": "css=.page-header span",
+            "auctionID": "css=.page-header h3:nth-of-type(3)",
+            "procuringEntity.name": "xpath=//*[@class='table-responsive']/following-sibling::*[@class='row']//dd[2]/span",
 
-            "dgfID": "span.info_dgfId",
-            "title": "span.info_orderItem",
-            "description": ".container-fluid .page-header .col-sm-7 span:eq(0)",
-            "value.currency": "span.info_currencyId",
-            "value.valueAddedTaxIncluded": "span.info_withVat",
-            "auctionID": "span.info_tendernum",
-            "procuringEntity.name": "span.info_organization",
             "enquiryPeriod.startDate": "span.info_enquirysta",
             "enquiryPeriod.endDate": "span.info_ddm",
             "tenderPeriod.startDate": "span.info_enquirysta",
@@ -222,7 +221,6 @@ def auction_field_info(field):
             "dgfDecisionID": "span.info_dgfDecisionId",
             "dgfDecisionDate": "span.info_dgfDecisionDate",
             "tenderAttempts": "span.info_tenderAttempts",
-            "minNumberOfQualifiedBids": ".info_minnumber_qualifiedbids",
         }
     return map[field]
 
@@ -235,12 +233,23 @@ def convert_result(field, value):
         if u"Оренда" in value:
             ret = 'dgfOtherAssets'
     elif field == "value.valueAddedTaxIncluded":
-        ret = value == "True"
+        if u'ПДВ' in value:
+            ret = True
+        else:
+            ret = value
     elif field == "value.currency":
-        ret = convert_currency_from_smarttender_format(value)
+        if u'грн.' in value:
+            ret = "UAH"
+        else:
+            ret = value
     elif "unit.code" in field:
         ret = convert_edi_from_starttender_format(value)
+    elif "classification.description" in field:
+        ret = ''.join(re.split(ur'— ', ''.join(re.findall(ur'\—\s.+', value))))
+    elif "additionalClassifications" in field:
+        ret = ''.join(re.findall(ur'[^\(][^\)]', ''.join(re.findall(ur'\(.+\)', value))))
     elif "unit.name" in field:
+        value =  ''.join(re.split(r' ', ''.join(re.findall(ur'\W+$', value))))
         ret = convert_unit_from_smarttender_format(value)
     elif "tenderPeriod.endDate" in field:
         ret = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}", value)))
@@ -256,13 +265,17 @@ def convert_result(field, value):
     elif "dgfDecisionDate" in field:
         ret = convert_date_offset_naive(value)
     elif "quantity" in field:
-        ret = float(value)
+        ret = float(''.join(re.findall(ur'\d+\.\d+', value)))
     elif "description" in field:
         if "questions" in field:
             ret = value
         else:
             ret = ''.join(re.findall(ur'\s+[\d.]+\s[\W\w\D\d. ]*', value))
             ret = re.sub(ret, '', value)
+    elif "classification.scheme" in field:
+        ret = ''.join(re.split(r':', ''.join(re.findall(ur'.+\:', value))))
+    elif "classification.id" in field:
+        ret = ''.join(re.split(ur': ', ''.join(re.findall(ur'\:\s[\d\-]+', value))))
     else:
         ret = value
     return ret

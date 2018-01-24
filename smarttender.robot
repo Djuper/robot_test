@@ -770,8 +770,8 @@ Click Input Enter Wait
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
   ${selector}=  auction_field_info  ${fieldname}
-  ${ret}=  Get Text  ${selector}
-  ${ret}=  convert_result  ${fieldname}  ${ret}
+  ${value}=  Get Text  ${selector}
+  ${ret}=  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
 
 Змінити дані тендера_
@@ -825,29 +825,41 @@ Click Input Enter Wait
 
 Задати запитання_
   [Arguments]  ${title}  ${description}  ${item_id}
-  Run Keyword if  '${item_id}' == 'no_id'  Run Keywords  Click Element  css=#questions span[role="presentation"]
+  Відкрити бланк запитання_  ${item_id}
+  Wait Until Element Is Not Visible  ${wraploading}  ${wait}
+  Заповнити динні для запитання_  ${title}  ${description}
+  Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
+  Закрити вікно ваше запитання успішно надіслане_
+  #TODO  Don't know how to get value from the hidden element with Selenium2Library
+  ${question_id}=  Execute JavaScript  return (function() {return $("span.question_idcdb").text() })()
+  ${question_data}=  smarttender_service.get_question_data  ${question_id}
+  [Return]  ${question_data}
+
+Відкрити бланк запитання_
+  [Arguments]  ${item_id}
+  Run Keyword if  '${item_id}' == 'no_id'  Run Keywords
+  ...  Click Element  css=#questions span[role="presentation"]
   ...  AND  Click Element  css=.select2-results li:nth-child(2)
   ...  AND  Click element  id=add-question
-  ...  ELSE  Run Keywords  Click Element  jquery=#select2-question-relation-container:eq(0)
+  ...  ELSE  Run Keywords
+  ...  Click Element  jquery=#select2-question-relation-container:eq(0)
   ...  AND  Input Text  jquery=.select2-search__field:eq(0)  ${item_id}
   ...  AND  Press Key  jquery=.select2-search__field:eq(0)  \\13
   ...  AND  Click Element  jquery=input#add-question
-  Wait Until Element Is Not Visible  ${wraploading}  ${wait}
+
+Заповнити динні для запитання_
+  [Arguments]  ${title}  ${description}
   Select Frame  ${iframe}
   Input Text  id=subject  ${title}
   Input Text  id=question  ${description}
   Click Element  css=button[type='button']
-  Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
-  Wait Until Element Is Not Visible  ${loading}  ${wait}
+
+Закрити вікно ваше запитання успішно надіслане_
   ${status}=  get text  css=.ivu-alert-message span
   Should Be Equal  ${status}  Ваше запитання успішно надіслане
   Unselect Frame
   Select Frame  ${iframe}
   Click Element  css=#inputFormQuestion i[onclick]
-  #TODO  Don't know how to get value from the hidden element with Selenium2Library
-  ${question_id}=  Execute JavaScript  return (function() {return $("span.question_idcdb").text() })()
-  ${question_data}=  smarttender_service.get_question_data  ${question_id}
-  [Return]  ${question_data}
 
 Пройти кваліфікацію для подачі пропозиції_
   [Arguments]  ${username}  ${tender_uaid}  ${bid}
@@ -893,7 +905,7 @@ Click Input Enter Wait
   Run Keyword If  '${mode}' != 'dgfInsider'  Input Text  jquery=div#lotAmount0 input  ${value}
   Click Element  css=button#submitBidPlease
   Run Keyword And Ignore Error  Wait Until Page Contains Element  ${loading}
-  Wait Until Element Is Not Visible  ${loading}  ${wait}
+  Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  ${wait}
 
 Закрити валідаційне вікно_
   Wait Until Page Contains  Пропозицію прийнято  ${wait}
