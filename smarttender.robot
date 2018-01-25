@@ -737,7 +737,9 @@ Click Input Enter Wait
   Run keyword if  '${page_needed}' == '${False}'  Run Keywords
   ...  Run Keyword If  '${tender_page}' == '${False}'  Відкрити сторінку tender_  ${tender_uaid}
   ...  AND  Run Keyword If  '${page}' != 'tender'  Відкрити сторінку ${page}_
-  #...  ELSE  Run Keywords  Reload Page  AND  Select Frame  ${iframe}
+  ...  ELSE  Run Keywords  Reload Page
+  ...  AND  Run Keyword If  "${page}" != "proposal" or "${page}" != "cancellation"
+  ...  Select Frame  ${iframe}
 
 Відкрити сторінку tender_
   [Arguments]  ${tender_uaid}
