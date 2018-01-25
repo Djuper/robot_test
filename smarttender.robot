@@ -470,7 +470,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Змінює статус цінової пропозиції до лоту tender_uaid користувача username на cancelled.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію). Цей ківорд реалізовуємо лише для процедур на цбд1.
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  Tender
-  Відкрити сторінку подачі пропозиції_
+  Unselect Frame
   Wait Until Page Contains Element  ${cancellation offers button}
   Run Keyword And Ignore Error  Click Element  ${cancellation offers button}
   Run Keyword And Ignore Error  Click Element  ${cancel. offers confirm button}

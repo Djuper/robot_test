@@ -113,6 +113,19 @@ def convert_unit_to_smarttender_format(unit):
     }
     return map[unit]
 
+def convert_tender_status(value):
+    map = {
+        u"Прийом пропозицій": "active.tendering",
+        u"Кваліфікація": "active.qualification",
+        u"Торги не відбулися": "unsuccessful",
+
+        u"Очікує підтвердження протоколу": "pending.verification",
+        u"Очікується оплата": "pending.payment",
+        u"Переможець": "active",
+        u"Дискваліфікований": "unsuccessful"
+    }
+    return map[value]
+
 def convert_edi_from_starttender_format(edi):
     map = {
         u"166": u"KGM",
@@ -146,8 +159,7 @@ def convert_cpv_from_smarttender_format(cpv):
 
 def auction_field_info(field):
     if "items" in field:
-        item_id = int(re.search("\d",field).group(0))
-        item_id = item_id + 1
+        item_id = int(re.search("\d", field).group(0))+ 1
         splitted = field.split(".")
         splitted.remove(splitted[0])
         result = string.join(splitted, '.')
@@ -171,11 +183,8 @@ def auction_field_info(field):
         }
         return (map[result]).format(item_id)
     elif "questions" in field:
-        question_id = int(re.search("\d",field).group(0))
-        question_id = question_id + 4
-        splitted = field.split(".")
-        splitted.remove(splitted[0])
-        result = string.join(splitted, '.')
+        question_id = int(re.search("\d",field).group(0))+ 4
+        result = ''.join(re.split(r'].', ''.join(re.findall(r'\]\..+', field))))
         map = {
             "title": "xpath=(//*[@id='questions']/div/div[{0}]//span)[1]",
             "description": "xpath=//*[@id='questions']/div/div[{0}]//div[@class='q-content']",
@@ -183,12 +192,10 @@ def auction_field_info(field):
         }
         return (map[result]).format(question_id)
     elif "awards" in field:
-        award_id = re.search("\d",field).group(0)
-        splitted = field.split(".")
-        splitted.remove(splitted[0])
-        result = string.join(splitted, '.')
+        award_id = int(re.search("\d",field).group(0)) + 1
+        result = ''.join(re.split(r'].', ''.join(re.findall(r'\]\..+', field))))
         map = {
-            "status": "div#auctionResults div.row.well:eq({0}) span.info_award_status:eq(0)"
+            "status": "css=div#auctionResults div.row.well:nth-child({0}) h5 span"
         }
         return map[result].format(award_id)
     else:
@@ -207,13 +214,13 @@ def auction_field_info(field):
             "description": "css=.page-header span",
             "auctionID": "css=.page-header h3:nth-of-type(3)",
             "procuringEntity.name": "xpath=//*[@class='table-responsive']/following-sibling::*[@class='row']//dd[2]/span",
+            "status": "css=.page-header div:nth-child(2) h4",
 
             "enquiryPeriod.startDate": "span.info_enquirysta",
             "enquiryPeriod.endDate": "span.info_ddm",
             "tenderPeriod.startDate": "span.info_enquirysta",
             "auctionPeriod.startDate": "span.info_dtauction:eq(0)",
             "auctionPeriod.endDate": "span.info_dtauctionEnd:eq(0)",
-            "status": "span.info_tender_status:eq(0)",
             "cancellations[0].reason": "span.info_cancellation_reason",
             "cancellations[0].status": "span.info_cancellation_status",
             "eligibilityCriteria": "span.info_eligibilityCriteria",
@@ -276,6 +283,8 @@ def convert_result(field, value):
         ret = ''.join(re.split(r':', ''.join(re.findall(ur'.+\:', value))))
     elif "classification.id" in field:
         ret = ''.join(re.split(ur': ', ''.join(re.findall(ur'\:\s[\d\-]+', value))))
+    elif "status" == field or "awards" in field:
+        ret = convert_tender_status(value)
     else:
         ret = value
     return ret
