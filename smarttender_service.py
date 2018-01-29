@@ -332,13 +332,13 @@ def map_from_smarttender_document_type(doctype):
 
 def location_converter(value):
     if "cancellation" in value:
-        ret = "cancellation"
+        ret = "cancellation", "cancellation"
     elif "questions" in value:
-        ret = "discuss"
+        ret = "discuss", "questions"
     elif "proposal" in value:
-        ret = "/bid/edit/"
+        ret = "/bid/edit/", "proposal"
     else:
-        ret = "auktsiony-na-prodazh-aktyviv-derzhpidpryemstv"
+        ret = "auktsiony-na-prodazh-aktyviv-derzhpidpryemstv", "tender"
     return ret
 
 def question_field_info(field, id):

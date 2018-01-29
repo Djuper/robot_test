@@ -469,7 +469,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Змінює статус цінової пропозиції до лоту tender_uaid користувача username на cancelled.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію). Цей ківорд реалізовуємо лише для процедур на цбд1.
-  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  Tender
+  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  proposal
   Unselect Frame
   Wait Until Page Contains Element  ${cancellation offers button}
   Run Keyword And Ignore Error  Click Element  ${cancellation offers button}
@@ -731,18 +731,21 @@ Click Input Enter Wait
   ...  questions
   ...  cancellation
   ...  proposal
-  ${page_needed}=  location_converter  ${page}
-  ${page_needed}=  Run Keyword And Return Status  Location Should Contain  ${page_needed}
-  Run keyword if  '${page_needed}' == '${False}'  Run Keywords
-  ...  Run Keyword If  '${tender_page}' == '${False}'  Відкрити сторінку tender_  ${tender_uaid}
-  ...  AND  Run Keyword If  '${page}' != 'tender'  Відкрити сторінку ${page}_
-  ...  ELSE  Run Keywords  Reload Page
-  ...  AND  Run Keyword If  "${page}" != "proposal" or "${page}" != "cancellation"
+  ${page_needed}  ${page}=  location_converter  ${page}
+  ${status}=  Run Keyword And Return Status  Location Should Contain  ${page_needed}
+  Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}_  ${tender_uaid}
+  ...  ELSE  Run Keywords
+  ...  Reload Page
+  ...  AND  Run Keyword If  "${page}" == "tender" or "${page}" == "questions"
   ...  Select Frame  ${iframe}
 
 Відкрити сторінку tender_
   [Arguments]  ${tender_uaid}
-  ${tender_page}=  Run Keyword And Return Status  Location Should Contain  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
+  ${status}=  Run Keyword And Return Status  Location Should Contain  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
+  Run keyword if  '${status}' == '${False}'  Відкрити сторінку tender continue_  ${tender_uaid}
+
+Відкрити сторінку tender continue_
+  [Arguments]  ${tender_uaid}
   Go To  ${path to find tender}
   Wait Until page Contains Element  ${find tender field }  ${wait}
   Input Text  ${find tender field }  ${tender_uaid}
@@ -753,21 +756,23 @@ Click Input Enter Wait
   Select Frame  ${iframe}
 
 Відкрити сторінку proposal_
+  [Arguments]  ${tender_uaid}
   Wait Until Page Contains Element  css=a#bid
   ${href}=  Get Element Attribute  css=a#bid@href
   Go To  ${href}
   Wait Until Page Contains  Пропозиція по аукціону
 
 Відкрити сторінку questions_
+  [Arguments]  ${tender_uaid}
   Wait Until Page Contains Element  ${question_button}
   ${href}=  Get Element Attribute  ${question_button}@href
   Go to  ${href}
   Select Frame  ${iframe}
 
 Відкрити сторінку cancellation_
-  Click Element  jquery=a#cancellation:eq(0)  #css=a#cancellation
+  [Arguments]  ${tender_uaid}
+  Click Element  jquery=a#cancellation:eq(0)
   Select Frame  jquery=#widgetIframe
-  [Return]
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
@@ -904,6 +909,7 @@ Click Input Enter Wait
 Заповнити дані для подачі пропозиції_
   [Arguments]  ${value}
   Wait Until Page Contains Element  jquery=button#submitBidPlease
+  Sleep  .5
   Run Keyword If  '${mode}' != 'dgfInsider'  Input Text  jquery=div#lotAmount0 input  ${value}
   Click Element  css=button#submitBidPlease
   Run Keyword And Ignore Error  Wait Until Page Contains Element  ${loading}
