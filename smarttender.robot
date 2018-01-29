@@ -733,7 +733,6 @@ Click Input Enter Wait
   ...  proposal
   ${page_needed}=  location_converter  ${page}
   ${page_needed}=  Run Keyword And Return Status  Location Should Contain  ${page_needed}
-  ${tender_page}=  Run Keyword And Return Status  Location Should Contain  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
   Run keyword if  '${page_needed}' == '${False}'  Run Keywords
   ...  Run Keyword If  '${tender_page}' == '${False}'  Відкрити сторінку tender_  ${tender_uaid}
   ...  AND  Run Keyword If  '${page}' != 'tender'  Відкрити сторінку ${page}_
@@ -743,6 +742,7 @@ Click Input Enter Wait
 
 Відкрити сторінку tender_
   [Arguments]  ${tender_uaid}
+  ${tender_page}=  Run Keyword And Return Status  Location Should Contain  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
   Go To  ${path to find tender}
   Wait Until page Contains Element  ${find tender field }  ${wait}
   Input Text  ${find tender field }  ${tender_uaid}
