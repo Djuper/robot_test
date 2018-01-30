@@ -776,6 +776,7 @@ Click Input Enter Wait
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
+  #Run Keyword if  "items[0].unit.code" == '${fieldname}'  debug
   ${selector}=  auction_field_info  ${fieldname}
   ${value}=  Get Text  ${selector}
   ${ret}=  convert_result  ${fieldname}  ${value}

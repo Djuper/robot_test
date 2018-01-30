@@ -128,10 +128,10 @@ def convert_tender_status(value):
 
 def convert_edi_from_starttender_format(edi):
     map = {
-        u"166": u"KGM",
-        u"992": u"E48",
-        u"12": u"MTK",
-        u"796": u"H87"
+        u"кг": u"KGM",
+        u"умов.": u"E48",
+        u"м.кв.": u"MTK",
+        u"шт": u"H87"
     }
     return map[edi]
 
@@ -167,19 +167,16 @@ def auction_field_info(field):
             "description": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
             "unit.name": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
             "quantity": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
-
+            "unit.code": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
             "contractPeriod.startDate": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[last()]",
             "contractPeriod.endDate": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[last()]",
-
             "classification.scheme": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[1]",
             "classification.id": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[1]",
             "classification.description": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[1]",
-
             "additionalClassifications[0].description": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
 
-            "unit.code": "span[data-itemid]:eq({0}) span.info_edi",
-            "additionalClassifications[0].scheme": "span[data-itemid]:eq({0}) .info_DKPP",
-            "additionalClassifications[0].id": "span[data-itemid]:eq({0}) .info_dkpp_code",
+            "additionalClassifications[0].scheme": "1css=span[data-itemid]:nth-child({0}) .info_DKPP",
+            "additionalClassifications[0].id": "1css=span[data-itemid]:nth-child({0}) .info_dkpp_code",
         }
         return (map[result]).format(item_id)
     elif "questions" in field:
@@ -216,18 +213,18 @@ def auction_field_info(field):
             "procuringEntity.name": "xpath=//*[@class='table-responsive']/following-sibling::*[@class='row']//dd[2]/span",
             "status": "css=.page-header div:nth-child(2) h4",
 
-            "enquiryPeriod.startDate": "span.info_enquirysta",
-            "enquiryPeriod.endDate": "span.info_ddm",
-            "tenderPeriod.startDate": "span.info_enquirysta",
-            "auctionPeriod.startDate": "span.info_dtauction:eq(0)",
-            "auctionPeriod.endDate": "span.info_dtauctionEnd:eq(0)",
-            "cancellations[0].reason": "span.info_cancellation_reason",
-            "cancellations[0].status": "span.info_cancellation_status",
-            "eligibilityCriteria": "span.info_eligibilityCriteria",
-            "contracts[-1].status": "span.info_contractStatus",
-            "dgfDecisionID": "span.info_dgfDecisionId",
-            "dgfDecisionDate": "span.info_dgfDecisionDate",
-            "tenderAttempts": "span.info_tenderAttempts",
+            "enquiryPeriod.startDate": "1css=span.info_enquirysta",
+            "enquiryPeriod.endDate": "1css=span.info_ddm",
+            "tenderPeriod.startDate": "1css=span.info_enquirysta",
+            "auctionPeriod.startDate": "1css=span.info_dtauction",
+            "auctionPeriod.endDate": "1css=span.info_dtauctionEnd",
+            "cancellations[0].reason": "1css=span.info_cancellation_reason",
+            "cancellations[0].status": "1css=span.info_cancellation_status",
+            "eligibilityCriteria": "1css=span.info_eligibilityCriteria",
+            "contracts[-1].status": "1css=span.info_contractStatus",
+            "dgfDecisionID": "1css=span.info_dgfDecisionId",
+            "dgfDecisionDate": "1css=span.info_dgfDecisionDate",
+            "tenderAttempts": "1css=span.info_tenderAttempts"
         }
     return map[field]
 
@@ -250,6 +247,7 @@ def convert_result(field, value):
         else:
             ret = value
     elif "unit.code" in field:
+        value = ''.join(re.findall(ur'\м.кв.|\шт|\умов.|\кг', value))
         ret = convert_edi_from_starttender_format(value)
     elif "classification.description" in field:
         ret = ''.join(re.split(ur'— ', ''.join(re.findall(ur'\—\s.+', value))))
@@ -370,4 +368,4 @@ def normalize_index(first,second):
         return str(int(first) + int(second))
 
 def delete_spaces(value):
-    return float(''.join(re.findall(r'\S', '136 470 761.89')))
+    return float(''.join(re.findall(r'\S', value)))
