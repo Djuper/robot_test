@@ -778,7 +778,7 @@ Click Input Enter Wait
   [Arguments]  ${fieldname}
   ${selector}=  auction_field_info  ${fieldname}
   ${value}=  Get Text  ${selector}
-  ${value}=  Crutch for get value from the page_  ${value}
+  ${value}=  Run Keyword If  "${fieldname}" == "tenderAttempts"  Crutch for get value from the page_  ${value}  ELSE  Set Variable  ${value}
   ${ret}=  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
 
