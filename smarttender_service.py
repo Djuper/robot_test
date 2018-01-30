@@ -212,6 +212,7 @@ def auction_field_info(field):
             "auctionID": "css=.page-header h3:nth-of-type(3)",
             "procuringEntity.name": "xpath=//*[@class='table-responsive']/following-sibling::*[@class='row']//dd[2]/span",
             "status": "css=.page-header div:nth-child(2) h4",
+            "tenderAttempts": "css=.page-header>div>h4",
 
             "enquiryPeriod.startDate": "1css=span.info_enquirysta",
             "enquiryPeriod.endDate": "1css=span.info_ddm",
@@ -223,8 +224,7 @@ def auction_field_info(field):
             "eligibilityCriteria": "1css=span.info_eligibilityCriteria",
             "contracts[-1].status": "1css=span.info_contractStatus",
             "dgfDecisionID": "1css=span.info_dgfDecisionId",
-            "dgfDecisionDate": "1css=span.info_dgfDecisionDate",
-            "tenderAttempts": "1css=span.info_tenderAttempts"
+            "dgfDecisionDate": "1css=span.info_dgfDecisionDate"
         }
     return map[field]
 
@@ -264,8 +264,8 @@ def convert_result(field, value):
             or "tenderPeriod.startDate" in field \
             or "auctionPeriod.startDate" in field:
         ret = convert_date(value)
-    elif "tenderAttempts" in field \
-            or "minNumberOfQualifiedBids" in field:
+    elif "minNumberOfQualifiedBids" in field \
+            or "tenderAttempts" in field:
         ret = int(value)
     elif "dgfDecisionDate" in field:
         ret = convert_date_offset_naive(value)

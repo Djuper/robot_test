@@ -776,11 +776,18 @@ Click Input Enter Wait
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
-  #Run Keyword if  "items[0].unit.code" == '${fieldname}'  debug
   ${selector}=  auction_field_info  ${fieldname}
   ${value}=  Get Text  ${selector}
+  ${value}=  Crutch for get value from the page_  ${value}
   ${ret}=  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
+
+Crutch for get value from the page_
+  [Arguments]  ${value}
+  ${value}=  Run Keyword If  '${value}' == 'Лот виставляється на торги повторно'  Execute JavaScript  return (function() {return $(".info_tenderAttempts").text() })()
+  ...  ELSE IF  '${value}' == 'Лот виставляється на торги вперше'  Set Variable  1
+  ...  ELSE  Set Variable  ${value}
+  [Return]  ${value}
 
 Змінити дані тендера_
   [Arguments]  ${field}  ${value}
