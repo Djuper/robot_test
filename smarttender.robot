@@ -217,8 +217,9 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   Click Element  jquery=#IMMessageBoxBtnYes
 
 Отримати посилання на аукціон для глядача
-  [Arguments]  ${username}  ${tender_uaid}
+  [Arguments]  ${username}  ${tender_uaid}  ${zero}
   [Documentation]  Отримує посилання на аукціон для лоту tender_uaid. [Повертає] auctionUrl (посилання).
+  ...  ${zero} передаеться пусте значення при виклику кейворда, не використовуеться для виконання
   smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
   ${href}=  Get Element Attribute  css=a#view-auction@href
   [Return]  ${href}
