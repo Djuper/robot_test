@@ -12,151 +12,6 @@ import re
 TZ = timezone(os.environ['TZ'] if 'TZ' in os.environ else 'Europe/Kiev')
 number_of_tabs = 1
 
-def get_number_of_tabs():
-    return number_of_tabs
-
-
-def reset_number_of_tabs():
-    global number_of_tabs
-    number_of_tabs = 1
-
-def add_to_number_of_tabs(value):
-    global number_of_tabs
-    number_of_tabs = number_of_tabs + value
-
-def get_now():
-    return datetime.now(TZ)
-
-def convert_datetime_to_smarttender_format(isodate):
-    iso_dt = parse_date(isodate)
-    date_string = iso_dt.strftime("%d.%m.%Y %H:%M")
-    return date_string
-
-def convert_datetime_to_smarttender_form(isodate):
-    iso_dt = parse_date(isodate)
-    date_string = iso_dt.strftime("%d.%m.%Y")
-    return date_string
-
-def convert_date_to_smarttender_format(isodate):
-    iso_dt = parse_date(isodate)
-    date_string = iso_dt.strftime("%d.%m.%Y")
-    return date_string
-
-def get_minutes_to_add(date_end):
-    date = parse(date_end)
-    now = get_now()
-    seconds = (date - now).total_seconds()
-    minutes = (seconds % 3600) // 60
-    if minutes < 7:
-        return 7
-    return 0
-
-def strip_string(s):
-    return s.strip()
-
-def adapt_data(tender_data):
-    tender_data.data.procuringEntity[
-        'name'] = u"ФОНД ГАРАНТУВАННЯ ВКЛАДІВ ФІЗИЧНИХ ОСІБ"
-    tender_data.data.procuringEntity['identifier'][
-        'legalName'] = u"ФОНД ГАРАНТУВАННЯ ВКЛАДІВ ФІЗИЧНИХ ОСІБ"
-    tender_data.data.procuringEntity['identifier']['id'] = u"111111111111111"
-    tender_data.data['items'][0].deliveryAddress.locality = u"Київ"
-    for item in tender_data.data['items']:
-        if item.unit['name'] == u"послуга":
-            item.unit['name'] = u"усл."
-        elif item.unit['name'] == u"метри квадратні":
-            item.unit['name'] = u"м.кв."
-        elif item.unit['name'] == u"штуки":
-            item.unit['name'] = u"шт"
-    return tender_data
-
-def convert_date(s):
-    dt = parse(s, parserinfo(True, False))
-    return dt.strftime('%Y-%m-%dT%H:%M:%S+02:00')
-
-def convert_date_offset_naive(s):
-    dt = parse(s, parserinfo(True, False))
-    return dt.strftime('%Y-%m-%d')
-
-def get_bid_response(value):
-    return smarttender_munchify(
-        {
-            'data': {
-                'value': {
-                    'amount': value
-                }
-            }
-        }
-    )
-
-def get_lot_response(value):
-    return smarttender_munchify({'data': {'value': {'amount': value}, 'id': 'bcac8d2ceb5f4227b841a2211f5cb646'}})
-
-def get_claim_response(id, title, description):
-    return smarttender_munchify({'data': {'id': int(id), 'title': title, 'description': description}, 'access': {'token': ''}})
-
-def get_bid_status(status):
-    return smarttender_munchify({'data': {'status': status}})
-
-def get_question_data(id):
-    return smarttender_munchify({'data': {'id': id}})
-
-def convert_unit_to_smarttender_format(unit):
-    map = {
-        u"кілограми": u"кг",
-        u"послуга": u"умов.",
-        u"умов.": u"умов.",
-        u"усл.": u"умов.",
-        u"метри квадратні": u"м.кв.",
-        u"м.кв.": u"м.кв.",
-        u"шт": u"шт"
-    }
-    return map[unit]
-
-def convert_tender_status(value):
-    map = {
-        u"Прийом пропозицій": "active.tendering",
-        u"Кваліфікація": "active.qualification",
-        u"Торги не відбулися": "unsuccessful",
-
-        u"Очікує підтвердження протоколу": "pending.verification",
-        u"Очікується оплата": "pending.payment",
-        u"Переможець": "active",
-        u"Дискваліфікований": "unsuccessful"
-    }
-    return map[value]
-
-def convert_edi_from_starttender_format(edi):
-    map = {
-        u"кг": u"KGM",
-        u"умов.": u"E48",
-        u"м.кв.": u"MTK",
-        u"шт": u"H87"
-    }
-    return map[edi]
-
-def convert_unit_from_smarttender_format(unit):
-    map = {
-        u"кг": u"кілограми",
-        u"умов.": u"усл.",
-        u"усл.": u"усл.",
-        u"м.кв.": u"м.кв.",
-        u"шт": u"шт"
-    }
-    return map[unit]
-
-def convert_country_from_smarttender_format(country):
-    map = {
-        u"УКРАЇНА": u"Україна"
-    }
-    return map[country]
-
-def convert_cpv_from_smarttender_format(cpv):
-    map = {
-        u"ДК 021:2015": "CPV"
-    }
-    return map[cpv]
-
 def auction_field_info(field):
     if "items" in field:
         item_id = int(re.search("\d", field).group(0))+ 1
@@ -287,6 +142,93 @@ def convert_result(field, value):
         ret = value
     return ret
 
+def convert_unit_to_smarttender_format(unit):
+    map = {
+        u"кілограми": u"кг",
+        u"послуга": u"умов.",
+        u"умов.": u"умов.",
+        u"усл.": u"умов.",
+        u"метри квадратні": u"м.кв.",
+        u"м.кв.": u"м.кв.",
+        u"шт": u"шт"
+    }
+    return map[unit]
+
+def convert_tender_status(value):
+    map = {
+        u"Прийом пропозицій": "active.tendering",
+        u"Аукціон": "active.auction",
+        u"Кваліфікація": "active.qualification",
+        u"": "active.awarded",
+        u"Торги не відбулися": "unsuccessful",
+        u"Завершено": "complete",
+        u"": "cancelled",
+
+        u"Очікує дискваліфікації першого учасника": "pending.waiting",
+        u"": "cancelled",
+        u"Очікує підтвердження протоколу": "pending.verification",
+        u"Очікується оплата": "pending.payment",
+        u"Переможець": "active",
+        u"Дискваліфікований": "unsuccessful",
+    }
+    return map[value]
+
+def convert_edi_from_starttender_format(edi):
+    map = {
+        u"кг": u"KGM",
+        u"умов.": u"E48",
+        u"м.кв.": u"MTK",
+        u"шт": u"H87"
+    }
+    return map[edi]
+
+def convert_unit_from_smarttender_format(unit):
+    map = {
+        u"кг": u"кілограми",
+        u"умов.": u"усл.",
+        u"усл.": u"усл.",
+        u"м.кв.": u"м.кв.",
+        u"шт": u"шт"
+    }
+    return map[unit]
+
+def convert_datetime_to_smarttender_format(isodate):
+    iso_dt = parse_date(isodate)
+    date_string = iso_dt.strftime("%d.%m.%Y %H:%M")
+    return date_string
+
+def convert_datetime_to_smarttender_form(isodate):
+    iso_dt = parse_date(isodate)
+    date_string = iso_dt.strftime("%d.%m.%Y")
+    return date_string
+
+def convert_date_offset_naive(s):
+    dt = parse(s, parserinfo(True, False))
+    return dt.strftime('%Y-%m-%d')
+
+def convert_date(s):
+    dt = parse(s, parserinfo(True, False))
+    return dt.strftime('%Y-%m-%dT%H:%M:%S+02:00')
+
+def adapt_data(tender_data):
+    tender_data.data.procuringEntity[
+        'name'] = u"ФОНД ГАРАНТУВАННЯ ВКЛАДІВ ФІЗИЧНИХ ОСІБ"
+    tender_data.data.procuringEntity['identifier'][
+        'legalName'] = u"ФОНД ГАРАНТУВАННЯ ВКЛАДІВ ФІЗИЧНИХ ОСІБ"
+    tender_data.data.procuringEntity['identifier']['id'] = u"111111111111111"
+    tender_data.data['items'][0].deliveryAddress.locality = u"Київ"
+    for item in tender_data.data['items']:
+        if item.unit['name'] == u"послуга":
+            item.unit['name'] = u"усл."
+        elif item.unit['name'] == u"метри квадратні":
+            item.unit['name'] = u"м.кв."
+        elif item.unit['name'] == u"штуки":
+            item.unit['name'] = u"шт"
+    return tender_data
+
+def get_question_data(id):
+    return smarttender_munchify({'data': {'id': id}})
+
 def document_fields_info(field,docId,is_cancellation_document):
     map = {
         "description": "span.info_attachment_description:eq(0)",
@@ -347,9 +289,6 @@ def question_field_info(field, id):
     }
     return (map[field]).format(id)
 
-def convert_bool_to_text(variable):
-    return str(variable).lower()
-
 def download_file(url,download_path):
     response = urllib2.urlopen(url)
     file_content = response.read()
@@ -357,9 +296,6 @@ def download_file(url,download_path):
     f = open(download_path, 'w')
     f.write(file_content)
     f.close()
-
-def unescape_link(link):
-    return str(link).replace("%20"," ")
 
 def normalize_index(first,second):
     if first == "-1":
