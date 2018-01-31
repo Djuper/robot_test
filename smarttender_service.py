@@ -117,7 +117,8 @@ def convert_result(field, value):
     elif "contractPeriod.startDate" in field \
             or "contractPeriod.endDate" in field \
             or "tenderPeriod.startDate" in field \
-            or "auctionPeriod.startDate" in field:
+            or "auctionPeriod.startDate" in field \
+            or "auctionPeriod.endDate" in field:
         ret = convert_date(value)
     elif "minNumberOfQualifiedBids" in field \
             or "tenderAttempts" in field:
