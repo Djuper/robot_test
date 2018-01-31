@@ -217,10 +217,10 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   Click Element  jquery=#IMMessageBoxBtnYes
 
 Отримати посилання на аукціон для глядача
-  [Arguments]  ${username}  ${tender_uaid}  ${zero}
+  [Arguments]  @{ARGUMENTS}
   [Documentation]  Отримує посилання на аукціон для лоту tender_uaid. [Повертає] auctionUrl (посилання).
-  ...  ${zero} передаеться пусте значення при виклику кейворда, не використовуеться для виконання
-  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
+  ...  ${username}  ${tender_uaid}  ${zero}
+  smarttender.Пошук тендера по ідентифікатору  ${ARGUMENTS[0]}  ${ARGUMENTS[1]}
   ${href}=  Get Element Attribute  css=a#view-auction@href
   [Return]  ${href}
 
@@ -777,6 +777,7 @@ Click Input Enter Wait
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
+  Run Keyword If  "awards[1].status" == "${fieldname}"  debug
   ${selector}=  auction_field_info  ${fieldname}
   ${value}=  Get Text  ${selector}
   ${value}=  Run Keyword If  "${fieldname}" == "tenderAttempts"  Crutch for get value from the page_  ${value}  ELSE  Set Variable  ${value}
