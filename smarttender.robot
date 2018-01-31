@@ -776,7 +776,6 @@ Click Input Enter Wait
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
-  Run Keyword If  "awards[1].status" == "${fieldname}"  debug
   ${selector}=  auction_field_info  ${fieldname}
   ${value}=  Get Text  ${selector}
   ${value}=  Run Keyword If  "${fieldname}" == "tenderAttempts"  Crutch for get value from the page_  ${value}  ELSE  Set Variable  ${value}
