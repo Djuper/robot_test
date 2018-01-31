@@ -47,7 +47,7 @@ def auction_field_info(field):
         award_id = int(re.search("\d",field).group(0)) + 1
         result = ''.join(re.split(r'].', ''.join(re.findall(r'\]\..+', field))))
         map = {
-            "status": "css=div#auctionResults div.row.well:nth-child({0}) h5 span"
+            "status": "css=div#auctionResults div.row.well:nth-child({0}) h5"
         }
         return map[result].format(award_id)
     else:
