@@ -52,28 +52,29 @@ def auction_field_info(field):
         return map[result].format(award_id)
     else:
         map = {
-            "value.amount": "xpath=(//*[@class='table-responsive']//td[2])[1]",
+            "value.amount": "css=[class=price]",
             "value.currency": "xpath=(//*[@class='table-responsive']//td[2])[1]",
-            "value.valueAddedTaxIncluded": "xpath=(//*[@class='table-responsive']//td[2])[1]",
+            "value.valueAddedTaxIncluded": "css=[class=price]",
             "tenderPeriod.endDate": "xpath=(//*[@class='popover-content timeline-popover'])[2]//div",
-            "tenderPeriod.startDate": "css=#home span.info_dtauction",
+            "tenderPeriod.startDate": "xpath=//*[contains(text(), 'Прийом пропозицій')]/following-sibling::div[1]",
             "auctionPeriod.startDate": "css=#home span.info_dtauction",
             "auctionPeriod.endDate": "css=#home span.info_dtauctionEnd",
             "minimalStep.amount": "xpath=(//*[@class='table-responsive']//td[2])[2]",
             "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
             "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
             "guarantee.amount": "xpath=(//*[@class='table-responsive']//td[2])[3]",
-            "title": "css=.page-header h3:nth-of-type(2)",
+            "title": "css=.info_orderItem",
             "minNumberOfQualifiedBids": "css=.info_minnumber_qualifiedbids",
             "dgfID": "css=.page-header h4:nth-of-type(2)",
-            "description": "css=.page-header span",
+            "tenderID": "css=.info_tendernum",
+            "description": "css=.info_info_comm2",
             "auctionID": "css=.page-header h3:nth-of-type(3)",
-            "procuringEntity.name": "xpath=//*[@class='table-responsive']/following-sibling::*[@class='row']//dd[2]/span",
+            "procuringEntity.name": "css=.group-element .pop",
             "status": "css=.page-header div:nth-child(2) h4",
             "tenderAttempts": "css=.page-header>div>h4",
+            "enquiryPeriod.startDate": "css=.info_enquirysta",
+            "enquiryPeriod.endDate": "css=.info_ddm",
 
-            "enquiryPeriod.startDate": "1css=span.info_enquirysta",
-            "enquiryPeriod.endDate": "1css=span.info_ddm",
             "cancellations[0].reason": "1css=span.info_cancellation_reason",
             "cancellations[0].status": "1css=span.info_cancellation_status",
             "eligibilityCriteria": "1css=span.info_eligibilityCriteria",
@@ -139,6 +140,12 @@ def convert_result(field, value):
         ret = ''.join(re.split(ur': ', ''.join(re.findall(ur'\:\s[\d\-]+', value))))
     elif "status" == field or "awards" in field:
         ret = convert_tender_status(value)
+    elif "enquiryPeriod.startDate" == field or "enquiryPeriod.endDate" == field:
+        value = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}:\d{2}", value)))
+        ret = convert_date(value)
+    elif "tenderPeriod.startDate" == field:
+        value = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}:\d{2}", value)))
+        ret = convert_date(value)
     else:
         ret = value
     return ret

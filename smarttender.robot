@@ -733,6 +733,8 @@ Click Input Enter Wait
   ...  cancellation
   ...  proposal
   ${page_needed}  ${page}=  location_converter  ${page}
+  ${page_needed}  Run Keyword if  '${mode}' != 'dgfInsider'  Set variable  publichni-zakupivli-prozorro
+  ...  ELSE  Set Variable  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
   ${status}=  Run Keyword And Return Status  Location Should Contain  ${page_needed}
   Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}_  ${tender_uaid}
   ...  ELSE  Run Keywords
@@ -742,7 +744,9 @@ Click Input Enter Wait
 
 Відкрити сторінку tender_
   [Arguments]  ${tender_uaid}
-  ${status}=  Run Keyword And Return Status  Location Should Contain  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
+  ${location}  Run Keyword if  '${mode}' != 'dgfInsider'  Set variable  publichni-zakupivli-prozorro
+  ...  ELSE  Set Variable  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
+  ${status}  Run Keyword And Return Status  Location Should Contain  ${location}
   Run keyword if  '${status}' == '${False}'  Відкрити сторінку tender continue_  ${tender_uaid}
 
 Відкрити сторінку tender continue_
@@ -777,6 +781,8 @@ Click Input Enter Wait
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
+  log to console  ${fieldname}
+  #debug
   ${selector}=  auction_field_info  ${fieldname}
   ${value}=  Get Text  ${selector}
   ${value}=  Run Keyword If  "${fieldname}" == "tenderAttempts"  Crutch for get value from the page_  ${value}  ELSE  Set Variable  ${value}
