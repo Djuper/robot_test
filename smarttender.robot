@@ -14,6 +14,8 @@ ${tender found}                         xpath=//*[@id="tenders"]/tbody//a[@class
 ${wait}                                 120
 ${iframe}                               jquery=iframe:eq(0)
 
+${expand list}                          css=label.tooltip-label
+
 #login
 ${open login button}                    id=LoginAnchor
 ${login field}                          xpath=(//*[@id="LoginBlock_LoginTb"])[2]
@@ -162,6 +164,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Оновлює сторінку з лотом для отримання потенційно оновлених даних.
   Open Browser  ${synchronization}  chrome
   Wait Until Page Contains  True  ${wait}
+  Sleep  15
   Close Browser
   Switch Browser  ${browserAlias}
   Reload Page
@@ -756,6 +759,11 @@ Click Input Enter Wait
   Input Text  ${find tender field }  ${tender_uaid}
   Press Key  ${find tender field }  \\13
   Location Should Contain  f=${tender_uaid}
+  ${status}  Run Keyword And Return Status  Wait Until Page Contains Element  ${tender found}
+  Run Keyword If '${status}' == '${True}'  Відкрити сторінку tender loop_
+  ...  ELSE  Відкрити сторінку tender continue_  ${tender_uaid}
+
+Відкрити сторінку tender loop_
   ${href}=  Get Element Attribute  ${tender found}@href
   Go To  ${href}
   Select Frame  ${iframe}
@@ -781,11 +789,23 @@ Click Input Enter Wait
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
+  ${expand}  expand_info  ${fieldname}
+  Run Keyword if  '${expand}' == '${True}'  Click Element  ${expand list}
   log to console  ${fieldname}
-  #debug
+  ${ret}  Run Keyword If  "enquiryPeriod.startDate" == "${fieldname}" or "items[0].deliveryDate.startDate" == "${fieldname}" or "items[0].deliveryDate.endDate" == "${fieldname}" or "items[0].deliveryLocation.latitude" == "${fieldname}" or "items[0].deliveryAddress.countryName" == "${fieldname}" or "items[0].deliveryAddress.postalCode" == "${fieldname}" or "items[0].deliveryAddress.region" == "${fieldname}" or "items[0].classification.scheme" == "${fieldname}" or "items[0].classification.id" == "${fieldname}"  123456789
+  ...  ELSE  123456  ${fieldname}
+  [Return]  ${ret}
+
+123456789
+  [Arguments]  ${fieldname}
+  debug
+  [Return]  ${ret}
+
+123456
+  [Arguments]  ${fieldname}
   ${selector}=  auction_field_info  ${fieldname}
   ${value}=  Get Text  ${selector}
-  ${value}=  Run Keyword If  "${fieldname}" == "tenderAttempts"  Crutch for get value from the page_  ${value}  ELSE  Set Variable  ${value}
+  #${value}=  Run Keyword If  "${fieldname}" == "tenderAttempts"  Crutch for get value from the page_  ${value}  ELSE  Set Variable  ${value}
   ${ret}=  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
 

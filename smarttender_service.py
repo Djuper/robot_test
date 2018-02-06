@@ -2,7 +2,6 @@
 from iso8601 import parse_date
 from dateutil.parser import parse
 from dateutil.parser import parserinfo
-from datetime import datetime
 from pytz import timezone
 import urllib2
 import os
@@ -19,7 +18,10 @@ def auction_field_info(field):
         splitted.remove(splitted[0])
         result = string.join(splitted, '.')
         map = {
-            "description": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
+            "description": "xpath=//*[@class='table-items'][{0}]//td[1]",
+            "deliveryDate.startDate": "xpath=//*[@class='smaller-font'][{0}]/div[3]",
+            "deliveryDate.endDate": "xpath=//*[@class='smaller-font'][{0}]/div[3]",
+            "deliveryLocation.latitude": "css=.smaller-font a@href",
             "unit.name": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
             "quantity": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
             "unit.code": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
@@ -53,14 +55,13 @@ def auction_field_info(field):
     else:
         map = {
             "value.amount": "css=[class=price]",
-            "value.currency": "xpath=(//*[@class='table-responsive']//td[2])[1]",
+            "value.currency": "css=[class=price]",
             "value.valueAddedTaxIncluded": "css=[class=price]",
-            "tenderPeriod.endDate": "xpath=(//*[@class='popover-content timeline-popover'])[2]//div",
-            "tenderPeriod.startDate": "xpath=//*[contains(text(), 'Прийом пропозицій')]/following-sibling::div[1]",
+            "tenderPeriod.startDate": "css=.info_tenderingFrom",
+            "tenderPeriod.endDate": "css=.info_tenderingTo",
             "auctionPeriod.startDate": "css=#home span.info_dtauction",
             "auctionPeriod.endDate": "css=#home span.info_dtauctionEnd",
-            "minimalStep.amount": "xpath=(//*[@class='table-responsive']//td[2])[2]",
-            "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
+            "minimalStep.amount": "css=[class='price text-lot']",
             "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
             "guarantee.amount": "xpath=(//*[@class='table-responsive']//td[2])[3]",
             "title": "css=.info_orderItem",
@@ -112,12 +113,8 @@ def convert_result(field, value):
     elif "unit.name" in field:
         value =  ''.join(re.split(r' ', ''.join(re.findall(ur'\W+$', value))))
         ret = convert_unit_from_smarttender_format(value)
-    elif "tenderPeriod.endDate" in field:
-        ret = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}", value)))
-        ret = convert_date(ret)
     elif "contractPeriod.startDate" in field \
             or "contractPeriod.endDate" in field \
-            or "tenderPeriod.startDate" in field \
             or "auctionPeriod.startDate" in field \
             or "auctionPeriod.endDate" in field:
         ret = convert_date(value)
@@ -128,26 +125,35 @@ def convert_result(field, value):
         ret = convert_date_offset_naive(value)
     elif "quantity" in field:
         ret = float(''.join(re.findall(ur'\d+\.\d+', value)))
-    elif "description" in field:
-        if "questions" in field:
-            ret = value
-        else:
-            ret = ''.join(re.findall(ur'\s+[\d.]+\s[\W\w\D\d. ]*', value))
-            ret = re.sub(ret, '', value)
     elif "classification.scheme" in field:
         ret = ''.join(re.split(r':', ''.join(re.findall(ur'.+\:', value))))
     elif "classification.id" in field:
         ret = ''.join(re.split(ur': ', ''.join(re.findall(ur'\:\s[\d\-]+', value))))
     elif "status" == field or "awards" in field:
         ret = convert_tender_status(value)
-    elif "enquiryPeriod.startDate" == field or "enquiryPeriod.endDate" == field:
+    elif "enquiryPeriod.startDate" == field or "enquiryPeriod.endDate" == field or "tenderPeriod.startDate" == field or "tenderPeriod.endDate" in field:
         value = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}:\d{2}", value)))
         ret = convert_date(value)
-    elif "tenderPeriod.startDate" == field:
-        value = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}:\d{2}", value)))
-        ret = convert_date(value)
+    elif "deliveryDate.startDate" in field:
+        value = re.findall(ur"\d{2}.\d{2}.\d{4}", value)
+        ret = value[0]
+        ret = convert_date(ret)
+    elif "deliveryDate.endDate" in field:
+        value = re.findall(ur"\d{2}.\d{2}.\d{4}", value)
+        ret = value[1]
+        ret = convert_date(ret)
+    elif "deliveryLocation.latitude" in field:
+        value = re.findall(r'\d{2}.\d{6},\d{2}.\d{6}', value)
+        ret = value[0]
     else:
         ret = value
+    return ret
+
+def expand_info(value):
+    if 'delivery' in value:
+        ret = True
+    else:
+        ret = False
     return ret
 
 def convert_unit_to_smarttender_format(unit):
