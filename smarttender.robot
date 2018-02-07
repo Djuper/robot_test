@@ -777,6 +777,7 @@ Click Input Enter Wait
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
+  Run Keyword If  "${fieldname}" == "status"  smarttender.Оновити сторінку з тендером  1  1
   ${selector}=  auction_field_info  ${fieldname}
   ${value}=  Get Text  ${selector}
   ${value}=  Run Keyword If  "${fieldname}" == "tenderAttempts"  Crutch for get value from the page_  ${value}  ELSE  Set Variable  ${value}
