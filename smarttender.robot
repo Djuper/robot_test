@@ -66,6 +66,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
 Створити тендер
   [Arguments]  ${username}  ${tender_data}
   [Documentation]  Створює лот з початковими даними tender_data.
+  Log  ${tender_data}
   ${items}=                     Get From Dictionary    ${tender_data.data}  items
   ${procuringEntityName}=       Get From Dictionary    ${tender_data.data.procuringEntity.identifier}  legalName
   ${title}=                     Get From Dictionary    ${tender_data.data}  title
@@ -84,7 +85,26 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   ${auction_start}=             Get From Dictionary    ${tender_data.data.auctionPeriod}  startDate
   ${auction_start}=             smarttender_service.convert_datetime_to_smarttender_format  ${auction_start}
   ${tenderAttempts}=            Get From Dictionary    ${tender_data.data}  tenderAttempts
-  Run Keyword And Ignore Error  Wait Until Page Contains element  id=IMMessageBoxBtnNo_CD
+  Відкрити вікно для створення тендера_
+  Вибрати тип процедури_
+  Ввести дату старту аукціону_  ${auction_start}
+  Заповнити поле з ціною власником_  ${budget}
+  З ПДВ_  ${valTax}
+  Заповнити поле з мінімальним кроком аукіону_  ${step_rate}
+  Ввести загальну назву аукціону_  ${title}
+  Ввести номер лоту в Замовника_  ${dgfID}
+  Ввести детальний опис_  ${description}
+  Ввести назву організації_  ${procuringEntityName}
+  Заповнити поле Лот виставляється на торги в_  ${tenderAttempts}
+  Визначити мінімальну кількість учасників_  ${minNumberOfQualifiedBids}
+  Заповнити данні позицій аукціону_  @{items}
+  Заповнити поле гарантійного внеску_  ${guarantee_amount}
+  Зберегти шаблон тендеру_
+  Оголосити аукціон_
+  ${return_value}  Get Text  xpath=(//div[@data-placeid='TENDER']//a[text()])[1]
+  [Return]  ${return_value}
+
+Відкрити вікно для створення тендера_
   Run Keyword And Ignore Error  Click Element  id=IMMessageBoxBtnNo_CD
   Wait Until Page Contains element  ${orenda}  ${wait}
   Click Element  ${orenda}
@@ -92,7 +112,8 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   Wait Until Page Contains element  ${create tender}
   Click Element  ${create tender}
   Wait Until Element Contains  cpModalMode  Оголошення  ${wait}
-  # Процедура
+
+Вибрати тип процедури_
   Run Keyword If  '${mode}' != 'dgfOtherAssets'  Run Keywords
   ...  Run Keyword And Ignore Error
   ...     Click Element  css=[data-name='OWNERSHIPTYPE']
@@ -100,19 +121,29 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   ...     Click Element  css=[data-name='KDM2']
   ...  AND  Run Keyword And Ignore Error
   ...     Click Element  css=div#CustomDropDownContainer div.dxpcDropDown_DevEx table:nth-child(3) tr:nth-child(2) td:nth-child(1)
-  # День старту електроного аукціону
+
+Ввести дату старту аукціону_
+  [Arguments]  ${auction_start}
   Click Input Enter Wait  css=#cpModalMode table[data-name='DTAUCTION'] input  ${auction_start}
-  Заповнити поле з ціною власником_  ${budget}
-  # з ПДВ
+
+З ПДВ_
+  [Arguments]  ${valTax}
   Run Keyword If  ${valTax}  Click Element  css=table[data-name='WITHVAT'] span:nth-child(1)
-  Заповнити поле з мінімальним кроком аукіону_  ${step_rate}
-  # Загальна назва аукціону
+
+Ввести загальну назву аукціону_
+  [Arguments]  ${title}
   Click Input Enter Wait  css=#cpModalMode table[data-name='TITLE'] input  ${title}
-  # Номер лоту в Замовника
+
+Ввести номер лоту в Замовника_
+  [Arguments]  ${dgfID}
   Click Input Enter Wait  css=#cpModalMode table[data-name='DGFID'] input:nth-child(1)  ${dgfID}
-  #Детальний опис
+
+Ввести детальний опис_
+  [Arguments]  ${description}
   Click Input Enter Wait  css=#cpModalMode table[data-name='DESCRIPT'] textarea  ${description}
-  # Організація
+
+Ввести назву організації_
+  [Arguments]  ${procuringEntityName}
   Input Text  css=#cpModalMode div[data-name='ORG_GPO_2'] input  ${procuringEntityName}
   Press Key  css=#cpModalMode div[data-name='ORG_GPO_2'] input  \\09
   sleep  1  #don't touch
@@ -120,37 +151,43 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   Press Key  css=#cpModalMode div[data-name='ORG_GPO_2'] input  \\13
   Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
   Sleep  1  # don't touch
-  # Лот виставляється на торги
+
+Заповнити поле Лот виставляється на торги в_
+  [Arguments]  ${tenderAttempts}
   Click Element  css=#cpModalMode table[data-name='ATTEMPT'] input[type='text']
   Sleep  1  # don't touch
   Click Element  xpath=//*[text()="Невідомо"]/../following-sibling::tr[${tenderAttempts}]
-  # Мінімальна кількість учасників
+
+Визначити мінімальну кількість учасників_
+  [Arguments]  ${minNumberOfQualifiedBids}
   run keyword if  "${minNumberOfQualifiedBids}" == '1'  run keywords
   ...  Click Element  table[data-name='PARTCOUNT']
   ...  AND  click element  xpath=(//td[text()="1"])[last()]
-  # Позиції аукціону
-  ${index}=  Set Variable  ${0}
-  log  ${items}
-  :FOR  ${item}  in  @{items}
-  \  Run Keyword If  '${index}' != '0'  Click Element  css=div:nth-child(3) a[title='Додати']
-  \  smarttender.Додати предмет в тендер_  ${item}
-  \  ${index}=  SetVariable  ${index + 1}
-  Заповнити поле гарантійного внеску_  ${guarantee_amount}
-  # Додати
+
+Зберегти шаблон тендеру_
   Click Image  css=\#cpModalMode a[data-name="OkButton"] img
   Sleep  1  # don't touch
   Wait Until Element Is Not Visible    ${webClient loading}  ${wait}
-  # Оголосити аукціон
+
+Оголосити аукціон_
   Click Element  css=[data-name="TBCASE____SHIFT-F12N"]
   Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
   Wait Until Page Contains Element  id=IMMessageBoxBtnYes_CD
   Sleep  1  # don't touch
+  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
   Click Element  id=IMMessageBoxBtnYes_CD
   Wait Until Element Is Not Visible  id=IMMessageBoxBtnYes_CD
   Sleep  1  # don't touch
   Wait Until Element Is Not Visible    ${webClient loading}  ${wait}
-  ${return_value}  Get Text  xpath=(//div[@data-placeid='TENDER']//a[text()])[1]
-  [Return]  ${return_value}
+
+Заповнити данні позицій аукціону_
+  [Arguments]  @{items}
+  Log Many  ${items}
+  ${index}=  Set Variable  ${0}
+  :FOR  ${item}  in  @{items}
+  \  Run Keyword If  '${index}' != '0'  Click Element  css=div:nth-child(3) a[title='Додати']
+  \  smarttender.Додати предмет в тендер_  ${item}
+  \  ${index}=  SetVariable  ${index + 1}
 
 Пошук тендера по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
@@ -179,7 +216,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Змінює значення поля fieldname на fieldvalue для лоту tender_uaid.
   Pass Execution If  '${role}'=='provider' or '${role}'=='viewer'  Данний користувач не може вносити зміни в аукціон
   ${status}=  Run Keyword And Return Status  Location Should Contain  webclient
-  Run Keyword If  '${status}' == '${False}'  smarttender.Підготуватися до редагування_
+  Run Keyword If  '${status}' == '${False}'  smarttender.Підготуватися до редагування_  ${user}  ${tenderId}
   Змінити дані тендера_  ${field}  ${value}
 
 Отримати кількість документів в тендері
@@ -699,7 +736,7 @@ Click Input Enter Wait
   Click Input Enter Wait  css=[data-name="CONTRTO"] input  ${contractPeriodendDate}
   # Класифікація
   Click Element  css=[data-name="MAINSCHEME"]
-  Run Keyword If  "${cpv/cav}" == "CAV" or "${cpv/cav}" == "CAV-PS"  Click Element  xpath=//td[text()="CAV"]
+  Run Keyword If  "${cpv/cav}" == "CAV" or "${cpv/cav}" == "CAV-PS"  Click Element  xpath=//td[text()="Класифікатор аукціонів держмайна"]
   ...  ELSE IF  "${cpv/cav}" == "CPV"  Click Element  xpath=//td[text()="CPV"]
   Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
   Click Input Enter Wait  css=#cpModalMode div[data-name='MAINCLASSIFICATION'] input[type=text]:nth-child(1)  ${cpv}
@@ -795,6 +832,7 @@ Crutch for get value from the page_
   Click Element  ${owner change}
   Wait Until Element Contains  id=cpModalMode  Коригування  ${wait}
   ${value}=  convert to string  ${value}
+  debug
   run keyword if  '${field}' == 'guarantee.amount'  Заповнити поле гарантійного внеску_  ${value}
   ...  ELSE IF  '${field}' == 'value.amount'  run keywords  Заповнити поле з ціною власником_  ${value}  AND  Заповнити поле з мінімальним кроком аукіону_  ${step_rate}
   ...  ELSE IF  '${field}' == 'minimalStep.amount'  Заповнити поле з мінімальним кроком аукіону_  ${value}
