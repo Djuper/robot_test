@@ -1,13 +1,23 @@
-﻿from munch import munchify as smarttender_munchify
+﻿#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# ==============
+#      Main script file
+# ==============
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+from munch import munchify as smarttender_munchify
 from iso8601 import parse_date
 from dateutil.parser import parse
 from dateutil.parser import parserinfo
-from datetime import datetime
 from pytz import timezone
 import urllib2
 import os
 import string
 import re
+
+
 
 TZ = timezone(os.environ['TZ'] if 'TZ' in os.environ else 'Europe/Kiev')
 number_of_tabs = 1
@@ -212,10 +222,8 @@ def convert_date(s):
     return dt.strftime('%Y-%m-%dT%H:%M:%S+02:00')
 
 def adapt_data(tender_data):
-    tender_data.data.procuringEntity[
-        'name'] = u"ФОНД ГАРАНТУВАННЯ ВКЛАДІВ ФІЗИЧНИХ ОСІБ"
-    tender_data.data.procuringEntity['identifier'][
-        'legalName'] = u"ФОНД ГАРАНТУВАННЯ ВКЛАДІВ ФІЗИЧНИХ ОСІБ"
+    tender_data.data.procuringEntity['name'] = u"ФОНД ГАРАНТУВАННЯ ВКЛАДІВ ФІЗИЧНИХ ОСІБ"
+    tender_data.data.procuringEntity['identifier']['legalName'] = u"ФОНД ГАРАНТУВАННЯ ВКЛАДІВ ФІЗИЧНИХ ОСІБ"
     tender_data.data.procuringEntity['identifier']['id'] = u"111111111111111"
     tender_data.data['items'][0].deliveryAddress.locality = u"Київ"
     for item in tender_data.data['items']:
@@ -225,6 +233,8 @@ def adapt_data(tender_data):
             item.unit['name'] = u"м.кв."
         elif item.unit['name'] == u"штуки":
             item.unit['name'] = u"шт"
+        elif item.deliveryAddress['locality'] == u"Миколаїв":
+            item.deliveryAddress['locality'] = u"Миколаїв Миколаївська обл. Україна"
     return tender_data
 
 def get_question_data(id):
