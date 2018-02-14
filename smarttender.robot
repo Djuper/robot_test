@@ -118,6 +118,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   Wait Until Page Contains  True  ${wait}
   Close Browser
   Switch Browser  ${browserAlias}
+  Sleep  30  #testing
   Reload Page
   Run Keyword And Ignore Error  Select Frame  ${iframe}
 
@@ -133,7 +134,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Documentation]  Змінює значення поля fieldname на fieldvalue для лоту tender_uaid.
   Pass Execution If  '${role}'=='provider' or '${role}'=='viewer'  Данний користувач не може вносити зміни в аукціон
   ${status}=  Run Keyword And Return Status  Location Should Contain  webclient
-  Run Keyword If  '${status}' == '${False}'  smarttender.Підготуватися до редагування_  ${user}  ${tenderId}
+  Run Keyword If  '${status}' == '${False}'  smarttender.Знайти тендер власником_  ${user}  ${tenderId}
   Змінити дані тендера_  ${field}  ${value}
 
 Отримати кількість документів в тендері
@@ -232,7 +233,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Documentation]  Додає посилання на Virtual Data Room vdr_url з назвою title до лоту tender_uaid користувачем username.
   ...  Посилання на Virtual Data Room додається лише для лотів типу dgfFinancialAssets на цбд1.
   Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити ілюстрацію
-  Підготуватися до редагування_  ${user}  ${tenderId}
+  Знайти тендер власником_  ${user}  ${tenderId}
   Click Element  ${owner change}
   Wait Until Page Contains  Завантаження документації
   Click Element  jquery=#cpModalMode li.dxtc-tab:contains('Завантаження документації')
@@ -245,7 +246,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Arguments]  ${user}  ${tenderId}  ${link}
   [Documentation]  Додає посилання на публічний паспорт активу certificate_url з назвою title до лоту tender_uaid користувачем username.
   Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити паспорт активу
-  Підготуватися до редагування_  ${user}  ${tenderId}
+  Знайти тендер власником_  ${user}  ${tenderId}
   Click Element  ${owner change}
   Wait Until Page Contains  Завантаження документації
   Click Element  jquery=#cpModalMode li.dxtc-tab:contains('Завантаження документації')
@@ -259,7 +260,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Documentation]  Додає документ з назвою title, деталями доступу accessDetails
   ...  та строго визначеним documentType = x_dgfAssetFamiliarizationдо лоту tender_uaid користувачем username.
   Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може додати офлайн документ
-  Підготуватися до редагування_  ${user}  ${tenderId}
+  Знайти тендер власником_  ${user}  ${tenderId}
   Click Element  ${owner change}
   Wait Until Page Contains  Завантаження документації  ${wait}
   Click Element  ${add files tab}
@@ -274,11 +275,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   Run Keyword  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
   ${isCancellation}=  Set Variable If  '${TEST NAME}' == 'Відображення опису документа до скасування лоту' or '${TEST NAME}' == 'Відображення заголовку документа до скасування лоту' or '${TEST NAME}' == 'Відображення вмісту документа до скасування лоту'  True  False
   Run Keyword If  ${isCancellation} == True  smarttender.Відкрити сторінку із данними скасування_
-  ${selector}=  run keyword if  '${TEST NAME}' == 'Відображення заголовку документа до скасування лоту'
-  ...    document_fields_info  title1  ${doc_id}  ${isCancellation}
-  ...  ELSE
-  ...    document_fields_info  ${field}  ${doc_id}  ${isCancellation}
-  ${result}=  Execute JavaScript  return (function() { return $("${selector}").text() })()
+  ${result}=  Get Text  xpath=//span[contains(text(), '${doc_id}')]
   [Return]  ${result}
 
 Отримати інформацію із документа по індексу
@@ -380,7 +377,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Arguments]  ${username}  ${tender_uaid}  ${answer_data}  ${question_id}
   [Documentation]  Надає відповідь answer_data на запитання з question_id до лоту tender_uaid.
   ...  [Повертає] reply (словник з інформацією про відповідь).
-  Підготуватися до редагування_  ${username}  ${tender_uaid}
+  Знайти тендер власником_  ${username}  ${tender_uaid}
   ${answerText}=  Get From Dictionary  ${answer_data.data}  answer
   Click Element  jquery=#MainSted2PageControl_TENDER ul.dxtc-stripContainer li.dxtc-tab:eq(1)
   Wait Until Page Contains  ${question_id}
@@ -512,7 +509,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Documentation]  Завантажує документ, який знаходиться по шляху file_path до кандидата під номером award_num для лоту tender_uaid.
   ...  [Повертає] doc (словник з інформацією про завантажений документ).
   Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може підтвердити постачальника
-  Підготуватися до редагування_  ${username}  ${tender_uaid}
+  Знайти тендер власником_  ${username}  ${tender_uaid}
   Click Element  jquery=#MainSted2TabPageHeaderLabelActive_1
   ${normalizedIndex}=  normalize_index  ${award_num}     1
   Click Element  jquery=div[data-placeid='BIDS'] div.objbox.selectable.objbox-scrollable table tbody tr:eq(${normalizedIndex}) td:eq(1)
@@ -701,6 +698,10 @@ Crutch for get value from the page_
 
 Змінити дані тендера_
   [Arguments]  ${field}  ${value}
+  Click Element  ${owner change}
+  Wait Until Page Contains Element  ${correct tender button}  ${wait}
+  debug
+  Click Element  ${correct tender button}
   Wait Until Element Contains  id=cpModalMode  Коригування  ${wait}
   ${value}=  convert to string  ${value}
   run keyword if  '${field}' == 'guarantee.amount'  Заповнити поле гарантійного внеску_  ${value}
@@ -709,18 +710,16 @@ Crutch for get value from the page_
   ...  ELSE  Fail
   [Teardown]  Закрити вікно редагування_
 
-Підготуватися до редагування_
+Знайти тендер власником_
   [Arguments]  ${USER}  ${TENDER_ID}
   Go To  ${USERS.users['${USER}'].homepage}
   Click Element  LoginAnchor
   Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
   Run Keyword And Ignore Error  Click Element  id=IMMessageBoxBtnNo_CD
-  Wait Until Page Contains element  ${orenda}
+  Wait Until Page Contains Element  ${orenda}
   Click Element  ${orenda}
   Wait Until Page Contains  Тестові аукціони на продаж
   Click Input Enter Wait  ${find tender_id field}  ${TENDER_ID}
-  Click Element  ${owner change}
-  Click Element  ${correct tender button}
 
 Закрити вікно редагування_
   [Documentation]  Закриває вікно та ігнорує помилки
@@ -735,7 +734,7 @@ Crutch for get value from the page_
 Завантажити документ власником_
   [Arguments]  ${username}  ${filepath}  ${tender_uaid}
   ${status}=  Run Keyword And Return Status  Location Should Contain  webclient
-  Run Keyword If  '${status}' == '${False}'  smarttender.Підготуватися до редагування_  ${username}  ${tender_uaid}
+  Run Keyword If  '${status}' == '${False}'  smarttender.Знайти тендер власником_  ${username}  ${tender_uaid}
   Click Element  ${owner change}
   Wait Until Page Contains  Завантаження документації  ${wait}
   Click Element  ${add files tab}
@@ -963,8 +962,9 @@ Crutch for get value from the page_
 
 Ввести найменування позиції_
   [Arguments]    ${description}
-  Sleep  1  #don't touch
+  Sleep  3  #don't touch
   Click Input Enter Wait  css=#cpModalMode div[data-name='KMAT'] input[type=text]:nth-child(1)  ${description}
+  Sleep  2  #don't touch
 
 Вести кількість активів_
   [Arguments]  ${quantity}

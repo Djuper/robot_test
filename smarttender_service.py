@@ -235,6 +235,8 @@ def adapt_data(tender_data):
             item.unit['name'] = u"шт"
         elif item.deliveryAddress['locality'] == u"Миколаїв":
             item.deliveryAddress['locality'] = u"Миколаїв Миколаївська обл. Україна"
+        elif item.deliveryAddress.locality == u"Дніпропетровськ":
+            item.deliveryAddress.locality = u"Дніпро"
     return tender_data
 
 def get_question_data(id):
@@ -251,7 +253,7 @@ def document_fields_info(field,docId,is_cancellation_document):
     if str(is_cancellation_document) == "True":
         result = map[field]
     else:
-        result = ("div.row.document:contains('{0}') ".format(docId))+map[field]
+        result = ("div.row.document:contains('{0}') ".format(docId))
     return result
 
 def map_to_smarttender_document_type(doctype):
