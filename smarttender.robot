@@ -44,6 +44,13 @@ ${choice file path}                     xpath=//*[@type='file'][1]
 ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]//span[text()='Завантаження документації']
 ${correct tender button}                xpath=//span[contains(text(), 'Коригувати')]
 ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-child(4) input:nth-child(1)
+${discuss tab}                          jquery=#MainSted2PageControl_TENDER ul.dxtc-stripContainer li.dxtc-tab:eq(1)
+${discuss search field}                 css=tbody .has-system-column:nth-child(2)>td:nth-child(3)>input
+${answer field for question}            xpath=(//textarea)[1]
+${answer question checkbox}             css=#cpModalMode span.dxICheckBox_DevEx
+${save changes}                         xpath=//*[@id='cpModalMode']//span[contains(text(), 'Зберегти')]
+${yes button}                           css=#IMMessageBoxBtnYes_CD
+${ok button}                            css=#IMMessageBoxBtnOK_CD
 
 *** Keywords ***
 ####################################
@@ -118,7 +125,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   Wait Until Page Contains  True  ${wait}
   Close Browser
   Switch Browser  ${browserAlias}
-  Sleep  30  #testing
+  Sleep  15  #testing
   Reload Page
   Run Keyword And Ignore Error  Select Frame  ${iframe}
 
@@ -152,19 +159,18 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   ...  Цей ківорд реалізовуємо лише для процедур на цбд1.
   Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може скасувати тендер
   ${documents}=  create_fake_doc
-  Підготуватися до редагування  ${user}     ${tenderId}
+  Підготуватися до редагування  ${user}  ${tenderId}
   Click Element  jquery=a[data-name='F2_________GPCANCEL']
   Wait Until Page Contains  Протоколи скасування
-  Set Focus To Element  jquery=#cpModalMode table[data-name='reason'] input:eq(1)
   Execute JavaScript  (function(){$("#cpModalMode table[data-name='reason'] input:eq(1)").val('');})()
   Input Text  jquery=#cpModalMode table[data-name='reason'] input:eq(1)    ${reason}
   Press Key  jquery=#cpModalMode table[data-name='reason'] input:eq(1)         \\13
   click element  xpath=//div[@title="Додати"]
   Choose File  id=fileUpload  ${file}
   Click Element  xpath=//*[@class="dxr-group mygroup"][1]
-  click element  xpath=.//*[@data-type="TreeView"]//tbody/tr[2]
-  click element  xpath=.//*[@data-type="TreeView"]//tbody/tr[2]
-  Set Focus To Element  jquery=table[data-name='DocumentDescription'] input:eq(0)
+  Click Element  xpath=.//*[@data-type="TreeView"]//tbody/tr[2]
+  Click Element  xpath=.//*[@data-type="TreeView"]//tbody/tr[2]
+  Wait Until Page Contains  jquery=table[data-name='DocumentDescription'] input:eq(0)
   Input Text  jquery=table[data-name='DocumentDescription'] input:eq(0)    ${descript}
   Press Key  jquery=table[data-name='DocumentDescription'] input:eq(0)  \\13
   Click Element  jquery=a[title='OK']
@@ -185,7 +191,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
 Завантажити документ
   [Arguments]  ${username}  ${filepath}  ${tender_uaid}
   [Documentation]  Завантажує документ, який знаходиться по шляху filepath, до лоту tender_uaid користувачем username. [Повертає] reply (словник з інформацією про документ).
-  Завантажити документ власником  ${username}  ${filepath}  ${tender_uaid}
+  Завантажити документ власником_  ${username}  ${filepath}  ${tender_uaid}
   [Teardown]  Закрити вікно редагування_
 
 Завантажити документ в тендер з типом
@@ -193,7 +199,6 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Documentation]  [Призначення] Завантажує документ, який знаходиться по шляху filepath і має певний documentType
   ...  (наприклад, x_nda, tenderNotice і т.д), до лоту tender_uaid користувачем username.
   ...  [Повертає] reply (словник з інформацією про документ).
-  Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити документ в тендер
   Завантажити документ власником_  ${username}  ${filepath}  ${tender_uaid}
   Вибрати тип завантаженого документу_  ${doc_type}
   [Teardown]  Закрити вікно редагування_
@@ -203,7 +208,6 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Documentation]  Завантажує ілюстрацію, яка знаходиться по шляху filepath
   ...  і має documentType = illustration, до лоту tender_uaid користувачем username.
   smarttender.Завантажити документ в тендер з типом  ${username}  ${tender_uaid}  ${filepath}  illustration
-  [Teardown]  _Закрити вікно редагування
 
 Завантажити фінансову ліцензію
   [Arguments]  ${user}  ${tenderId}  ${license_path}
@@ -232,12 +236,11 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Arguments]  ${user}  ${tenderId}  ${link}
   [Documentation]  Додає посилання на Virtual Data Room vdr_url з назвою title до лоту tender_uaid користувачем username.
   ...  Посилання на Virtual Data Room додається лише для лотів типу dgfFinancialAssets на цбд1.
-  Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити ілюстрацію
   Знайти тендер власником_  ${user}  ${tenderId}
   Click Element  ${owner change}
   Wait Until Page Contains  Завантаження документації
   Click Element  jquery=#cpModalMode li.dxtc-tab:contains('Завантаження документації')
-  Set Focus To Element  jquery=div#pcModalMode_PWC-1 table[data-name='VDRLINK'] input:eq(0)
+  Wait Until Page Contains  jquery=div#pcModalMode_PWC-1 table[data-name='VDRLINK'] input:eq(0)
   Input Text  jquery=div#pcModalMode_PWC-1 table[data-name='VDRLINK'] input:eq(0)  ${link}
   Press Key  jquery=div#pcModalMode_PWC-1 table[data-name='VDRLINK'] input:eq(0)  \\13
   Click Image  jquery=#cpModalMode div.dxrControl_DevEx a:contains('Зберегти') img
@@ -245,12 +248,11 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
 Додати публічний паспорт активу
   [Arguments]  ${user}  ${tenderId}  ${link}
   [Documentation]  Додає посилання на публічний паспорт активу certificate_url з назвою title до лоту tender_uaid користувачем username.
-  Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може завантажити паспорт активу
   Знайти тендер власником_  ${user}  ${tenderId}
   Click Element  ${owner change}
   Wait Until Page Contains  Завантаження документації
   Click Element  jquery=#cpModalMode li.dxtc-tab:contains('Завантаження документації')
-  Set Focus To Element  jquery=div#pcModalMode_PWC-1 table[data-name='PACLINK'] input:eq(0)
+  Wait Until Page Contains  jquery=div#pcModalMode_PWC-1 table[data-name='PACLINK'] input:eq(0)
   Input Text  jquery=div#pcModalMode_PWC-1 table[data-name='PACLINK'] input:eq(0)  ${link}
   Press Key  jquery=div#pcModalMode_PWC-1 table[data-name='PACLINK'] input:eq(0)  \\13
   Click Image  jquery=#cpModalMode div.dxrControl_DevEx a:contains('Зберегти') img
@@ -259,11 +261,10 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Arguments]  ${user}  ${tenderId}  ${description}
   [Documentation]  Додає документ з назвою title, деталями доступу accessDetails
   ...  та строго визначеним documentType = x_dgfAssetFamiliarizationдо лоту tender_uaid користувачем username.
-  Pass Execution If  '${role}' == 'provider' or '${role}' == 'viewer'  Даний учасник не може додати офлайн документ
   Знайти тендер власником_  ${user}  ${tenderId}
-  Click Element  ${owner change}
-  Wait Until Page Contains  Завантаження документації  ${wait}
+  Підготуватися до редагування_
   Click Element  ${add files tab}
+  Wait Until Page Contains Element  ${add file button}
   Input Text  xpath=(//*[@data-type="EditBox"])[last()]//textarea  ${description}
   [Teardown]  Закрити вікно редагування_
 
@@ -377,20 +378,11 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   [Arguments]  ${username}  ${tender_uaid}  ${answer_data}  ${question_id}
   [Documentation]  Надає відповідь answer_data на запитання з question_id до лоту tender_uaid.
   ...  [Повертає] reply (словник з інформацією про відповідь).
-  Знайти тендер власником_  ${username}  ${tender_uaid}
   ${answerText}=  Get From Dictionary  ${answer_data.data}  answer
-  Click Element  jquery=#MainSted2PageControl_TENDER ul.dxtc-stripContainer li.dxtc-tab:eq(1)
-  Wait Until Page Contains  ${question_id}
-  Input Text  jquery=div[data-placeid='TENDER'] table.hdr:eq(3) tbody tr:eq(1) td:eq(2) input:eq(0)  ${question_id}
-  Press Key  jquery=div[data-placeid='TENDER'] table.hdr:eq(3) tbody tr:eq(1) td:eq(2) input:eq(0)  \\13
-  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
-  Click Image  jquery=.dxrControl_DevEx a[title*='Змінити'] img:eq(0)
-  Set Focus To Element  jquery=#cpModalMode textarea:eq(0)
-  Input Text  jquery=#cpModalMode textarea:eq(0)  ${answerText}
-  Click Element  jquery=#cpModalMode span.dxICheckBox_DevEx:eq(0)
-  Click Image  jquery=#cpModalMode .dxrControl_DevEx .dxr-buttonItem:eq(0) img
-  Click Element  jquery=#cpIMMessageBox .dxbButton_DevEx:eq(0)
-  Wait Until Page Contains  Відповідь надіслана на сервер ЦБД  ${wait}
+  Знайти тендер власником_  ${username}  ${tender_uaid}
+  Відкрити закладку с запитаннями_
+  Знайти запитання_  ${question_id}
+  Відповісти на запитання та зберегти_  ${answerText}
 
 ####################################
 #       Цінові пропозиції          #
@@ -528,7 +520,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   ${normalizedIndex}=  normalize_index  ${award_num}  1
   Click Element  jquery=div[data-placeid='BIDS'] div.objbox.selectable.objbox-scrollable table tbody tr:eq(${normalizedIndex}) td:eq(1)
   Click Element  jquery=a[title='Кваліфікація']
-  Click Element  query=div.dxbButton_DevEx:contains('Підтвердити оплату')
+  Click Element  jquery=div.dxbButton_DevEx:contains('Підтвердити оплату')
   Click Element  jquery=div#IMMessageBoxBtnYes
   ${status}=   Execute JavaScript  return  (function() { return $("div[data-placeid='BIDS'] tr.rowselected td:eq(5)").text() } )()
   Should Be Equal  '${status}'  'Визначений переможцем'
@@ -544,7 +536,7 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   Click Element  xpath=//a[@title="Кваліфікація"]
   Click Element  jquery=div.dxbButton_DevEx.dxbButtonSys.dxbTSys span:contains('Відхилити пропозицію')
   Click Element  id=IMMessageBoxBtnNo_CD
-  Set Focus To Element  jquery=#cpModalMode textarea
+  Wait Until Page Contains  jquery=#cpModalMode textarea
   Input Text  jquery=#cpModalMode textarea  ${description}
   Click Element  xpath=//span[text()="Зберегти"]
   Click Element  id=IMMessageBoxBtnYes_CD
@@ -581,7 +573,6 @@ ${find tender_id field}                 css=div[data-placeid='TENDER'] td:nth-ch
   Click Element  jquery=div[data-placeid='BIDS'] div.objbox.selectable.objbox-scrollable table tbody tr:contains('Визначений переможцем') td:eq(1)
   Click Element  jquery=a[title='Прикріпити договір']:eq(0)
   Wait Until Page Contains  Вкладення договірних документів
-  Set Focus To Element  jquery=td.dxic input[maxlength='30']
   Input Text  jquery=td.dxic input[maxlength='30']  11111111111111
   click element  xpath=//span[text()="Перегляд..."]
   Choose File  ${choice file path}  ${ARGUMENTS[3]}
@@ -670,6 +661,7 @@ Click Input Enter Wait
 
 Відкрити сторінку questions_
   [Arguments]  ${tender_uaid}
+  Відкрити сторінку tender_  ${tender_uaid}
   Wait Until Page Contains Element  ${question_button}
   ${href}=  Get Element Attribute  ${question_button}@href
   Go to  ${href}
@@ -698,17 +690,22 @@ Crutch for get value from the page_
 
 Змінити дані тендера_
   [Arguments]  ${field}  ${value}
-  Click Element  ${owner change}
-  Wait Until Page Contains Element  ${correct tender button}  ${wait}
-  debug
-  Click Element  ${correct tender button}
-  Wait Until Element Contains  id=cpModalMode  Коригування  ${wait}
+  Підготуватися до редагування_
   ${value}=  convert to string  ${value}
   run keyword if  '${field}' == 'guarantee.amount'  Заповнити поле гарантійного внеску_  ${value}
   ...  ELSE IF  '${field}' == 'value.amount'  run keywords  Заповнити поле з ціною власником_  ${value}  AND  Заповнити поле з мінімальним кроком аукіону_  ${step_rate}
   ...  ELSE IF  '${field}' == 'minimalStep.amount'  Заповнити поле з мінімальним кроком аукіону_  ${value}
   ...  ELSE  Fail
   [Teardown]  Закрити вікно редагування_
+
+Підготуватися до редагування_
+  Click Element  ${owner change}
+  Wait Until Page Contains Element  css=#pcModalMode_PW-1 .dxpc-headerText
+  Wait Until Page Contains Element  ${correct tender button}  ${wait}
+  Sleep  5  #don't touch
+  Click Element  ${correct tender button}
+  Sleep  3
+  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
 
 Знайти тендер власником_
   [Arguments]  ${USER}  ${TENDER_ID}
@@ -723,6 +720,7 @@ Crutch for get value from the page_
 
 Закрити вікно редагування_
   [Documentation]  Закриває вікно та ігнорує помилки
+  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
   Click Element  css=div.dxpnlControl_DevEx a[title='Зберегти'] img
   Закрити вікно з помилкою_
 
@@ -733,29 +731,32 @@ Crutch for get value from the page_
 
 Завантажити документ власником_
   [Arguments]  ${username}  ${filepath}  ${tender_uaid}
-  ${status}=  Run Keyword And Return Status  Location Should Contain  webclient
-  Run Keyword If  '${status}' == '${False}'  smarttender.Знайти тендер власником_  ${username}  ${tender_uaid}
-  Click Element  ${owner change}
-  Wait Until Page Contains  Завантаження документації  ${wait}
+  Підготуватися до редагування_
   Click Element  ${add files tab}
   Wait Until Page Contains Element  ${add file button}
   Click Element  ${add file button}
   Choose File  ${choice file path}  ${filepath}
   Click Element  ${ok add file}
+  Wait Until Element Is Not Visible  ${ok add file}  15
 
 Вибрати тип завантаженого документу_
   [Arguments]  ${doc_type}
   ${documentTypeNormalized}=  map_to_smarttender_document_type  ${doc_type}
   Click Element  xpath=(//*[text()="Інший тип"])[last()-1]
+  Sleep  2
   Click Element  xpath=(//*[text()="Інший тип"])[last()-1]
-  Click Element  xpath=(//*[text()="${documentTypeNormalized}"])[2]
+  Sleep  2
+  Click Element  css=td[class='cellselected editable']
+  Sleep  1
+  Click Element  xpath=(//*[contains(text(), "${documentTypeNormalized}")])[2]
+  Sleep  .5
+  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
+  Sleep  .5
 
 Задати запитання_
   [Arguments]  ${title}  ${description}  ${item_id}
   Відкрити бланк запитання_  ${item_id}
-  Wait Until Element Is Not Visible  ${wraploading}  ${wait}
   Заповнити динні для запитання_  ${title}  ${description}
-  Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
   Закрити вікно ваше запитання успішно надіслане_
   #TODO  Don't know how to get value from the hidden element with Selenium2Library
   ${question_id}=  Execute JavaScript  return (function() {return $("span.question_idcdb").text() })()
@@ -764,6 +765,7 @@ Crutch for get value from the page_
 
 Відкрити бланк запитання_
   [Arguments]  ${item_id}
+  Wait Until Element Is Not Visible  ${wraploading}  ${wait}
   Run Keyword if  '${item_id}' == 'no_id'  Run Keywords
   ...  Click Element  css=#questions span[role="presentation"]
   ...  AND  Click Element  css=.select2-results li:nth-child(2)
@@ -776,6 +778,7 @@ Crutch for get value from the page_
 
 Заповнити динні для запитання_
   [Arguments]  ${title}  ${description}
+  Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
   Select Frame  ${iframe}
   Input Text  id=subject  ${title}
   Input Text  id=question  ${description}
@@ -886,6 +889,7 @@ Crutch for get value from the page_
 Ввести назву організації_
   [Arguments]  ${procuringEntityName}
   Input Text  css=#cpModalMode div[data-name='ORG_GPO_2'] input  ${procuringEntityName}
+  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
   Press Key  css=#cpModalMode div[data-name='ORG_GPO_2'] input  \\09
   sleep  1  #don't touch
   Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
@@ -1002,6 +1006,32 @@ Crutch for get value from the page_
   Click Input Enter Wait  css=#cpModalMode table[data-name='LATITUDE'] input  ${latitude}
   Click Input Enter Wait  css=#cpModalMode table[data-name='LONGITUDE'] input  ${longitude}
 
+Відповісти на запитання та зберегти_
+  [Arguments]  ${answerText}
+  Click Element  ${owner change}
+  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
+  Wait Until Page Contains Element  ${answer field for question}
+  Sleep  2
+  Input Text  ${answer field for question}  ${answerText}
+  Click Element  ${answer question checkbox}
+  Sleep  .5
+  Click Element  ${save changes}
+  Sleep  .5
+  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
+  Click Element  ${yes button}
+  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
+  Page Should Contain  ${answerText}
+
+Відкрити закладку с запитаннями_
+  Click Element  ${discuss tab}
+  Wait Until Page Contains Element  ${discuss search field}
+
+Знайти запитання_
+  [Arguments]  ${question_id}
+  Wait Until Page Contains  ${question_id}
+  Input Text  ${discuss search field}  ${question_id}
+  Press Key  ${discuss search field}  \\13
+  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
 
 ####################################
 #             LEGACY               #
