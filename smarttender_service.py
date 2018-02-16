@@ -261,9 +261,10 @@ def map_to_smarttender_document_type(doctype):
         u"x_presentation": u"Презентація",
         u"tenderNotice": u"Паспорт торгів",
         u"x_nda": u"Договір NDA",
-        u"technicalSpecifications": u"Публічний паспорт активу",
+        u"technicalSpecifications": u"Технічні специфікації",
         u"x_dgfAssetFamiliarization": u"",
-        u"x_dgfPublicAssetCertificate": u""
+        u"x_dgfPublicAssetCertificate": u"",
+        u"illustration": u"Ілюстрація"
     }
     return map[doctype]
 
