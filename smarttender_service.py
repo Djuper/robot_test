@@ -22,18 +22,15 @@ def auction_field_info(field):
             "deliveryDate.startDate": "xpath=//*[@class='smaller-font'][{0}]/div[3]",
             "deliveryDate.endDate": "xpath=//*[@class='smaller-font'][{0}]/div[3]",
             "deliveryLocation.latitude": "css=.smaller-font a@href",
-            "unit.name": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
-            "quantity": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
-            "unit.code": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//h5",
-            "contractPeriod.startDate": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[last()]",
-            "contractPeriod.endDate": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[last()]",
-            "classification.scheme": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[1]",
-            "classification.id": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[1]",
-            "classification.description": "xpath=(//*[@id='home']//*[@class='row well'])[{0}]//dd[1]",
+            "deliveryLocation.longitude": "css=.smaller-font a@href",
+            "unit.name": "css=[class=text-lot]",
+            "unit.code": "css=[class=text-lot]",
+            "unit.quantity": "css=[class=text-lot]",
+            "quantity": "css=[class=text-lot]",
+            "classification.scheme": "css=.smaller-font>div:nth-child(1)",
+            "classification.id": "css=.smaller-font>div:nth-child(1)",
+            "classification.description": "css=.smaller-font>div:nth-child(1)",
             "additionalClassifications[0].description": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
-
-            "additionalClassifications[0].scheme": "1css=span[data-itemid]:nth-child({0}) .info_DKPP",
-            "additionalClassifications[0].id": "1css=span[data-itemid]:nth-child({0}) .info_dkpp_code",
         }
         return (map[result]).format(item_id)
     elif "questions" in field:
@@ -75,6 +72,7 @@ def auction_field_info(field):
             "tenderAttempts": "css=.page-header>div>h4",
             "enquiryPeriod.startDate": "css=.info_enquirysta",
             "enquiryPeriod.endDate": "css=.info_ddm",
+            "qualificationPeriod": "css=span",
 
             "cancellations[0].reason": "1css=span.info_cancellation_reason",
             "cancellations[0].status": "1css=span.info_cancellation_status",
@@ -84,6 +82,18 @@ def auction_field_info(field):
             "dgfDecisionDate": "1css=span.info_dgfDecisionDate"
         }
     return map[field]
+
+def lot_field_info(field, id):
+    map = {
+        "title": "xpath=//*[contains(text(), '{0}')]"
+        "description"
+    }
+    return map[field].format(id)
+
+def convert_lot_result(field, value):
+    if 'title' in field:
+        ret = re.search('.*?:\s(?P<title>.*)', value).group('title')
+        return ret
 
 def convert_result(field, value):
     if field == "value.amount" \
@@ -103,16 +113,20 @@ def convert_result(field, value):
             ret = "UAH"
         else:
             ret = value
-    elif "unit.code" in field:
-        value = ''.join(re.findall(ur'\м.кв.|\шт|\умов.|\кг', value))
-        ret = convert_edi_from_starttender_format(value)
-    elif "classification.description" in field:
-        ret = ''.join(re.split(ur'— ', ''.join(re.findall(ur'\—\s.+', value))))
+    elif "unit" in field or "quantity" in field:
+        list = re.search(ur'(?P<count>[\d,.]+?)\s(?P<name>.+)', value)
+        if 'quantity' in field:
+            ret = int(list.group('count'))
+        else:
+            ret = list.group('name')
+        if 'code' in field:
+            ret = convert_unit_from_smarttender_format(ret, 'code')
+        elif 'name' in field:
+            ret = convert_unit_from_smarttender_format(ret, 'name')
+    elif "quantity" in field:
+        ret = re.search(ur'(?P<count>[\d,.]+?)\s(?P<name>.+)', value).group('count')
     elif "additionalClassifications" in field:
         ret = ''.join(re.findall(ur'[^\(][^\)]', ''.join(re.findall(ur'\(.+\)', value))))
-    elif "unit.name" in field:
-        value =  ''.join(re.split(r' ', ''.join(re.findall(ur'\W+$', value))))
-        ret = convert_unit_from_smarttender_format(value)
     elif "contractPeriod.startDate" in field \
             or "contractPeriod.endDate" in field \
             or "auctionPeriod.startDate" in field \
@@ -124,11 +138,15 @@ def convert_result(field, value):
     elif "dgfDecisionDate" in field:
         ret = convert_date_offset_naive(value)
     elif "quantity" in field:
-        ret = float(''.join(re.findall(ur'\d+\.\d+', value)))
-    elif "classification.scheme" in field:
-        ret = ''.join(re.split(r':', ''.join(re.findall(ur'.+\:', value))))
-    elif "classification.id" in field:
-        ret = ''.join(re.split(ur': ', ''.join(re.findall(ur'\:\s[\d\-]+', value))))
+        ret = re.search(ur'(?P<count>[\d,.]+?)\s(?P<name>.+)', value).group('count')
+    elif "classification" in field:
+        list = re.search(ur'Код\s(?P<scheme>.+?):\s(?P<id>.+?)\s—\s(?P<description>.+)', value)
+        if 'scheme' in field:
+            ret = list.group('scheme')
+        elif 'id' in field:
+            ret = list.group('id')
+        elif 'description' in field:
+            ret = list.group('description')
     elif "status" == field or "awards" in field:
         ret = convert_tender_status(value)
     elif "enquiryPeriod.startDate" == field or "enquiryPeriod.endDate" == field or "tenderPeriod.startDate" == field or "tenderPeriod.endDate" in field:
@@ -142,15 +160,18 @@ def convert_result(field, value):
         value = re.findall(ur"\d{2}.\d{2}.\d{4}", value)
         ret = value[1]
         ret = convert_date(ret)
-    elif "deliveryLocation.latitude" in field:
-        value = re.findall(r'\d{2}.\d{6},\d{2}.\d{6}', value)
-        ret = value[0]
+    elif "deliveryLocation" in field:
+        value = re.findall(r'\d{2}.\d+', value)
+        if 'latitude' in field:
+            ret = value[0]
+        elif 'longitude' in field:
+            ret = value[1]
     else:
         ret = value
     return ret
 
 def expand_info(value):
-    if 'delivery' in value:
+    if 'delivery' in value or 'classification' in value:
         ret = True
     else:
         ret = False
@@ -167,6 +188,35 @@ def convert_unit_to_smarttender_format(unit):
         u"шт": u"шт"
     }
     return map[unit]
+
+def convert_unit_from_smarttender_format(unit, field):
+    map = {
+        u"шт": {"code": "H87", "name": u"штуки"},
+        u"кг": {"code": "KGM", "name": u"кілограми"},
+        u"умов.": {"code": "E48", "name": u"послуга"},
+        u"м.кв.": {"code": "MTK", "name": u"метри квадратні"},
+        u"упаков": {"code": "PK", "name": u"упаковка"},
+        u"лот": {"code": "LO", "name": u"лот"},
+
+        u"пара": {"code": "PR", "name": u"пара"},
+        u"літр": {"code": "LTR", "name": u"літр"},
+        u"набір": {"code": "SET", "name": u"набір"},
+        u"пачок": {"code": "NMP", "name": u"пачок"},
+        u"метри": {"code": "MTR", "name": u"метри"},
+        u"лот": {"code": "LO", "name": u"лот"},
+        u"метри кубічні": {"code": "MTQ", "name": u"метри кубічні"},
+        u"ящик": {"code": "BX", "name": u"ящик"},
+        u"рейс": {"code": "E54", "name": u"рейс"},
+        u"тони": {"code": "TNE", "name": u"тони"},
+        u"кілометри": {"code": "KMT", "name": u"кілометри"},
+        u"місяць": {"code": "MON", "name": u"місяць"},
+        u"пачка": {"code": "RM", "name": u"пачка"},
+        u"упаковка": {"code": "PK", "name": u"упаковка"},
+        u"гектар": {"code": "HAR", "name": u"гектар"},
+        u"блок": {"code": "D64", "name": u"блок"},
+        u"флакон": {"code": "VI", "name": u"флакон"}
+    }
+    return map[unit][field]
 
 def convert_tender_status(value):
     map = {
@@ -186,25 +236,6 @@ def convert_tender_status(value):
         u"Дискваліфікований": "unsuccessful",
     }
     return map[value]
-
-def convert_edi_from_starttender_format(edi):
-    map = {
-        u"кг": u"KGM",
-        u"умов.": u"E48",
-        u"м.кв.": u"MTK",
-        u"шт": u"H87"
-    }
-    return map[edi]
-
-def convert_unit_from_smarttender_format(unit):
-    map = {
-        u"кг": u"кілограми",
-        u"умов.": u"усл.",
-        u"усл.": u"усл.",
-        u"м.кв.": u"м.кв.",
-        u"шт": u"шт"
-    }
-    return map[unit]
 
 def convert_datetime_to_smarttender_format(isodate):
     iso_dt = parse_date(isodate)
@@ -319,3 +350,9 @@ def normalize_index(first,second):
 
 def delete_spaces(value):
     return float(''.join(re.findall(r'\S', value)))
+
+def get_attribute(value):
+    if 'latitude' in value or 'longitude' in value:
+        return True
+    else:
+        return False

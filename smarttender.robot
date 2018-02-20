@@ -177,6 +177,14 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   ${response}=  Отримати та обробити данні із тендера_  ${field_name}
   [Return]  ${response}
 
+Отримати інформацію із лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${field_name}
+  [Documentation]  Отримати значення поля field_name з лоту з lot_id в описі для тендера tender_uaid.
+  ...  [Повертає] lot['field_name']
+  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  ${field_name}
+  ${response}=  Отримати та обробити данні із лоту_  ${field_name}  ${lot_id}
+  [Return]  ${response}
+
 Внести зміни в тендер
   [Arguments]  ${user}  ${tenderId}  ${field}  ${value}
   [Documentation]  Змінює значення поля fieldname на fieldvalue для лоту tender_uaid.
@@ -226,6 +234,25 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   smarttender.Пошук тендера по ідентифікатору  ${ARGUMENTS[0]}  ${ARGUMENTS[1]}
   ${href}=  Get Element Attribute  css=a#view-auction@href
   [Return]  ${href}
+
+Отримати документ до лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${doc_id}
+  [Documentation]  Завантажити файл doc_id до лоту з lot_id в описі для тендера tender_uaid в директорію ${OUTPUT_DIR} для перевірки вмісту цього файлу.
+  ...  [Повертає] filename (ім'я завантаженого файлу)
+  log to console  Отримати документ до лоту
+  debug
+  [Return]  ${ret}
+
+####################################
+#        Нецінові показники        #
+####################################
+Отримати інформацію із нецінового показника
+  [Arguments]  ${username}  ${tender_uaid}  ${feature_id}  ${field_name}
+  [Documentation]  Отримати значення поля field_name з нецінового показника з feature_id в описі для тендера tender_uaid.
+  ...  [Повертає] feature['field_name']
+  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  ${field_name}
+  ${response}=  Отримати та обробити данні із лоту_  ${field_name}  ${feature_id}
+  [Return]  ${response}
 
 ####################################
 #      Робота з документами        #
@@ -320,6 +347,8 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Отримує значення поля field документа doc_id з лоту tender_uaid
   ...  для перевірки правильності відображення цього поля.
   ...  [Повертає] document['field'] (значення поля field)
+  log to console  Отримати інформацію із документа
+  debug
   Run Keyword  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
   ${isCancellation}=  Set Variable If  '${TEST NAME}' == 'Відображення опису документа до скасування лоту' or '${TEST NAME}' == 'Відображення заголовку документа до скасування лоту' or '${TEST NAME}' == 'Відображення вмісту документа до скасування лоту'  True  False
   Run Keyword If  ${isCancellation} == True  smarttender.Відкрити сторінку із данними скасування_
@@ -344,6 +373,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Завантажує файл з doc_id в заголовку з лоту tender_uaid в директорію ${OUTPUT_DIR}
   ...  для перевірки вмісту цього файлу.
   ...  [Повертає] filename (ім'я завантаженого файлу)
+  debug  Отримати документ
   Run Keyword  smarttender.Пошук тендера по ідентифікатору  ${user}  ${tenderId}
   ${selector}=  document_fields_info  content  ${docId}  False
   ${fileUrl}=  Get Element Attribute  jquery=div.row.document:contains('${docId}') a.info_attachment_link:eq(0)@href
@@ -740,10 +770,11 @@ Click Input Enter Wait
   ...  ELSE  Set Variable  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
   ${status}=  Run Keyword And Return Status  Location Should Contain  ${page_needed}
   Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}_  ${tender_uaid}
-  ...  ELSE  Run Keywords
-  ...  Reload Page
-  ...  AND  Run Keyword If  "${page}" == "tender" or "${page}" == "questions"
-  ...  Select Frame  ${iframe}
+  ...  ELSE  Sleep  .1
+  #Run Keywords
+  #...  Reload Page
+  #...  AND  Run Keyword If  "${page}" == "tender" or "${page}" == "questions"
+  #...  Select Frame  ${iframe}
 
 Відкрити сторінку tender_
   [Arguments]  ${tender_uaid}
@@ -760,7 +791,7 @@ Click Input Enter Wait
   Press Key  ${find tender field }  \\13
   Location Should Contain  f=${tender_uaid}
   ${status}  Run Keyword And Return Status  Wait Until Page Contains Element  ${tender found}
-  Run Keyword If '${status}' == '${True}'  Відкрити сторінку tender loop_
+  Run Keyword If  '${status}' == '${True}'  Відкрити сторінку tender loop_
   ...  ELSE  Відкрити сторінку tender continue_  ${tender_uaid}
 
 Відкрити сторінку tender loop_
@@ -787,34 +818,36 @@ Click Input Enter Wait
   Click Element  jquery=a#cancellation:eq(0)
   Select Frame  jquery=#widgetIframe
 
+Отримати та обробити данні із лоту_
+  [Arguments]  ${fieldname}  ${id}
+  ${selector}=  Set Variable  xpath=//*[contains(text(), '${id}')]
+  ${ret}=  Run Keyword If  "${fieldname}" == "title"  Get Text  ${selector}
+  ...  ELSE IF  "${fieldname}" == "title"  Get Element Attribute  ${selector}@title
+  ...  ELSE IF  "${fieldname}" == "featureOf"  Get Text  ${selector}/preceding-sibling::div[1]
+  [Return]  ${ret}
+
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
   ${expand}  expand_info  ${fieldname}
   Run Keyword if  '${expand}' == '${True}'  Click Element  ${expand list}
-  log to console  ${fieldname}
-  ${ret}  Run Keyword If  "enquiryPeriod.startDate" == "${fieldname}" or "items[0].deliveryDate.startDate" == "${fieldname}" or "items[0].deliveryDate.endDate" == "${fieldname}" or "items[0].deliveryLocation.latitude" == "${fieldname}" or "items[0].deliveryAddress.countryName" == "${fieldname}" or "items[0].deliveryAddress.postalCode" == "${fieldname}" or "items[0].deliveryAddress.region" == "${fieldname}" or "items[0].classification.scheme" == "${fieldname}" or "items[0].classification.id" == "${fieldname}"  123456789
+  ${ret}  Run Keyword If  "status" == "${fieldname}" or "qualificationPeriod.endDate" == "${fieldname}" or "questions[0].answer" == "${fieldname}"  123456789  ${fieldname}
   ...  ELSE  123456  ${fieldname}
   [Return]  ${ret}
 
 123456789
   [Arguments]  ${fieldname}
+  #${ret}  123456  ${fieldname}
   debug
   [Return]  ${ret}
 
 123456
   [Arguments]  ${fieldname}
+  ${get attribute}=  get_attribute  ${fieldname}
   ${selector}=  auction_field_info  ${fieldname}
-  ${value}=  Get Text  ${selector}
-  #${value}=  Run Keyword If  "${fieldname}" == "tenderAttempts"  Crutch for get value from the page_  ${value}  ELSE  Set Variable  ${value}
+  ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
+  ...  ELSE  Get Text  ${selector}
   ${ret}=  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
-
-Crutch for get value from the page_
-  [Arguments]  ${value}
-  ${value}=  Run Keyword If  '${value}' == 'Лот виставляється на торги повторно'  Execute JavaScript  return (function() {return $(".info_tenderAttempts").text() })()
-  ...  ELSE IF  '${value}' == 'Лот виставляється на торги вперше'  Set Variable  1
-  ...  ELSE  Set Variable  ${value}
-  [Return]  ${value}
 
 Змінити дані тендера_
   [Arguments]  ${field}  ${value}
