@@ -13,10 +13,9 @@ number_of_tabs = 1
 
 def auction_field_info(field):
     if "items" in field:
-        item_id = int(re.search("\d", field).group(0))+ 1
-        splitted = field.split(".")
-        splitted.remove(splitted[0])
-        result = string.join(splitted, '.')
+        list = re.search('(?P<items>\w+)\[(?P<id>\d)\]\.(?P<map>.+)', field)
+        item_id = int(list.group('id')) + 1
+        result = list.group('map')
         map = {
             "description": "xpath=//*[@class='table-items'][{0}]//td[1]",
             "deliveryDate.startDate": "xpath=//*[@class='smaller-font'][{0}]/div[3]",
@@ -32,7 +31,32 @@ def auction_field_info(field):
             "classification.description": "css=.smaller-font>div:nth-child(1)",
             "additionalClassifications[0].description": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
         }
-        return (map[result]).format(item_id)
+        return map[result].format(item_id)
+    elif "lots" in field:
+        list = re.search('(?P<lots>\w+)\[(?P<id>\d)\]\.(?P<map>.+)', field)
+        lot_id = int(list.group('id')) + 1
+        result = list.group('map')
+        map = {
+            "title": "css=.main-column .text-bold ",
+            "description": "xpath=//*[contains(text(), '{0}')]@title",
+            "value.amount": "css=[class=price]",
+            "value.currency": "css=[class=price]",
+            "value.valueAddedTaxIncluded": "css=[class=price]",
+            "minimalStep.amount": "css=[class='price text-lot']",
+            "minimalStep.currency": "css=[class='price text-lot']",
+            "minimalStep.valueAddedTaxIncluded": "css=span"
+        }
+        return map[result].format(lot_id)
+    elif "features" in field:
+        list = re.search('(?P<features>\w+)\[(?P<id>\d)\]\.(?P<map>.+)', field)
+        features_id = int(list.group('id')) + 1
+        result = list.group('map')
+        map = {
+            "title": "css=[class=text-lot]",
+            "description": "css=[class=text-lot]",
+            "featureOf": "css=[class=text-lot]",
+        }
+        return map[result].format(features_id)
     elif "questions" in field:
         question_id = int(re.search("\d",field).group(0))+ 4
         result = ''.join(re.split(r'].', ''.join(re.findall(r'\]\..+', field))))
@@ -85,30 +109,39 @@ def auction_field_info(field):
 
 def lot_field_info(field, id):
     map = {
-        "title": "xpath=//*[contains(text(), '{0}')]"
-        "description"
+        "title": "xpath=//*[contains(text(), '{0}')]",
+        "description": "xpath=//*[contains(text(), '{0}')]",
+        "value.amount": "css=[class=price]",
+        "value.currency": "css=[class=price]",
+        "value.valueAddedTaxIncluded": "css=[class=price]",
+        "minimalStep.amount": "[class='price text-lot']",
+        "minimalStep.currency": "css=[class='price text-lot']",
+        "minimalStep.valueAddedTaxIncluded": "css=span",
+        "featureOf": "xpath=//*[contains(text(), '{0}')]/preceding-sibling::div[@class][1]"
     }
     return map[field].format(id)
 
-def convert_lot_result(field, value):
-    if 'title' in field:
-        ret = re.search('.*?:\s(?P<title>.*)', value).group('title')
-        return ret
+def document_fields_info(field, id):
+    map = {
+        "description": "span.info_attachment_description:eq(0)",
+        "title": "xpath=//*[contains(text(), '{0}')]",
+        "content": "span.info_attachment_title:eq(0)",
+        "type": "span.info_attachment_type:eq(0)"
+    }
+    return map[field].format(id)
 
 def convert_result(field, value):
-    if field == "value.amount" \
-            or field == "guarantee.amount" \
-            or field == "minimalStep.amount":
+    if "amount" in field:
         ret = float(re.sub(ur'[^\d.]', '', ''.join(re.findall(ur'[\d\s.]+\sгрн', value))))
-    elif field ==  "procurementMethodType":
+    elif "procurementMethodType" in field:
         if u"Оренда" in value:
             ret = 'dgfOtherAssets'
-    elif field == "value.valueAddedTaxIncluded":
+    elif "valueAddedTaxIncluded" in field:
         if u'ПДВ' in value:
             ret = True
         else:
             ret = value
-    elif field == "value.currency":
+    elif "currency" in field:
         if u'грн.' in value:
             ret = "UAH"
         else:
@@ -166,15 +199,15 @@ def convert_result(field, value):
             ret = value[0]
         elif 'longitude' in field:
             ret = value[1]
+    elif 'featureOf' in field:
+        if u'Критерії для лоту' in value:
+            ret = 'lot'
+        elif u'Критерії для номенклатури' in value:
+            ret = u'Критерії для номенклатури'
+        else:
+            ret = False
     else:
         ret = value
-    return ret
-
-def expand_info(value):
-    if 'delivery' in value or 'classification' in value:
-        ret = True
-    else:
-        ret = False
     return ret
 
 def convert_unit_to_smarttender_format(unit):
@@ -191,7 +224,7 @@ def convert_unit_to_smarttender_format(unit):
 
 def convert_unit_from_smarttender_format(unit, field):
     map = {
-        u"шт": {"code": "H87", "name": u"штуки"},
+        u"шт": {"code": "H87", "name": u"шт"},
         u"кг": {"code": "KGM", "name": u"кілограми"},
         u"умов.": {"code": "E48", "name": u"послуга"},
         u"м.кв.": {"code": "MTK", "name": u"метри квадратні"},
@@ -274,20 +307,6 @@ def adapt_data(tender_data):
 def get_question_data(id):
     return smarttender_munchify({'data': {'id': id}})
 
-def document_fields_info(field,docId,is_cancellation_document):
-    map = {
-        "description": "span.info_attachment_description:eq(0)",
-        "title": "span.info_attachment_title:eq(0)",
-        "title1": ".fileLink:eq(0)",
-        "content": "span.info_attachment_title:eq(0)",
-        "type": "span.info_attachment_type:eq(0)"
-    }
-    if str(is_cancellation_document) == "True":
-        result = map[field]
-    else:
-        result = ("div.row.document:contains('{0}') ".format(docId))+map[field]
-    return result
-
 def map_to_smarttender_document_type(doctype):
     map = {
         u"x_presentation": u"Презентація",
@@ -356,3 +375,10 @@ def get_attribute(value):
         return True
     else:
         return False
+
+def expand_info(value):
+    if 'delivery' in value or 'classification' in value:
+        ret = True
+    else:
+        ret = False
+    return ret
