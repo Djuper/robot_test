@@ -11,7 +11,7 @@ import re
 TZ = timezone(os.environ['TZ'] if 'TZ' in os.environ else 'Europe/Kiev')
 number_of_tabs = 1
 
-def auction_field_info(field):
+def tender_field_info(field):
     if "items" in field:
         list = re.search('(?P<items>\w+)\[(?P<id>\d)\]\.(?P<map>.+)', field)
         item_id = int(list.group('id')) + 1
@@ -22,14 +22,14 @@ def auction_field_info(field):
             "deliveryDate.endDate": "xpath=//*[@class='smaller-font'][{0}]/div[3]",
             "deliveryLocation.latitude": "css=.smaller-font a@href",
             "deliveryLocation.longitude": "css=.smaller-font a@href",
-            "unit.name": "css=[class=text-lot]",
-            "unit.code": "css=[class=text-lot]",
-            "unit.quantity": "css=[class=text-lot]",
-            "quantity": "css=[class=text-lot]",
             "classification.scheme": "css=.smaller-font>div:nth-child(1)",
             "classification.id": "css=.smaller-font>div:nth-child(1)",
             "classification.description": "css=.smaller-font>div:nth-child(1)",
-            "additionalClassifications[0].description": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
+            "unit.name": "css=[class=text-lot]",
+            "unit.code": "css=[class=text-lot]",
+            "quantity": "css=[class=text-lot]",
+            "u'additionalClassifications[0].scheme": "css=span",
+            "u'additionalClassifications[0].id": "css=span",
         }
         return map[result].format(item_id)
     elif "lots" in field:
@@ -37,14 +37,8 @@ def auction_field_info(field):
         lot_id = int(list.group('id')) + 1
         result = list.group('map')
         map = {
-            "title": "css=.main-column .text-bold ",
-            "description": "xpath=//*[contains(text(), '{0}')]@title",
-            "value.amount": "css=[class=price]",
-            "value.currency": "css=[class=price]",
-            "value.valueAddedTaxIncluded": "css=[class=price]",
+            "minimalStep.valueAddedTaxIncluded": "css=[class=price]",
             "minimalStep.amount": "css=[class='price text-lot']",
-            "minimalStep.currency": "css=[class='price text-lot']",
-            "minimalStep.valueAddedTaxIncluded": "css=span"
         }
         return map[result].format(lot_id)
     elif "features" in field:
@@ -52,15 +46,18 @@ def auction_field_info(field):
         features_id = int(list.group('id')) + 1
         result = list.group('map')
         map = {
+
+
             "title": "css=[class=text-lot]",
             "description": "css=[class=text-lot]",
-            "featureOf": "css=[class=text-lot]",
         }
         return map[result].format(features_id)
     elif "questions" in field:
         question_id = int(re.search("\d",field).group(0))+ 4
         result = ''.join(re.split(r'].', ''.join(re.findall(r'\]\..+', field))))
         map = {
+
+
             "title": "xpath=(//*[@id='questions']/div/div[{0}]//span)[1]",
             "description": "xpath=//*[@id='questions']/div/div[{0}]//div[@class='q-content']",
             "answer": "xpath=//*[@id='questions']/div/div[{0}]//div[@class='answer']/div[3]"
@@ -75,29 +72,29 @@ def auction_field_info(field):
         return map[result].format(award_id)
     else:
         map = {
+            "title": "css=.info_orderItem",
+            "description": "css=.info_info_comm2",
             "value.amount": "css=[class=price]",
             "value.currency": "css=[class=price]",
             "value.valueAddedTaxIncluded": "css=[class=price]",
-            "tenderPeriod.startDate": "css=.info_tenderingFrom",
-            "tenderPeriod.endDate": "css=.info_tenderingTo",
-            "auctionPeriod.startDate": "css=#home span.info_dtauction",
-            "auctionPeriod.endDate": "css=#home span.info_dtauctionEnd",
-            "minimalStep.amount": "css=[class='price text-lot']",
-            "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
-            "guarantee.amount": "xpath=(//*[@class='table-responsive']//td[2])[3]",
-            "title": "css=.info_orderItem",
-            "minNumberOfQualifiedBids": "css=.info_minnumber_qualifiedbids",
-            "dgfID": "css=.page-header h4:nth-of-type(2)",
             "tenderID": "css=.info_tendernum",
-            "description": "css=.info_info_comm2",
-            "auctionID": "css=.page-header h3:nth-of-type(3)",
             "procuringEntity.name": "css=.group-element .pop",
-            "status": "css=.page-header div:nth-child(2) h4",
-            "tenderAttempts": "css=.page-header>div>h4",
             "enquiryPeriod.startDate": "css=.info_enquirysta",
             "enquiryPeriod.endDate": "css=.info_ddm",
-            "qualificationPeriod": "css=span",
+            "tenderPeriod.startDate": "css=.info_tenderingFrom",
+            "tenderPeriod.endDate": "css=.info_tenderingTo",
+            "minimalStep.amount": "css=[class='price text-lot']",
+            "status": "css=#group-main>div:nth-child(4)",
 
+            "auctionPeriod.startDate": "css=#home span.info_dtauction",
+            "auctionPeriod.endDate": "css=#home span.info_dtauctionEnd",
+            "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
+            "guarantee.amount": "xpath=(//*[@class='table-responsive']//td[2])[3]",
+            "minNumberOfQualifiedBids": "css=.info_minnumber_qualifiedbids",
+            "dgfID": "css=.page-header h4:nth-of-type(2)",
+            "auctionID": "css=.page-header h3:nth-of-type(3)",
+            "tenderAttempts": "css=.page-header>div>h4",
+            "qualificationPeriod": "css=span",
             "cancellations[0].reason": "1css=span.info_cancellation_reason",
             "cancellations[0].status": "1css=span.info_cancellation_status",
             "eligibilityCriteria": "1css=span.info_eligibilityCriteria",
@@ -114,21 +111,38 @@ def lot_field_info(field, id):
         "value.amount": "css=[class=price]",
         "value.currency": "css=[class=price]",
         "value.valueAddedTaxIncluded": "css=[class=price]",
-        "minimalStep.amount": "[class='price text-lot']",
+        "minimalStep.amount": "css=[class='price text-lot']",
         "minimalStep.currency": "css=[class='price text-lot']",
-        "minimalStep.valueAddedTaxIncluded": "css=span",
-        "featureOf": "xpath=//*[contains(text(), '{0}')]/preceding-sibling::div[@class][1]"
+        "minimalStep.valueAddedTaxIncluded": "css=[class=price]",
+    }
+    return map[field].format(id)
+
+def non_price_field_info(field, id):
+    map = {
+        "title": "xpath=//*[contains(text(), '{0}')]",
+        "description": "xpath=//*[contains(text(), '{0}')]",
+        "featureOf": "xpath=//*[contains(text(), '{0}')]/preceding-sibling::div[@class][1]",
     }
     return map[field].format(id)
 
 def document_fields_info(field, id):
     map = {
-        "description": "span.info_attachment_description:eq(0)",
         "title": "xpath=//*[contains(text(), '{0}')]",
+
+        "description": "span.info_attachment_description:eq(0)",
         "content": "span.info_attachment_title:eq(0)",
-        "type": "span.info_attachment_type:eq(0)"
+        "type": "span.info_attachment_type:eq(0)",
     }
     return map[field].format(id)
+
+def question_field_info(field, id):
+    map = {
+
+        "description": "xpath=//span[contains(text(),'{0}')]/../following-sibling::div[@class='q-content']",
+        "title": "div.title-question span.question-title-inner",
+        "answer": "div.answer div:eq(2)"
+    }
+    return (map[field]).format(id)
 
 def convert_result(field, value):
     if "amount" in field:
@@ -202,8 +216,10 @@ def convert_result(field, value):
     elif 'featureOf' in field:
         if u'Критерії для лоту' in value:
             ret = 'lot'
+        elif u'Критерії для закупівлі' in value:
+            ret = 'tenderer'
         elif u'Критерії для номенклатури' in value:
-            ret = u'Критерії для номенклатури'
+            ret = 'item'
         else:
             ret = False
     else:
@@ -230,6 +246,7 @@ def convert_unit_from_smarttender_format(unit, field):
         u"м.кв.": {"code": "MTK", "name": u"метри квадратні"},
         u"упаков": {"code": "PK", "name": u"упаковка"},
         u"лот": {"code": "LO", "name": u"лот"},
+        u"флак.": {"code": "VI", "name": u"Флакон"},
 
         u"пара": {"code": "PR", "name": u"пара"},
         u"літр": {"code": "LTR", "name": u"літр"},
@@ -247,7 +264,6 @@ def convert_unit_from_smarttender_format(unit, field):
         u"упаковка": {"code": "PK", "name": u"упаковка"},
         u"гектар": {"code": "HAR", "name": u"гектар"},
         u"блок": {"code": "D64", "name": u"блок"},
-        u"флакон": {"code": "VI", "name": u"флакон"}
     }
     return map[unit][field]
 
@@ -342,16 +358,8 @@ def location_converter(value):
     elif "proposal" in value:
         ret = "/bid/edit/", "proposal"
     else:
-        ret = "auktsiony-na-prodazh-aktyviv-derzhpidpryemstv", "tender"
+        ret = "publichni-zakupivli-prozorro", "tender"
     return ret
-
-def question_field_info(field, id):
-    map = {
-        "description": "xpath=//span[contains(text(),'{0}')]/../following-sibling::div[@class='q-content']",
-        "title": "div.title-question span.question-title-inner",
-        "answer": "div.answer div:eq(2)"
-    }
-    return (map[field]).format(id)
 
 def download_file(url,download_path):
     response = urllib2.urlopen(url)

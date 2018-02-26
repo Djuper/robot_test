@@ -235,14 +235,6 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   ${href}=  Get Element Attribute  css=a#view-auction@href
   [Return]  ${href}
 
-Отримати документ до лоту
-  [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${doc_id}
-  [Documentation]  Завантажити файл doc_id до лоту з lot_id в описі для тендера tender_uaid в директорію ${OUTPUT_DIR} для перевірки вмісту цього файлу.
-  ...  [Повертає] filename (ім'я завантаженого файлу)
-  log to console  Отримати документ до лоту
-  debug
-  [Return]  ${ret}
-
 ####################################
 #        Нецінові показники        #
 ####################################
@@ -251,7 +243,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Отримати значення поля field_name з нецінового показника з feature_id в описі для тендера tender_uaid.
   ...  [Повертає] feature['field_name']
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  ${field_name}
-  ${response}=  Отримати та обробити данні із лоту_  ${field_name}  ${feature_id}
+  ${response}=  Отримати та обробити данні нецінового показника_  ${field_name}  ${feature_id}
   [Return]  ${response}
 
 ####################################
@@ -347,10 +339,12 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Отримує значення поля field документа doc_id з лоту tender_uaid
   ...  для перевірки правильності відображення цього поля.
   ...  [Повертає] document['field'] (значення поля field)
-  log to console  Отримати інформацію із документа
-  debug
-  #${selector}=  document_fields_info  ${field}  ${doc_id}
-  #${result}=  Get Text  ${selector}
+  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  tender
+
+  log to console  smartОтримати інформацію із документа
+  ${selector}=  document_fields_info  ${field}  ${doc_id}
+  ${status}  ${result}=  Run Keyword And Ignore Error  Get Text  ${selector}
+  Run Keyword If  '${status}' == 'FAIL'  smarttender.Отримати інформацію із документа  ${username}  ${tender_uaid}  ${doc_id}  ${field}
   [Return]  ${result}
 
 Отримати інформацію із документа по індексу
@@ -363,18 +357,25 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Return]  ${resultDoctype}
 
 Отримати документ
-  [Arguments]  ${user}  ${tenderId}  ${docId}
+  [Arguments]  ${username}  ${tender_uaid}  ${doc_id}
   [Documentation]  Завантажує файл з doc_id в заголовку з лоту tender_uaid в директорію ${OUTPUT_DIR}
   ...  для перевірки вмісту цього файлу.
   ...  [Повертає] filename (ім'я завантаженого файлу)
-  Log To Console  Отримати документ
-  debug
-  Run Keyword  smarttender.Пошук тендера по ідентифікатору  ${user}  ${tenderId}
-  ${selector}=  document_fields_info  content  ${docId}  False
-  ${fileUrl}=  Get Element Attribute  jquery=div.row.document:contains('${docId}') a.info_attachment_link:eq(0)@href
-  ${result}=  Execute JavaScript  return (function() { return $("${selector}").text() })()
-  smarttender_service.download_file  ${fileUrl}  ${OUTPUT_DIR}${/}${result}
-  [Return]  ${result}
+  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  tender
+  ${fileUrl}=  Get Element Attribute  xpath=//*[contains(text(), '${doc_id}')]@href
+  ${filename}=  Get Text  xpath=//*[contains(text(), '${doc_id}')]
+  smarttender_service.download_file  ${fileUrl}  ${OUTPUT_DIR}/${filename}
+  [Return]  ${filename}
+
+Отримати документ до лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${doc_id}
+  [Documentation]  Завантажити файл doc_id до лоту з lot_id в описі для тендера tender_uaid в директорію ${OUTPUT_DIR} для перевірки вмісту цього файлу.
+  ...  [Повертає] filename (ім'я завантаженого файлу)
+  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  tender
+  ${fileUrl}=  Get Element Attribute  xpath=//*[contains(text(), '${doc_id}')]@href
+  ${filename}=  Get Text  xpath=//*[contains(text(), '${doc_id}')]
+  smarttender_service.download_file  ${fileUrl}  ${OUTPUT_DIR}/${filename}
+  [Return]  ${ret}
 
 ####################################
 #     Робота з активами лоту       #
@@ -468,6 +469,12 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   Click Image  jquery=#cpModalMode .dxrControl_DevEx .dxr-buttonItem:eq(0) img
   Click Element  jquery=#cpIMMessageBox .dxbButton_DevEx:eq(0)
   Wait Until Page Contains  Відповідь надіслана на сервер ЦБД  ${wait}
+
+Задати запитання на лот
+  [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${question}
+  [Documentation]  Створити запитання з даними question до лоту з lot_id в описі для тендера tender_uaid.
+  Log to Console  Задати запитання на лот
+  debug
 
 ####################################
 #       Цінові пропозиції          #
@@ -761,8 +768,6 @@ Click Input Enter Wait
   ...  cancellation
   ...  proposal
   ${page_needed}  ${page}=  location_converter  ${page}
-  ${page_needed}  Run Keyword if  '${mode}' != 'dgfInsider'  Set variable  publichni-zakupivli-prozorro
-  ...  ELSE  Set Variable  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
   ${status}=  Run Keyword And Return Status  Location Should Contain  ${page_needed}
   Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}_  ${tender_uaid}
   ...  ELSE  Run Keywords
@@ -802,10 +807,11 @@ Click Input Enter Wait
 
 Відкрити сторінку questions_
   [Arguments]  ${tender_uaid}
-  Wait Until Page Contains Element  ${question_button}
-  ${href}=  Get Element Attribute  ${question_button}@href
-  Go to  ${href}
-  Select Frame  ${iframe}
+  log to console  Відкрити сторінку questions_
+  ${status}  Run Keyword and return status  Click Element  css=span#questionToggle
+  Wait Until Page Contains Element  css=span#questionToggle
+  Run Keyword if  Click Element  css=span#questionToggle
+  #Select Frame  ${iframe}
 
 Відкрити сторінку cancellation_
   [Arguments]  ${tender_uaid}
@@ -817,7 +823,9 @@ Click Input Enter Wait
   ${expand}  expand_info  ${fieldname}
   Run Keyword if  '${expand}' == '${True}'  Click Element  ${expand list}
   ${get attribute}=  get_attribute  ${fieldname}
-  ${selector}=  auction_field_info  ${fieldname}
+  ${selector}=  tender_field_info  ${fieldname}
+  Run Keyword If  '${fieldname}' == 'features[3].title'  Log To Console  features[3].title
+  Run Keyword If  '${fieldname}' == 'features[3].title'  debug
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
   ...  ELSE  Get Text  ${selector}
   ${ret}=  convert_result  ${fieldname}  ${value}
@@ -825,13 +833,18 @@ Click Input Enter Wait
 
 Отримати та обробити данні із лоту_
   [Arguments]  ${fieldname}  ${id}
-  Log To Console  Отримати та обробити данні із лоту_
-  Log To Console  ${fieldname}
-  Log To Console  ${id}
-  #debug
   ${selector}  lot_field_info  ${fieldname}  ${id}
   ${value}=  Run Keyword If
-  ...  '${value}' == 'description'  Get Element Attribute  ${selector}@title
+  ...  '${fieldname}' == 'description'  Get Element Attribute  ${selector}@title
+  ...  ELSE  Get Text  ${selector}
+  ${ret}  convert_result  ${fieldname}  ${value}
+  [Return]  ${ret}
+
+Отримати та обробити данні нецінового показника_
+  [Arguments]  ${fieldname}  ${id}
+  ${selector}  non_price_field_info  ${fieldname}  ${id}
+  ${value}=  Run Keyword If
+  ...  '${fieldname}' == 'description'  Get Element Attribute  ${selector}@title
   ...  ELSE  Get Text  ${selector}
   ${ret}  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
