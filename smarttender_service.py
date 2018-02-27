@@ -5,7 +5,6 @@ from dateutil.parser import parserinfo
 from pytz import timezone
 import urllib2
 import os
-import string
 import re
 
 TZ = timezone(os.environ['TZ'] if 'TZ' in os.environ else 'Europe/Kiev')
@@ -48,6 +47,7 @@ def tender_field_info(field):
         map = {
             "title": "xpath=//*[@class='text-lot criteria-tip'][{0}]",
             "description": "xpath=//*[@class='text-lot criteria-tip'][{0}]",
+            "featureOf": "xpath=//*[@class='text-lot criteria-tip'][{0}]",
         }
         return map[result].format(features_id)
     elif "questions" in field:
@@ -119,7 +119,7 @@ def non_price_field_info(field, id):
     map = {
         "title": "xpath=//*[contains(text(), '{0}')]",
         "description": "xpath=//*[contains(text(), '{0}')]",
-        "featureOf": "xpath=(//div[contains(text(), '{0}')])[2]",
+        "featureOf": "xpath=//*[contains(text(), '{0}')]/preceding-sibling::div[1]",
     }
     return map[field].format(id)
 
