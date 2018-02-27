@@ -43,13 +43,11 @@ def tender_field_info(field):
         return map[result].format(lot_id)
     elif "features" in field:
         list = re.search('(?P<features>\w+)\[(?P<id>\d)\]\.(?P<map>.+)', field)
-        features_id = int(list.group('id')) + 1
+        features_id = int(list.group('id'))
         result = list.group('map')
         map = {
-
-
-            "title": "css=[class=text-lot]",
-            "description": "css=[class=text-lot]",
+            "title": "xpath=//*[@class='text-lot criteria-tip'][{0}]",
+            "description": "xpath=//*[@class='text-lot criteria-tip'][{0}]",
         }
         return map[result].format(features_id)
     elif "questions" in field:
@@ -84,8 +82,8 @@ def tender_field_info(field):
             "tenderPeriod.startDate": "css=.info_tenderingFrom",
             "tenderPeriod.endDate": "css=.info_tenderingTo",
             "minimalStep.amount": "css=[class='price text-lot']",
-            "status": "css=#group-main>div:nth-child(4)",
-
+            "status": "xpath=//*[@id='group-main']/div[3]",
+            "qualificationPeriod.endDate": "css=span",
             "auctionPeriod.startDate": "css=#home span.info_dtauction",
             "auctionPeriod.endDate": "css=#home span.info_dtauctionEnd",
             "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
@@ -121,7 +119,7 @@ def non_price_field_info(field, id):
     map = {
         "title": "xpath=//*[contains(text(), '{0}')]",
         "description": "xpath=//*[contains(text(), '{0}')]",
-        "featureOf": "xpath=//*[contains(text(), '{0}')]/preceding-sibling::div[@class][1]",
+        "featureOf": "xpath=(//div[contains(text(), '{0}')])[2]",
     }
     return map[field].format(id)
 
@@ -194,6 +192,8 @@ def convert_result(field, value):
             ret = list.group('id')
         elif 'description' in field:
             ret = list.group('description')
+            if ret == u'Не визначено':
+                ret = u'Не відображене в інших розділах'
     elif "status" == field or "awards" in field:
         ret = convert_tender_status(value)
     elif "enquiryPeriod.startDate" == field or "enquiryPeriod.endDate" == field or "tenderPeriod.startDate" == field or "tenderPeriod.endDate" in field:
@@ -380,6 +380,8 @@ def delete_spaces(value):
 
 def get_attribute(value):
     if 'latitude' in value or 'longitude' in value:
+        return True
+    elif 'features' in value and 'description' in value:
         return True
     else:
         return False

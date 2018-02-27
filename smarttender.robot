@@ -164,7 +164,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Оновлює сторінку з лотом для отримання потенційно оновлених даних.
   Open Browser  ${synchronization}  chrome
   Wait Until Page Contains  True  ${wait}
-  Sleep  15
+  Sleep  40
   Close Browser
   Switch Browser  ${browserAlias}
   Reload Page
@@ -232,7 +232,14 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Отримує посилання на аукціон для лоту tender_uaid. [Повертає] auctionUrl (посилання).
   ...  ${username}  ${tender_uaid}  ${zero}
   smarttender.Пошук тендера по ідентифікатору  ${ARGUMENTS[0]}  ${ARGUMENTS[1]}
-  ${href}=  Get Element Attribute  css=a#view-auction@href
+  log to console  Отримати посилання на аукціон для глядача
+  debug
+  Click Element  css=#view-auction
+  Select Window  New
+  ${href}  Get Location
+  Close Window
+  Select Window
+  #${href}=  Get Element Attribute  css=a#view-auction@href
   [Return]  ${href}
 
 ####################################
@@ -340,11 +347,8 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   ...  для перевірки правильності відображення цього поля.
   ...  [Повертає] document['field'] (значення поля field)
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  tender
-
-  log to console  smartОтримати інформацію із документа
   ${selector}=  document_fields_info  ${field}  ${doc_id}
-  ${status}  ${result}=  Run Keyword And Ignore Error  Get Text  ${selector}
-  Run Keyword If  '${status}' == 'FAIL'  smarttender.Отримати інформацію із документа  ${username}  ${tender_uaid}  ${doc_id}  ${field}
+  ${result}  Get Text  ${selector}
   [Return]  ${result}
 
 Отримати інформацію із документа по індексу
@@ -807,11 +811,7 @@ Click Input Enter Wait
 
 Відкрити сторінку questions_
   [Arguments]  ${tender_uaid}
-  log to console  Відкрити сторінку questions_
-  ${status}  Run Keyword and return status  Click Element  css=span#questionToggle
-  Wait Until Page Contains Element  css=span#questionToggle
-  Run Keyword if  Click Element  css=span#questionToggle
-  #Select Frame  ${iframe}
+  Run Keyword And Ignore Error  Click Element  css=span#questionToggle
 
 Відкрити сторінку cancellation_
   [Arguments]  ${tender_uaid}
@@ -824,9 +824,7 @@ Click Input Enter Wait
   Run Keyword if  '${expand}' == '${True}'  Click Element  ${expand list}
   ${get attribute}=  get_attribute  ${fieldname}
   ${selector}=  tender_field_info  ${fieldname}
-  Run Keyword If  '${fieldname}' == 'features[3].title'  Log To Console  features[3].title
-  Run Keyword If  '${fieldname}' == 'features[3].title'  debug
-  ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
+  ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}@title
   ...  ELSE  Get Text  ${selector}
   ${ret}=  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
