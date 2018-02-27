@@ -119,7 +119,7 @@ def non_price_field_info(field, id):
     map = {
         "title": "xpath=//*[contains(text(), '{0}')]",
         "description": "xpath=//*[contains(text(), '{0}')]",
-        "featureOf": "xpath=//*[contains(text(), '{0}')]/preceding-sibling::div[1]",
+        "featureOf": "xpath=//*[contains(text(), '{0}')]/preceding-sibling::div[@class='title-lot  cr-title'][1]",
     }
     return map[field].format(id)
 
