@@ -232,8 +232,6 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Отримує посилання на аукціон для лоту tender_uaid. [Повертає] auctionUrl (посилання).
   ...  ${username}  ${tender_uaid}  ${zero}
   smarttender.Пошук тендера по ідентифікатору  ${ARGUMENTS[0]}  ${ARGUMENTS[1]}
-  log to console  Отримати посилання на аукціон для глядача
-  debug
   Click Element  css=#view-auction
   Select Window  New
   ${href}  Get Location
