@@ -475,19 +475,27 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
 Задати запитання на лот
   [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${question}
   [Documentation]  Створити запитання з даними question до лоту з lot_id в описі для тендера tender_uaid.
-  Log to Console  Задати запитання на лот
-  debug
+  ${title}=  Get From Dictionary  ${question.data}  title
+  ${description}=  Get From Dictionary  ${question.data}  description
+  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  questions
+  Відкрити сторінку questions_  ${tender_uaid}
+  Задати запитання_  ${title}  ${description}  no_id
+
 
 ####################################
 #       Цінові пропозиції          #
 ####################################
 Подати цінову пропозицію
-  [Arguments]  ${username}  ${tender_uaid}  ${bid}
-  [Documentation]  Подає цінову пропозицію bid до лоту tender_uaid користувачем username.
+  [Arguments]  ${username}  ${tender_uaid}  ${bid}  @{ARGUMENTS}
+  [Documentation]
+  ...  ${ARGUMENTS[0]}  lots_ids=None
+  ...  ${ARGUMENTS[1]}  features_ids=None
+  ...  Подає цінову пропозицію bid до лоту tender_uaid користувачем username.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію).
-  ${amount}=  Get From Dictionary  ${bid.data.value}  amount
+  Run Keyword If  'Можливість подати пропозицію першим учасником' == '${TESTNAME}'  Debug
+  ${amount}=  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
   ${amount}=  convert to string  ${amount}
-  Пройти кваліфікацію для подачі пропозиції_  ${username}  ${tender_uaid}  ${bid}
+  #Пройти кваліфікацію для подачі пропозиції_  ${username}  ${tender_uaid}  ${bid}
   Прийняти участь в тендері_  ${username}  ${tender_uaid}  ${amount}
   ${response}=  Get Value  css=#lotAmount0>input
   ${response}=  smarttender_service.delete_spaces  ${response}
@@ -810,6 +818,7 @@ Click Input Enter Wait
 Відкрити сторінку questions_
   [Arguments]  ${tender_uaid}
   Run Keyword And Ignore Error  Click Element  css=span#questionToggle
+  Sleep  2
 
 Відкрити сторінку cancellation_
   [Arguments]  ${tender_uaid}
@@ -901,10 +910,6 @@ Click Input Enter Wait
   Заповнити динні для запитання_  ${title}  ${description}
   Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
   Закрити вікно ваше запитання успішно надіслане_
-  #TODO  Don't know how to get value from the hidden element with Selenium2Library
-  ${question_id}=  Execute JavaScript  return (function() {return $("span.question_idcdb").text() })()
-  ${question_data}=  smarttender_service.get_question_data  ${question_id}
-  [Return]  ${question_data}
 
 Відкрити бланк запитання_
   [Arguments]  ${item_id}
@@ -920,7 +925,7 @@ Click Input Enter Wait
 
 Заповнити динні для запитання_
   [Arguments]  ${title}  ${description}
-  Select Frame  ${iframe}
+  Select Frame  css=iframe#questionIframe
   Input Text  id=subject  ${title}
   Input Text  id=question  ${description}
   Click Element  css=button[type='button']
