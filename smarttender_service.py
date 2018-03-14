@@ -197,7 +197,7 @@ def convert_result(field, value):
     elif "status" == field or "awards" in field:
         ret = convert_tender_status(value)
     elif "enquiryPeriod.startDate" == field or "enquiryPeriod.endDate" == field or "tenderPeriod.startDate" == field or "tenderPeriod.endDate" in field:
-        value = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}:\d{2}", value)))
+        value = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}", value)))
         ret = convert_date(value)
     elif "deliveryDate.startDate" in field:
         value = re.findall(ur"\d{2}.\d{2}.\d{4}", value)
