@@ -596,12 +596,25 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Отримує значення поля field пропозиції користувача username для лоту tender_uaid.
   ...  [Повертає] bid['field'] (значення поля).
   ${selector}  tender_field_info  ${field}
-  ${ret}  Run Keyword If  '${field}' == 'lotValues[0].value.amount'  Run Keywords
-  ...  Get Text  ${selector}
-  ...  AND  delete_spaces  ${text}
-  ELSE  Run Keywords
-  ...  Get Value  ${selector}
-  ...  AND  smarttender_service.convert_result  ${field}  ${value}
+  ${ret}  Run Keyword If  '${field}' == 'lotValues[0].value.amount'
+  ...  Отримати інформацію із пропозиції Get Text  ${selector}
+  ...  ELSE  Отримати інформацію із пропозиції Get Value  ${selector}  ${field}
+  [Return]  ${ret}
+
+Отримати інформацію із пропозиції Get Text
+  [Arguments]  ${selector}
+  log to console  Get Text
+  debug
+  #${text}  Get Text  ${selector}
+  #${ret}  delete_spaces  ${text}
+  [Return]  ${ret}
+
+Отримати інформацію із пропозиції Get Value
+  [Arguments]  ${selector}  ${field}
+  log to console  Get Value
+  debug
+  #${value}  Get Value  ${selector}
+  #${ret}  smarttender_service.convert_result  ${field}  ${value}
   [Return]  ${ret}
 
 Отримати кількість документів в ставці
