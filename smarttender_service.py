@@ -93,12 +93,14 @@ def tender_field_info(field):
             "auctionID": "css=.page-header h3:nth-of-type(3)",
             "tenderAttempts": "css=.page-header>div>h4",
             "qualificationPeriod": "css=span",
+            "lotValues[0].value.amount": "css=#lotAmount0>input",
             "cancellations[0].reason": "1css=span.info_cancellation_reason",
             "cancellations[0].status": "1css=span.info_cancellation_status",
             "eligibilityCriteria": "1css=span.info_eligibilityCriteria",
             "contracts[-1].status": "1css=span.info_contractStatus",
             "dgfDecisionID": "1css=span.info_dgfDecisionId",
-            "dgfDecisionDate": "1css=span.info_dgfDecisionDate"
+            "dgfDecisionDate": "1css=span.info_dgfDecisionDate",
+
         }
     return map[field]
 
@@ -197,7 +199,7 @@ def convert_result(field, value):
     elif "status" == field or "awards" in field:
         ret = convert_tender_status(value)
     elif "enquiryPeriod.startDate" == field or "enquiryPeriod.endDate" == field or "tenderPeriod.startDate" == field or "tenderPeriod.endDate" in field:
-        value = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}:\d{2}", value)))
+        value = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}", value)))
         ret = convert_date(value)
     elif "deliveryDate.startDate" in field:
         value = re.findall(ur"\d{2}.\d{2}.\d{4}", value)
@@ -329,8 +331,9 @@ def map_to_smarttender_document_type(doctype):
         u"tenderNotice": u"Паспорт торгів",
         u"x_nda": u"Договір NDA",
         u"technicalSpecifications": u"Публічний паспорт активу",
-        u"x_dgfAssetFamiliarization": u"",
-        u"x_dgfPublicAssetCertificate": u""
+        u"financial_documents": u"Цінова пропозиція",
+        u"qualification_documents": u"Документи, що підтверджують кваліфікацію",
+        u"eligibility_documents": u"Документи, що підтверджують відповідність",
     }
     return map[doctype]
 

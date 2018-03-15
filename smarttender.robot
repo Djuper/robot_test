@@ -34,6 +34,20 @@ ${ok button}                            xpath=.//div[@class="ivu-modal-body"]/di
 ${loading}                              css=#app .smt-load .box
 ${your request is sending}              css=.ivu-message-notice-content-textddd
 ${wraploading}                          css=#wrapLoading .load-icon-div i
+${button make proposal}                 css=button#submitBidPlease
+${checkbox1}                            xpath=//*[@id="SelfEligible"]//input
+${checkbox2}                            xpath=//*[@id="SelfQualified"]//input
+${succeed}                              Пропозицію прийнято.
+${error1}                               Виникла помилка при збереженні пропозиції.
+${error2}                               Не вдалося подати пропозицію
+${succeed message}                      xpath=//div[@class='ivu-modal-confirm-body-icon ivu-modal-confirm-body-icon-info']/following-sibling::div/div/div[1]
+${error message}                        css=.ivu-modal-content .ivu-modal-confirm-body>div:nth-child(2)
+${button add file}                      //input[@type="file"][1]
+${file container}                       //div[@class="file-container"]/div
+${choice file list}                     //div[@class="dropdown open"]//li
+${choice file button}                   //button[@data-toggle="dropdown"]
+${confidentiality switch}               xpath=//*[@class="ivu-switch"]
+${confidentiality switch field}         xpath=//*[@class="ivu-input-wrapper ivu-input-type"]/input
 
 #webclient
 ${owner change}                         css=[data-name="TBCASE____F4"]
@@ -300,6 +314,31 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   Click Element  jquery=div#SubmitButton__1_CD
   Page Should Contain  Кваліфікаційні документи відправлені
 
+Змінити документацію в ставці
+  [Arguments]  ${username}  ${tender_uaid}  ${doc_data}  ${doc_id}
+  [Documentation]  Змінити тип документа з doc_id в заголовку в пропозиції
+  ...  користувача username для тендера tender_uaid.
+  ...  Дані про новий тип документа знаходяться в doc_data.
+  ${confidentiality}  Get From Dictionary  ${doc_data.data}  confidentiality
+  ${confidentialityRationale}  Get From Dictionary  ${doc_data.data}  confidentialityRationale
+  ${doc}=  create_fake_doc
+  ${path}  Set Variable  ${doc[0]}
+  Замінити файл  ${doc_id}  ${path}
+  Зазначити конфіденційність  ${doc_id}  ${confidentialityRationale}
+  Подати пропозицію
+  Закрити валідаційне вікно_
+
+Замінити файл
+  [Arguments]  ${doc_id}  ${path}
+  Click Element  xpath=//*[contains(text(), '${doc_id}')]/../../../..//*[@class="ivu-tooltip-rel"]/button
+  Choose File  xpath=(//input[@type="file"])[1]  ${path}
+
+Зазначити конфіденційність
+  [Arguments]  ${doc_id}  ${confidentialityRationale}
+  [Documentation]  Зазначує конфіденційність для батька(DOM) документа по ID
+  Click Element  xpath=//*[contains(text(), '${doc_id}')]/../../../../../preceding-sibling::div[1]//*[@class="ivu-switch-inner"]
+  Input Text  xpath=//*[contains(text(), '${doc_id}')]/../../../../../preceding-sibling::div[1]//*[@spellcheck]  ${confidentialityRationale}
+
 Додати Virtual Data Room
   [Arguments]  ${user}  ${tenderId}  ${link}
   [Documentation]  Додає посилання на Virtual Data Room vdr_url з назвою title до лоту tender_uaid користувачем username.
@@ -492,9 +531,9 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   ...  ${ARGUMENTS[1]}  features_ids=None
   ...  Подає цінову пропозицію bid до лоту tender_uaid користувачем username.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію).
-  Run Keyword If  'Можливість подати пропозицію першим учасником' == '${TESTNAME}'  Debug
   ${amount}=  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
   ${amount}=  convert to string  ${amount}
+  ${parameters}=  Get From Dictionary  ${bid.data}  parameters
   #Пройти кваліфікацію для подачі пропозиції_  ${username}  ${tender_uaid}  ${bid}
   Прийняти участь в тендері_  ${username}  ${tender_uaid}  ${amount}
   ${response}=  Get Value  css=#lotAmount0>input
@@ -506,7 +545,12 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Documentation]  Змінює поле fieldname на fieldvalue цінової пропозиції користувача username до лоту tender_uaid.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію)
   ${amount}=  convert to string  ${fieldvalue}
-  Прийняти участь в тендері_  ${username}  ${tender_uaid}  ${amount}
+  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  proposal
+  Wait Until Page Contains Element  ${button make proposal}
+  Sleep  .5
+  Заповнити поле з ціною учасником  ${amount}
+  Подати пропозицію
+  Закрити валідаційне вікно_
   ${response}=  Get Value  css=#lotAmount0>input
   ${response}=  smarttender_service.delete_spaces  ${response}
   [Return]  ${response}
@@ -523,22 +567,22 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   Run Keyword And Ignore Error  Click Element  ${ok button}
 
 Завантажити документ в ставку
-  [Arguments]  ${username}  ${path}  ${tender_uaid}
+  [Arguments]  ${username}  ${path}  ${tender_uaid}  @{doc_type}
   [Documentation]  Завантажує документ типу doc_type, який знаходиться за шляхом path,
   ...  до цінової пропозиції користувача username для тендера tender_uaid.
   ...  [Повертає] reply (словник з інформацією про завантажений документ).
-  Pass Execution If  '${mode}' == 'dgfOtherAssets'  Для типа 'Продаж майна банків, що ліквідуються' документы не вкладываются
-  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-  Wait Until Page Contains Element  jquery=a#bid  ${wait}
-  ${href}=  Get Element Attribute  jquery=a#bid@href
-  Go To  ${href}
-  Wait Until Page Contains  Пропозиція  10
-  Wait Until Page Contains Element  jquery=button:contains('Обрати файли')  ${wait}
-  Choose File  jquery=button:contains('Обрати файли')  ${path}
-  Click Element  jquery=button#submitBidPlease
-  Wait Until Page Contains Element  jquery=button:contains('Так')  ${wait}
-  Click Element  jquery=button:contains('Так')
-  Wait Until Page Contains  Пропозицію прийнято  ${wait}
+  Choose File  xpath=(//input[@type="file"][1])[1]  ${path}
+  ${status}  Run Keyword And Return Status  Log  ${doc_type[0]}
+  ${doc_type}  Run Keyword If  '${status}' == '${True}'  Set Variable  ${doc_type[0]}
+  Run Keyword If  '${status}' == '${True}'  Вибрати тип файлу  ${doc_type}
+  Подати пропозицію
+  Закрити валідаційне вікно_
+
+Вибрати тип файлу
+    [Arguments]  ${doc_type}
+    ${doc_type_ua}  map_to_smarttender_document_type  ${doc_type}
+    Click Element  ${block}[1]${file container}[last()]${choice file button}
+    Click Element  xpath=(//*[@class='ivu-card ivu-card-bordered'][1]//*[contains(text(), "${doc_type_ua}")])[last()]
 
 Змінити документ в ставці
   [Arguments]  ${username}  ${tender_uaid}  ${path}  ${docid}
@@ -551,9 +595,13 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Arguments]  ${username}  ${tender_uaid}  ${field}
   [Documentation]  Отримує значення поля field пропозиції користувача username для лоту tender_uaid.
   ...  [Повертає] bid['field'] (значення поля).
-  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-  ${ret}=  smarttender.Отримати інформацію із тендера  ${username}  ${tender_uaid}  ${field}
-  ${ret}=  Execute JavaScript  return (function() { return parseFloat('${ret}') })()
+  ${selector}  tender_field_info  ${field}
+  ${ret}  Run Keyword If  '${field}' == 'lotValues[0].value.amount'  Run Keywords
+  ...  Get Text  ${selector}
+  ...  AND  delete_spaces  ${text}
+  ELSE  Run Keywords
+  ...  Get Value  ${selector}
+  ...  AND  smarttender_service.convert_result  ${field}  ${value}
   [Return]  ${ret}
 
 Отримати кількість документів в ставці
@@ -587,14 +635,16 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Отримує посилання на участь в аукціоні для користувача username для лоту tender_uaid.
   ...  [Повертає] participationUrl (посилання).
-  smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-  Wait Until Page Contains Element  css=a#to-auction
-  Click Element  css=a#to-auction
-  Wait Until Page Contains Element  css=iframe#widgetIframe  ${wait}
-  Select Frame  css=iframe#widgetIframe
-  Wait Until Page Contains Element  jquery=a.link-button:eq(0)  ${wait}
-  ${return_value}=  Get Element Attribute  jquery=a.link-button:eq(0)@href
+  debug
+  #smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
+  #Wait Until Page Contains Element  css=a#to-auction
+  #Click Element  css=a#to-auction
+  #Wait Until Page Contains Element  css=iframe#widgetIframe  ${wait}
+  #Select Frame  css=iframe#widgetIframe
+  #Wait Until Page Contains Element  jquery=a.link-button:eq(0)  ${wait}
+  #${return_value}=  Get Element Attribute  jquery=a.link-button:eq(0)@href
   [Return]  ${return_value}
+
 ####################################
 #     Кваліфікація кандидата       #
 ####################################
@@ -810,13 +860,15 @@ Click Input Enter Wait
 
 Відкрити сторінку proposal_
   [Arguments]  ${tender_uaid}
-  Wait Until Page Contains Element  css=a#bid
-  ${href}=  Get Element Attribute  css=a#bid@href
+  Wait Until Page Contains Element  css=a[class='show-control button-lot']
+  ${href}=  Get Element Attribute  css=a[class='show-control button-lot']@href
   Go To  ${href}
-  Wait Until Page Contains  Пропозиція по аукціону
+  Wait Until Page Contains  Пропозиція
 
 Відкрити сторінку questions_
   [Arguments]  ${tender_uaid}
+  Reload Page
+  Select Frame  ${iframe}
   Run Keyword And Ignore Error  Click Element  css=span#questionToggle
   Sleep  2
 
@@ -973,22 +1025,68 @@ Click Input Enter Wait
   [Arguments]  ${username}  ${tender_uaid}  ${amount}
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  proposal
   Заповнити дані для подачі пропозиції_  ${amount}
+  Подати пропозицію
   Закрити валідаційне вікно_
+
+Подати пропозицію
+  Натиснути надіслати пропозицію
+  ${message}  Вичитати відповідь
+  Виконати дії відповідно повідомленню  ${message}
+
+Натиснути надіслати пропозицію
+  Click Element  ${button make proposal}
+  Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  600
+
+Вичитати відповідь
+  ${status}  Run Keyword And Ignore Error  Get Text  ${succeed message}
+  ${message}  Run Keyword if  '${status[0]}' == 'FAIL'  Get Text  ${error message}
+  ...  ELSE  Set Variable  ${status[1]}
+  [Return]  ${message}
+
+Виконати дії відповідно повідомленню
+  [Arguments]  ${message}
+  Run Keyword If  "${error1}" in """${message}"""  Ignore error
+  ...  ELSE IF  "${error2}" in """${message}"""  Ignore error
+  ...  ELSE IF  "${succeed}" in """${message}"""  Log  ${message}
+  ...  ELSE  Fail  Look to message above
 
 Заповнити дані для подачі пропозиції_
   [Arguments]  ${value}
-  Wait Until Page Contains Element  jquery=button#submitBidPlease
+  #${mode}
+  Wait Until Page Contains Element  ${button make proposal}
   Sleep  .5
-  Run Keyword If  '${mode}' != 'dgfInsider'  Input Text  jquery=div#lotAmount0 input  ${value}
-  Click Element  css=button#submitBidPlease
-  Run Keyword And Ignore Error  Wait Until Page Contains Element  ${loading}
-  Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  ${wait}
+  Розгорнути лот
+  Заповнити поле з ціною учасником  ${value}
+  Підтвердити відповідність
+  Додати файл  1
+
+Додати файл
+  [Arguments]  ${block}
+  ${doc}=  create_fake_doc
+  ${path}  Set Variable  ${doc[0]}
+  Choose File  xpath=(//input[@type="file"][1])[${block}]  ${path}
+
+Ignore error
+  Click Element  ${ok button}
+  Wait Until Page Does Not Contain Element  ${ok button}
+  Sleep  20
+  Подати пропозицію
 
 Закрити валідаційне вікно_
   Wait Until Page Contains  Пропозицію прийнято  ${wait}
   Wait Until Page Contains Element  css=div.ivu-modal-confirm-footer>button  ${wait}
   Click Element  css=div.ivu-modal-confirm-footer>button
 
+Розгорнути лот
+  Click Element  ${block}[2]//button
+
+Заповнити поле з ціною учасником
+  [Arguments]  ${value}
+  Input Text  jquery=div#lotAmount0 input  ${value}
+
+Підтвердити відповідність
+  Click Element  ${checkbox1}
+  Click Element  ${checkbox2}
 ####################################
 #             LEGACY               #
 ####################################
