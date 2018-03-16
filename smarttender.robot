@@ -608,6 +608,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
 
 Отримати інформацію із пропозиції Get Text
   [Arguments]  ${selector}  ${field}
+  Відкрити сторінку proposal_  none
   Unselect Frame
   ${text}  Get Text  ${selector}
   ${ret}  smarttender_service.convert_result  ${field}  ${text}
