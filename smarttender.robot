@@ -176,11 +176,10 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
 Оновити сторінку з тендером
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Оновлює сторінку з лотом для отримання потенційно оновлених даних.
-  Open Browser  ${synchronization}  chrome
-  Wait Until Page Contains  True  ${wait}
-  Sleep  40
-  Close Browser
-  Switch Browser  ${browserAlias}
+  #Open Browser  ${synchronization}  chrome
+  #Wait Until Page Contains  True  ${wait}
+  #Close Browser
+  #Switch Browser  ${browserAlias}
   Reload Page
   Run Keyword And Ignore Error  Select Frame  ${iframe}
 
@@ -595,7 +594,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Arguments]  ${username}  ${tender_uaid}  ${field}
   [Documentation]  Отримує значення поля field пропозиції користувача username для лоту tender_uaid.
   ...  [Повертає] bid['field'] (значення поля).
-  ${selector}  tender_field_info  ${field}
+  ${selector}  proposal_field_info  ${field}
   ${ret}  Run Keyword If  '${field}' == 'lotValues[0].value.amount'
   ...  Отримати інформацію із пропозиції Get Value  ${selector}
   ...  ELSE  Отримати інформацію із пропозиції Get Text  ${selector}  ${field}
@@ -609,6 +608,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
 
 Отримати інформацію із пропозиції Get Text
   [Arguments]  ${selector}  ${field}
+  Unselect Frame
   ${text}  Get Text  ${selector}
   ${ret}  smarttender_service.convert_result  ${field}  ${text}
   [Return]  ${ret}
@@ -871,8 +871,7 @@ Click Input Enter Wait
 
 Відкрити сторінку questions_
   [Arguments]  ${tender_uaid}
-  Reload Page
-  Select Frame  ${iframe}
+  smarttender.Оновити сторінку з тендером  none  ${tender_uaid}
   Run Keyword And Ignore Error  Click Element  css=span#questionToggle
   Sleep  2
 

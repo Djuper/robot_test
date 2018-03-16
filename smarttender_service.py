@@ -101,11 +101,16 @@ def tender_field_info(field):
             "contracts[-1].status": "1css=span.info_contractStatus",
             "dgfDecisionID": "1css=span.info_dgfDecisionId",
             "dgfDecisionDate": "1css=span.info_dgfDecisionDate",
-            "u'additionalClassifications[0].scheme": "css=span",
-            "u'additionalClassifications[0].id": "css=span",
-
         }
     return map[field]
+
+def proposal_field_info(field):
+    map= {
+        "lotValues[0].value.amount": "css=#lotAmount0>input",
+        "status": "css=.ivu-alert-desc span",
+    }
+    return map[field]
+
 
 def lot_field_info(field, id):
     map = {
@@ -281,6 +286,8 @@ def convert_tender_status(value):
         u"Торги не відбулися": "unsuccessful",
         u"Завершено": "complete",
         u"Торги скасовано": "cancelled",
+        u"Ваша раніше подана пропозиція у статусі «Недійсне». Необхідно підтвердження": "invalid",
+
 
         u"Очікує дискваліфікації першого учасника": "pending.waiting",
         u"Рішення скасовано": "cancelled",
@@ -288,6 +295,7 @@ def convert_tender_status(value):
         u"Очікується оплата": "pending.payment",
         u"Переможець": "active",
         u"Дискваліфікований": "unsuccessful",
+
     }
     return map[value]
 
