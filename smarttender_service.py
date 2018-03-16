@@ -27,8 +27,9 @@ def tender_field_info(field):
             "unit.name": "css=[class=text-lot]",
             "unit.code": "css=[class=text-lot]",
             "quantity": "css=[class=text-lot]",
-            "u'additionalClassifications[0].scheme": "css=span",
-            "u'additionalClassifications[0].id": "css=span",
+            "additionalClassifications[0].scheme": "css=.smaller-font>div:nth-child(1)",
+            "additionalClassifications[0].id": "css=.smaller-font>div:nth-child(1)",
+            "additionalClassifications[0].description": "css=.smaller-font>div:nth-child(1)",
         }
         return map[result].format(item_id)
     elif "lots" in field:
@@ -100,6 +101,8 @@ def tender_field_info(field):
             "contracts[-1].status": "1css=span.info_contractStatus",
             "dgfDecisionID": "1css=span.info_dgfDecisionId",
             "dgfDecisionDate": "1css=span.info_dgfDecisionDate",
+            "u'additionalClassifications[0].scheme": "css=span",
+            "u'additionalClassifications[0].id": "css=span",
 
         }
     return map[field]
