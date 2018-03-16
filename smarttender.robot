@@ -597,24 +597,20 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   ...  [Повертає] bid['field'] (значення поля).
   ${selector}  tender_field_info  ${field}
   ${ret}  Run Keyword If  '${field}' == 'lotValues[0].value.amount'
-  ...  Отримати інформацію із пропозиції Get Text  ${selector}
-  ...  ELSE  Отримати інформацію із пропозиції Get Value  ${selector}  ${field}
-  [Return]  ${ret}
-
-Отримати інформацію із пропозиції Get Text
-  [Arguments]  ${selector}
-  log to console  Get Text
-  debug
-  #${text}  Get Text  ${selector}
-  #${ret}  delete_spaces  ${text}
+  ...  Отримати інформацію із пропозиції Get Value  ${selector}
+  ...  ELSE  Отримати інформацію із пропозиції Get Text  ${selector}  ${field}
   [Return]  ${ret}
 
 Отримати інформацію із пропозиції Get Value
+  [Arguments]  ${selector}
+  ${value}  Get Value  ${selector}
+  ${ret}  delete_spaces  ${value}
+  [Return]  ${ret}
+
+Отримати інформацію із пропозиції Get Text
   [Arguments]  ${selector}  ${field}
-  log to console  Get Value
-  debug
-  #${value}  Get Value  ${selector}
-  #${ret}  smarttender_service.convert_result  ${field}  ${value}
+  ${text}  Get Text  ${selector}
+  ${ret}  smarttender_service.convert_result  ${field}  ${text}
   [Return]  ${ret}
 
 Отримати кількість документів в ставці
@@ -648,15 +644,10 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Отримує посилання на участь в аукціоні для користувача username для лоту tender_uaid.
   ...  [Повертає] participationUrl (посилання).
-  debug
-  #smarttender.Пошук тендера по ідентифікатору  ${username}  ${tender_uaid}
-  #Wait Until Page Contains Element  css=a#to-auction
-  #Click Element  css=a#to-auction
-  #Wait Until Page Contains Element  css=iframe#widgetIframe  ${wait}
-  #Select Frame  css=iframe#widgetIframe
-  #Wait Until Page Contains Element  jquery=a.link-button:eq(0)  ${wait}
-  #${return_value}=  Get Element Attribute  jquery=a.link-button:eq(0)@href
-  [Return]  ${return_value}
+  Click Element  css=#tenderDetail button
+  Select Frame  css=#participate-auction
+  ${href}  Get Element Attribute  css=a.link-button[class]@href
+  [Return]  ${href}
 
 ####################################
 #     Кваліфікація кандидата       #
