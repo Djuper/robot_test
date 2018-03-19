@@ -872,9 +872,9 @@ Click Input Enter Wait
 
 Відкрити сторінку questions_
   [Arguments]  ${tender_uaid}
+  Sleep  100
   smarttender.Оновити сторінку з тендером  none  ${tender_uaid}
-  Run Keyword And Ignore Error  Click Element  css=span#questionToggle
-  Sleep  2
+  Click Element  css=span#questionToggle
 
 Відкрити сторінку cancellation_
   [Arguments]  ${tender_uaid}
