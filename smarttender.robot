@@ -878,8 +878,8 @@ Click Input Enter Wait
 
 Відкрити сторінку cancellation_
   [Arguments]  ${tender_uaid}
-  Click Element  jquery=a#cancellation:eq(0)
-  Select Frame  jquery=#widgetIframe
+  Click Element  css=a#cancellation
+  Select Frame  css=#widgetIframe
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
@@ -969,15 +969,22 @@ Click Input Enter Wait
 
 Відкрити бланк запитання_
   [Arguments]  ${item_id}
-  Run Keyword if  '${item_id}' == 'no_id'  Run Keywords
-  ...  Click Element  css=#questions span[role="presentation"]
-  ...  AND  Click Element  css=.select2-results li:nth-child(2)
-  ...  AND  Click element  id=add-question
-  ...  ELSE  Run Keywords
-  ...  Click Element  jquery=#select2-question-relation-container:eq(0)
-  ...  AND  Input Text  jquery=.select2-search__field:eq(0)  ${item_id}
-  ...  AND  Press Key  jquery=.select2-search__field:eq(0)  \\13
-  ...  AND  Click Element  jquery=input#add-question
+  Run Keyword if  '${item_id}' == 'no_id'
+  ...    Відкрити бланк запитання без id
+  ...  ELSE
+  ...    Відкрити бланк запитання з id  ${item_id}
+
+Відкрити бланк запитання без id
+  Wait Until Keyword Succeeds  10  2  Click Element  css=#questions span[role="presentation"]
+  Click Element  css=.select2-results li:nth-child(2)
+  Click element  id=add-question
+
+Відкрити бланк запитання з id
+  [Arguments]  ${item_id}
+  Click Element  jquery=#select2-question-relation-container:eq(0)
+  Input Text  jquery=.select2-search__field:eq(0)  ${item_id}
+  Press Key  jquery=.select2-search__field:eq(0)  \\13
+  Click Element  jquery=input#add-question
 
 Заповнити динні для запитання_
   [Arguments]  ${title}  ${description}
@@ -1051,6 +1058,7 @@ Click Input Enter Wait
   [Arguments]  ${message}
   Run Keyword If  "${error1}" in """${message}"""  Ignore error
   ...  ELSE IF  "${error2}" in """${message}"""  Ignore error
+  ...  ELSE IF  "${message}" == "${EMPTY}"  Sleep  1
   ...  ELSE IF  "${succeed}" in """${message}"""  Log  ${message}
   ...  ELSE  Fail  Look to message above
 
