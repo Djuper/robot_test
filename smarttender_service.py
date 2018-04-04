@@ -315,7 +315,7 @@ def convert_date_offset_naive(s):
 
 def convert_date(s):
     dt = parse(s, parserinfo(True, False))
-    return dt.strftime('%Y-%m-%dT%H:%M:%S+02:00')
+    return dt.strftime('%Y-%m-%dT%H:%M:%S+03:00')
 
 def adapt_data(tender_data):
     tender_data.data.procuringEntity[
@@ -406,3 +406,11 @@ def expand_info(value):
     else:
         ret = False
     return ret
+
+def synch(string):
+    list = re.search(ur'{"DateStart":"(?P<DateStart>[\d\s\:\.]+?)","DateEnd":"(?P<DateEnd>[\d\s\:\.]*?)","WorkStatus":"(?P<WorkStatus>[\w+]+?)","Success":(?P<Success>[\w+]+?)}', string)
+    DateStart = list.group('DateStart')
+    DateEnd = list.group('DateEnd')
+    WorkStatus = list.group('WorkStatus')
+    Success = list.group('Success')
+    return DateStart, DateEnd, WorkStatus, Success

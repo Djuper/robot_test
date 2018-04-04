@@ -6,7 +6,7 @@ Library           op_robot_tests.tests_files.service_keywords
 Library           Selenium2Library
 
 *** Variables ***
-${browserAlias}                        'our_browser'
+${browserAlias}                        'main_browser'
 ${synchronization}                      http://test.smarttender.biz/ws/webservice.asmx/ExecuteEx?calcId=_SYNCANDMOVE&args=&ticket=&pureJson=
 ${path to find tender}                  http://test.smarttender.biz/test-tenders/
 ${find tender field}                    xpath=//input[@placeholder="Введіть запит для пошуку або номер тендеру"]
@@ -37,17 +37,23 @@ ${wraploading}                          css=#wrapLoading .load-icon-div i
 ${button make proposal}                 css=button#submitBidPlease
 ${checkbox1}                            xpath=//*[@id="SelfEligible"]//input
 ${checkbox2}                            xpath=//*[@id="SelfQualified"]//input
-${succeed}                              Пропозицію прийнято.
-${error1}                               Виникла помилка при збереженні пропозиції.
-${error2}                               Не вдалося подати пропозицію
-${succeed message}                      xpath=//div[@class='ivu-modal-confirm-body-icon ivu-modal-confirm-body-icon-info']/following-sibling::div/div/div[1]
-${error message}                        css=.ivu-modal-content .ivu-modal-confirm-body>div:nth-child(2)
+
+${succeed}                          Пропозицію прийнято
+${succeed2}                         Не вдалося зчитати пропозицію з ЦБД!
+${empty error}                      ValueError: Element locator
+${error1}                           Не вдалося подати пропозицію
+${error2}                           Виникла помилка при збереженні пропозиції.
+${error3}                           Непередбачувана ситуація
+${cancellation succeed}             Пропозиція анульована.
+${cancellation error1}              Не вдалося анулювати пропозицію.
+
 ${button add file}                      //input[@type="file"][1]
 ${file container}                       //div[@class="file-container"]/div
 ${choice file list}                     //div[@class="dropdown open"]//li
 ${choice file button}                   //button[@data-toggle="dropdown"]
 ${confidentiality switch}               xpath=//*[@class="ivu-switch"]
 ${confidentiality switch field}         xpath=//*[@class="ivu-input-wrapper ivu-input-type"]/input
+${validation message}                   css=.ivu-modal-content .ivu-modal-confirm-body>div:nth-child(2)
 
 #webclient
 ${owner change}                         css=[data-name="TBCASE____F4"]
@@ -176,12 +182,29 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
 Оновити сторінку з тендером
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Оновлює сторінку з лотом для отримання потенційно оновлених даних.
-  #Open Browser  ${synchronization}  chrome
-  #Wait Until Page Contains  True  ${wait}
-  #Close Browser
-  #Switch Browser  ${browserAlias}
+  log  ${mode}
+  ${last_modification_date}  convert_datetime_to_smarttender_format  ${TENDER.LAST_MODIFICATION_DATE}
+  Open Browser  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.GET.LAST.SYNCHRONIZATION&args={"SEGMENT":3}  chrome
+  Wait Until Keyword Succeeds  10 min  10 sec  waiting_for_synch  ${last_modification_date}
+  debug
   Reload Page
   Run Keyword And Ignore Error  Select Frame  ${iframe}
+
+waiting_for_synch
+  [Arguments]  ${last_modification_date}
+  ${synch dict}  Get Text  css=.text
+  ${dict}  synch  ${synch dict}
+  ${DateStart}  Set Variable  ${dict[0]}
+  ${DateEnd}  Set Variable  ${dict[1]}
+  ${WorkStatus}  Set Variable  ${dict[2]}
+  ${Success}  Set Variable  ${dict[3]}
+  ${status}  Run Keyword if  '${last_modification_date}' < '${DateStart}' and '${DateEnd}' != '${EMPTY}' and '${WorkStatus}' != 'working' and '${Success}' == '${true}'
+  ...  Set Variable  Pass
+  ...  ELSE  Reload Page
+  Should Be Equal  ${status}  Pass
+  Close Browser
+  Switch Browser  ${browserAlias}
+  Reload Page
 
 Отримати інформацію із тендера
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
@@ -872,7 +895,6 @@ Click Input Enter Wait
 
 Відкрити сторінку questions_
   [Arguments]  ${tender_uaid}
-  Sleep  100
   smarttender.Оновити сторінку з тендером  none  ${tender_uaid}
   Click Element  css=span#questionToggle
 
@@ -890,6 +912,7 @@ Click Input Enter Wait
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}@title
   ...  ELSE  Get Text  ${selector}
   ${ret}=  convert_result  ${fieldname}  ${value}
+  Run Keyword If  'features[3].title' == '${fieldname}'  debug
   [Return]  ${ret}
 
 Отримати та обробити данні із лоту_
@@ -989,6 +1012,7 @@ Click Input Enter Wait
 Заповнити динні для запитання_
   [Arguments]  ${title}  ${description}
   Select Frame  css=iframe#questionIframe
+  Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  20
   Input Text  id=subject  ${title}
   Input Text  id=question  ${description}
   Click Element  css=button[type='button']
@@ -1037,29 +1061,32 @@ Click Input Enter Wait
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  proposal
   Заповнити дані для подачі пропозиції_  ${amount}
   Подати пропозицію
-  Закрити валідаційне вікно_
+
+Закрити валідаційне вікно_
+  Click Element  ${ok button}
 
 Подати пропозицію
   Натиснути надіслати пропозицію
   ${message}  Вичитати відповідь
   Виконати дії відповідно повідомленню  ${message}
+  Wait Until Element Is Not Visible  ${ok button}
 
 Натиснути надіслати пропозицію
   Click Element  ${button make proposal}
   Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  600
 
 Вичитати відповідь
-  ${status}  Run Keyword And Ignore Error  Get Text  ${succeed message}
-  ${message}  Run Keyword if  '${status[0]}' == 'FAIL'  Get Text  ${error message}
-  ...  ELSE  Set Variable  ${status[1]}
+  ${status}  ${message}  Run Keyword And Ignore Error  Get Text  ${validation message}
   [Return]  ${message}
 
 Виконати дії відповідно повідомленню
   [Arguments]  ${message}
-  Run Keyword If  "${error1}" in """${message}"""  Ignore error
+  Run Keyword If  "${empty error}" in """${message}"""  Подати пропозицію
+  ...  ELSE IF  "${error1}" in """${message}"""  Ignore error
   ...  ELSE IF  "${error2}" in """${message}"""  Ignore error
-  ...  ELSE IF  "${message}" == "${EMPTY}"  Sleep  1
-  ...  ELSE IF  "${succeed}" in """${message}"""  Log  ${message}
+  ...  ELSE IF  "${error3}" in """${message}"""  Ignore error
+  ...  ELSE IF  "${succeed}" in """${message}"""  Click Element  ${ok button}
+  ...  ELSE IF  "${succeed2}" in """${message}"""  Click Element  ${ok button}
   ...  ELSE  Fail  Look to message above
 
 Заповнити дані для подачі пропозиції_
@@ -1083,11 +1110,6 @@ Ignore error
   Wait Until Page Does Not Contain Element  ${ok button}
   Sleep  20
   Подати пропозицію
-
-Закрити валідаційне вікно_
-  Wait Until Page Contains  Пропозицію прийнято  ${wait}
-  Wait Until Page Contains Element  css=div.ivu-modal-confirm-footer>button  ${wait}
-  Click Element  css=div.ivu-modal-confirm-footer>button
 
 Розгорнути лот
   Click Element  ${block}[2]//button
