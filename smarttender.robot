@@ -566,12 +566,7 @@ waiting_for_synch
   [Documentation]  Змінює поле fieldname на fieldvalue цінової пропозиції користувача username до лоту tender_uaid.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію)
   ${amount}=  convert to string  ${fieldvalue}
-  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  proposal
-  Wait Until Page Contains Element  ${button make proposal}
-  Sleep  .5
-  Заповнити поле з ціною учасником  ${amount}
-  Подати пропозицію
-  Закрити валідаційне вікно_
+  Прийняти участь в тендері_  ${username}  ${tender_uaid}  ${amount}
   ${response}=  Get Value  css=#lotAmount0>input
   ${response}=  smarttender_service.delete_spaces  ${response}
   [Return]  ${response}
@@ -1118,8 +1113,8 @@ Ignore error
   Input Text  jquery=div#lotAmount0 input  ${value}
 
 Підтвердити відповідність
-  Click Element  ${checkbox1}
-  Click Element  ${checkbox2}
+  Select Checkbox  ${checkbox1}
+  Select Checkbox  ${checkbox2}
 ####################################
 #             LEGACY               #
 ####################################
