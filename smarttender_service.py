@@ -304,6 +304,11 @@ def convert_datetime_to_smarttender_format(isodate):
     date_string = iso_dt.strftime("%d.%m.%Y %H:%M")
     return date_string
 
+def convert_datetime_to_kot_format(isodate):
+    iso_dt = parse_date(isodate)
+    date_string = iso_dt.strftime("%d.%m.%Y %H:%M:%S")
+    return date_string
+
 def convert_datetime_to_smarttender_form(isodate):
     iso_dt = parse_date(isodate)
     date_string = iso_dt.strftime("%d.%m.%Y")
@@ -407,3 +412,10 @@ def expand_info(value):
         ret = False
     return ret
 
+def synch(string):
+    list = re.search(ur'{"DateStart":"(?P<DateStart>[\d\s\:\.]+?)","DateEnd":"(?P<DateEnd>[\d\s\:\.]*?)","WorkStatus":"(?P<WorkStatus>[\w+]+?)","Success":(?P<Success>[\w+]+?)}', string)
+    DateStart = list.group('DateStart')
+    DateEnd = list.group('DateEnd')
+    WorkStatus = list.group('WorkStatus')
+    Success = list.group('Success')
+    return DateStart, DateEnd, WorkStatus, Success
