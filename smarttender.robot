@@ -183,10 +183,9 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Оновлює сторінку з лотом для отримання потенційно оновлених даних.
   log  ${mode}
-  ${last_modification_date}  convert_datetime_to_smarttender_format  ${TENDER.LAST_MODIFICATION_DATE}
+  ${last_modification_date}  convert_datetime_to_kot_format  ${TENDER.LAST_MODIFICATION_DATE}
   Open Browser  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.GET.LAST.SYNCHRONIZATION&args={"SEGMENT":3}  chrome
   Wait Until Keyword Succeeds  10 min  10 sec  waiting_for_synch  ${last_modification_date}
-  debug
   Reload Page
   Run Keyword And Ignore Error  Select Frame  ${iframe}
 
@@ -198,7 +197,7 @@ waiting_for_synch
   ${DateEnd}  Set Variable  ${dict[1]}
   ${WorkStatus}  Set Variable  ${dict[2]}
   ${Success}  Set Variable  ${dict[3]}
-  ${status}  Run Keyword if  '${last_modification_date}' < '${DateStart}' and '${DateEnd}' != '${EMPTY}' and '${WorkStatus}' != 'working' and '${Success}' == '${true}'
+  ${status}  Run Keyword if  '${last_modification_date}' < '${DateStart}' and '${DateEnd}' != '${EMPTY}' and '${WorkStatus}' != 'working' and '${Success}' == 'true'
   ...  Set Variable  Pass
   ...  ELSE  Reload Page
   Should Be Equal  ${status}  Pass

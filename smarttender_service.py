@@ -304,6 +304,11 @@ def convert_datetime_to_smarttender_format(isodate):
     date_string = iso_dt.strftime("%d.%m.%Y %H:%M")
     return date_string
 
+def convert_datetime_to_kot_format(isodate):
+    iso_dt = parse_date(isodate)
+    date_string = iso_dt.strftime("%d.%m.%Y %H:%M:%S")
+    return date_string
+
 def convert_datetime_to_smarttender_form(isodate):
     iso_dt = parse_date(isodate)
     date_string = iso_dt.strftime("%d.%m.%Y")
