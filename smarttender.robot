@@ -915,6 +915,7 @@ Click Input Enter Wait
   ${value}=  Run Keyword If
   ...  '${fieldname}' == 'description'  Get Element Attribute  ${selector}@title
   ...  ELSE  Get Text  ${selector}
+  Should Not Be Empty  ${value}  Look to the screen
   ${ret}  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
 
@@ -1060,18 +1061,14 @@ Click Input Enter Wait
   Click Element  ${ok button}
 
 Подати пропозицію
-  Натиснути надіслати пропозицію
-  ${message}  Вичитати відповідь
+  ${message}  Натиснути надіслати пропозицію та вичитати відповідь
   Виконати дії відповідно повідомленню  ${message}
-  Wait Until Element Is Not Visible  ${ok button}
+  Wait Until Page Does Not Contain Element  ${ok button}
 
-Натиснути надіслати пропозицію
-  Click Element  ${button make proposal}
+Натиснути надіслати пропозицію та вичитати відповідь
+  Click Element  ${send offer button}
   Run Keyword And Ignore Error  Wait Until Element Is Visible  ${loading}  10
   Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  600
-  Sleep  2
-
-Вичитати відповідь
   ${status}  ${message}  Run Keyword And Ignore Error  Get Text  ${validation message}
   Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
   [Return]  ${message}
@@ -1087,9 +1084,14 @@ Click Input Enter Wait
   ...  ELSE IF  "${succeed2}" in """${message}"""  Click Element  ${ok button}
   ...  ELSE  Fail  Look to message above
 
+Ignore error
+  Click Element  ${ok button}
+  Wait Until Page Does Not Contain Element  ${ok button}
+  Sleep  30
+  Подати пропозицію
+
 Заповнити дані для подачі пропозиції_
   [Arguments]  ${value}
-  #${mode}
   Wait Until Page Contains Element  ${button make proposal}
   Sleep  .5
   Розгорнути лот
@@ -1102,12 +1104,6 @@ Click Input Enter Wait
   ${doc}=  create_fake_doc
   ${path}  Set Variable  ${doc[0]}
   Choose File  xpath=(//input[@type="file"][1])[${block}]  ${path}
-
-Ignore error
-  Click Element  ${ok button}
-  Wait Until Page Does Not Contain Element  ${ok button}
-  Sleep  20
-  Подати пропозицію
 
 Розгорнути лот
   Click Element  ${block}[2]//button
