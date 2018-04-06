@@ -34,7 +34,7 @@ ${ok button}                            xpath=.//div[@class="ivu-modal-body"]/di
 ${loading}                              css=#app .smt-load .box
 ${your request is sending}              css=.ivu-message-notice-content-textddd
 ${wraploading}                          css=#wrapLoading .load-icon-div i
-${button make proposal}                 css=button#submitBidPlease
+${send offer button}                    css=button#submitBidPlease
 ${checkbox1}                            xpath=//*[@id="SelfEligible"]//input
 ${checkbox2}                            xpath=//*[@id="SelfQualified"]//input
 
@@ -1092,7 +1092,7 @@ Ignore error
 
 Заповнити дані для подачі пропозиції_
   [Arguments]  ${value}
-  Wait Until Page Contains Element  ${button make proposal}
+  Wait Until Page Contains Element  ${send offer button}
   Sleep  .5
   Розгорнути лот
   Заповнити поле з ціною учасником  ${value}
