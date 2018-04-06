@@ -38,14 +38,14 @@ ${button make proposal}                 css=button#submitBidPlease
 ${checkbox1}                            xpath=//*[@id="SelfEligible"]//input
 ${checkbox2}                            xpath=//*[@id="SelfQualified"]//input
 
-${succeed}                          Пропозицію прийнято
-${succeed2}                         Не вдалося зчитати пропозицію з ЦБД!
-${empty error}                      ValueError: Element locator
-${error1}                           Не вдалося подати пропозицію
-${error2}                           Виникла помилка при збереженні пропозиції.
-${error3}                           Непередбачувана ситуація
-${cancellation succeed}             Пропозиція анульована.
-${cancellation error1}              Не вдалося анулювати пропозицію.
+${succeed}                              Пропозицію прийнято
+${succeed2}                             Не вдалося зчитати пропозицію з ЦБД!
+${empty error}                          ValueError: Element locator
+${error1}                               Не вдалося подати пропозицію
+${error2}                               Виникла помилка при збереженні пропозиції.
+${error3}                               Непередбачувана ситуація
+${cancellation succeed}                 Пропозиція анульована.
+${cancellation error1}                  Не вдалося анулювати пропозицію.
 
 ${button add file}                      //input[@type="file"][1]
 ${file container}                       //div[@class="file-container"]/div
@@ -592,7 +592,6 @@ waiting_for_synch
   ${doc_type}  Run Keyword If  '${status}' == '${True}'  Set Variable  ${doc_type[0]}
   Run Keyword If  '${status}' == '${True}'  Вибрати тип файлу  ${doc_type}
   Подати пропозицію
-  Закрити валідаційне вікно_
 
 Вибрати тип файлу
     [Arguments]  ${doc_type}
@@ -903,10 +902,11 @@ Click Input Enter Wait
   Run Keyword if  '${expand}' == '${True}'  Click Element  ${expand list}
   ${get attribute}=  get_attribute  ${fieldname}
   ${selector}=  tender_field_info  ${fieldname}
+  Run Keyword If  'features[3].title' == '${fieldname}'  Оновити сторінку з тендером
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}@title
   ...  ELSE  Get Text  ${selector}
+  Should Not Be Empty  ${value}  Look to the screen
   ${ret}=  convert_result  ${fieldname}  ${value}
-  Run Keyword If  'features[3].title' == '${fieldname}'  debug
   [Return]  ${ret}
 
 Отримати та обробити данні із лоту_
@@ -1067,15 +1067,19 @@ Click Input Enter Wait
 
 Натиснути надіслати пропозицію
   Click Element  ${button make proposal}
+  Run Keyword And Ignore Error  Wait Until Element Is Visible  ${loading}  10
   Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  600
+  Sleep  2
 
 Вичитати відповідь
   ${status}  ${message}  Run Keyword And Ignore Error  Get Text  ${validation message}
+  Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
   [Return]  ${message}
 
 Виконати дії відповідно повідомленню
   [Arguments]  ${message}
   Run Keyword If  "${empty error}" in """${message}"""  Подати пропозицію
+  ...  ELSE IF  "${EMPTY}" == """${message}"""  Ignore error
   ...  ELSE IF  "${error1}" in """${message}"""  Ignore error
   ...  ELSE IF  "${error2}" in """${message}"""  Ignore error
   ...  ELSE IF  "${error3}" in """${message}"""  Ignore error
