@@ -347,7 +347,6 @@ waiting_for_synch
   Замінити файл  ${doc_id}  ${path}
   Зазначити конфіденційність  ${doc_id}  ${confidentialityRationale}
   Подати пропозицію
-  Закрити валідаційне вікно_
 
 Замінити файл
   [Arguments]  ${doc_id}  ${path}
@@ -1056,9 +1055,6 @@ Click Input Enter Wait
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  proposal
   Заповнити дані для подачі пропозиції_  ${amount}
   Подати пропозицію
-
-Закрити валідаційне вікно_
-  Click Element  ${ok button}
 
 Подати пропозицію
   ${message}  Натиснути надіслати пропозицію та вичитати відповідь
