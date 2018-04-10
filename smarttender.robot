@@ -551,9 +551,10 @@ waiting_for_synch
   ...  ${ARGUMENTS[1]}  features_ids=None
   ...  Подає цінову пропозицію bid до лоту tender_uaid користувачем username.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію).
-  ${amount}=  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
+  ${amount}=  Run Keyword If  '${NUMBER_OF_ITEMS}' == '1'  Get From Dictionary  ${bid.data.value}  amount
+  ...  ELSE  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
   ${amount}=  convert to string  ${amount}
-  ${parameters}=  Get From Dictionary  ${bid.data}  parameters
+  #${parameters}=  Get From Dictionary  ${bid.data}  parameters
   #Пройти кваліфікацію для подачі пропозиції_  ${username}  ${tender_uaid}  ${bid}
   Прийняти участь в тендері_  ${username}  ${tender_uaid}  ${amount}
   ${response}=  Get Value  css=#lotAmount0>input
@@ -610,9 +611,9 @@ waiting_for_synch
   [Documentation]  Отримує значення поля field пропозиції користувача username для лоту tender_uaid.
   ...  [Повертає] bid['field'] (значення поля).
   ${selector}  proposal_field_info  ${field}
-  ${ret}  Run Keyword If  '${field}' == 'lotValues[0].value.amount'
+  ${ret}  Run Keyword If  '${field}' == 'lotValues[0].value.amount' or '${field}' == 'value.amount'
   ...  Отримати інформацію із пропозиції Get Value  ${selector}
-  ...  ELSE  Отримати інформацію із пропозиції Get Text  ${selector}  ${field}
+  ...  ELSE  Отримати інформацію із пропозиції Get Text  ${username}  ${tender_uaid}  ${selector}  ${field}
   [Return]  ${ret}
 
 Отримати інформацію із пропозиції Get Value
@@ -622,9 +623,8 @@ waiting_for_synch
   [Return]  ${ret}
 
 Отримати інформацію із пропозиції Get Text
-  [Arguments]  ${selector}  ${field}
-  Відкрити сторінку proposal_  none
-  Unselect Frame
+  [Arguments]  ${username}  ${tender_uaid}  ${selector}  ${field}
+  Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  proposal
   ${text}  Get Text  ${selector}
   ${ret}  smarttender_service.convert_result  ${field}  ${text}
   [Return]  ${ret}
@@ -1012,6 +1012,7 @@ Click Input Enter Wait
   Click Element  css=button[type='button']
 
 Закрити вікно ваше запитання успішно надіслане_
+  Sleep  5
   ${status}=  get text  css=.ivu-alert-message span
   Should Be Equal  ${status}  Ваше запитання успішно надіслане
   Unselect Frame
@@ -1090,10 +1091,10 @@ Ignore error
   [Arguments]  ${value}
   Wait Until Page Contains Element  ${send offer button}
   Sleep  .5
-  Розгорнути лот
+  Run Keyword If  '${NUMBER_OF_ITEMS}' != '1'  Розгорнути лот
   Заповнити поле з ціною учасником  ${value}
-  Підтвердити відповідність
-  Додати файл  1
+  Run Keyword If  '${mode}' != 'belowThreshold'  Підтвердити відповідність
+  Run Keyword If  '${mode}' != 'openeu'  Додати файл  1
 
 Додати файл
   [Arguments]  ${block}

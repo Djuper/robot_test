@@ -107,6 +107,7 @@ def tender_field_info(field):
 def proposal_field_info(field):
     map= {
         "lotValues[0].value.amount": "css=#lotAmount0>input",
+        "value.amount": "css=#lotAmount0>input",
         "status": "css=.ivu-alert-desc span",
     }
     return map[field]
@@ -287,15 +288,13 @@ def convert_tender_status(value):
         u"Завершено": "complete",
         u"Торги скасовано": "cancelled",
         u"Ваша раніше подана пропозиція у статусі «Недійсне». Необхідно підтвердження": "invalid",
-
-
         u"Очікує дискваліфікації першого учасника": "pending.waiting",
         u"Рішення скасовано": "cancelled",
         u"Очікує підтвердження протоколу": "pending.verification",
         u"Очікується оплата": "pending.payment",
         u"Переможець": "active",
         u"Дискваліфікований": "unsuccessful",
-
+        u"Період уточнень": "active.enquiries",
     }
     return map[value]
 
