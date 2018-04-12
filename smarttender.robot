@@ -554,8 +554,8 @@ waiting_for_synch
   ...  ${ARGUMENTS[1]}  features_ids=None
   ...  Подає цінову пропозицію bid до лоту tender_uaid користувачем username.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію).
-  ${amount}=  Run Keyword If  'open' in '${mode}'  Get From Dictionary  ${bid.data.value}  amount
-  ...  ELSE  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
+  ${amount}=  Run Keyword If  'open' in '${mode}'  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
+  ...  ELSE  Get From Dictionary  ${bid.data.value}  amount
   ${amount}=  convert to string  ${amount}
   #${parameters}=  Get From Dictionary  ${bid.data}  parameters
   #Пройти кваліфікацію для подачі пропозиції_  ${username}  ${tender_uaid}  ${bid}
