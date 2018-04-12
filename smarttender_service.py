@@ -72,7 +72,10 @@ def tender_field_info(field):
     else:
         map = {
             "title": "css=.info_orderItem",
+            "title_en": "css=.info_orderItem",
+            "title_ru": "css=.info_orderItem",
             "description": "css=.info_info_comm2",
+            "description_en": "css=.info_info_comm2",
             "value.amount": "css=[class=price]",
             "value.currency": "css=[class=price]",
             "value.valueAddedTaxIncluded": "css=[class=price]",
@@ -94,6 +97,9 @@ def tender_field_info(field):
             "auctionID": "css=.page-header h3:nth-of-type(3)",
             "tenderAttempts": "css=.page-header>div>h4",
             "qualificationPeriod": "css=span",
+            "causeDescription": "css=span",
+            "cause": "css=span",
+
             "lotValues[0].value.amount": "css=#lotAmount0>input",
             "cancellations[0].reason": "1css=span.info_cancellation_reason",
             "cancellations[0].status": "1css=span.info_cancellation_status",

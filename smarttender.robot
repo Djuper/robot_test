@@ -54,6 +54,9 @@ ${choice file button}                   //button[@data-toggle="dropdown"]
 ${confidentiality switch}               xpath=//*[@class="ivu-switch"]
 ${confidentiality switch field}         xpath=//*[@class="ivu-input-wrapper ivu-input-type"]/input
 ${validation message}                   css=.ivu-modal-content .ivu-modal-confirm-body>div:nth-child(2)
+${torgy top/bottom tab}                 css=#MainMenuTenders ul:nth-child   #up-1 bottom-2
+${torgy count tab}                      li:nth-child
+${change language}                      css=div:nth-child(2) .dropdown img
 
 #webclient
 ${owner change}                         css=[data-name="TBCASE____F4"]
@@ -551,7 +554,7 @@ waiting_for_synch
   ...  ${ARGUMENTS[1]}  features_ids=None
   ...  Подає цінову пропозицію bid до лоту tender_uaid користувачем username.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію).
-  ${amount}=  Run Keyword If  '${NUMBER_OF_ITEMS}' == '1'  Get From Dictionary  ${bid.data.value}  amount
+  ${amount}=  Run Keyword If  'open' in '${mode}'  Get From Dictionary  ${bid.data.value}  amount
   ...  ELSE  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
   ${amount}=  convert to string  ${amount}
   #${parameters}=  Get From Dictionary  ${bid.data}  parameters
@@ -866,6 +869,7 @@ Click Input Enter Wait
   [Arguments]  ${tender_uaid}
   Go To  ${path to find tender}
   Wait Until page Contains Element  ${find tender field }  ${wait}
+  Run Keyword If  '${mode}' == 'negotiation'  Click Element  css=li:nth-child(2)>a[data-toggle=tab]
   Input Text  ${find tender field }  ${tender_uaid}
   Press Key  ${find tender field }  \\13
   Location Should Contain  f=${tender_uaid}
@@ -900,13 +904,35 @@ Click Input Enter Wait
   ${expand}  expand_info  ${fieldname}
   Run Keyword if  '${expand}' == '${True}'  Click Element  ${expand list}
   ${get attribute}=  get_attribute  ${fieldname}
+  Змінити мову  ${fieldname}
   ${selector}=  tender_field_info  ${fieldname}
   Run Keyword If  'features[3].title' == '${fieldname}'  Оновити сторінку з тендером
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}@title
   ...  ELSE  Get Text  ${selector}
   Should Not Be Empty  ${value}  Look to the screen
   ${ret}=  convert_result  ${fieldname}  ${value}
+  Змінити мову на ua
   [Return]  ${ret}
+
+Змінити мову
+  [Arguments]  ${fieldname}
+  ${lan}  Run Keyword if
+  ...           '_en' in '${fieldname}'  Set Variable  en
+  ...  ELSE IF  '_ru' in '${fieldname}'  Set Variable  ru
+  ...  ELSE IF  '_ua' in '${fieldname}'  Set Variable  uk
+  ...  ELSE  Set Variable  default
+  Run Keyword If  '${lan}' != 'default'  Run Keywords
+  ...       Unselect Frame
+  ...  AND  Click Element  ${change language}
+  ...  AND  Click Element  css=a[href="javascript:setLanguage('${lan}');"]
+  ...  AND  Select Frame  css=iframe[style]
+
+Змінити мову на ua
+  Unselect Frame
+  ${text}  Get Text  ${change language}
+  Run Keyword if  "Українська" not in "${text}"  Змінити мову  _ua
+  ...  ELSE  debug
+  ...  ELSE  Select Frame  css=iframe[style]
 
 Отримати та обробити данні із лоту_
   [Arguments]  ${fieldname}  ${id}
