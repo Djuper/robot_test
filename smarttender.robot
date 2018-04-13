@@ -908,7 +908,7 @@ Click Input Enter Wait
   Змінити мову  ${fieldname}
   ${selector}=  tender_field_info  ${fieldname}
   ${get attribute}=  get_attribute  ${fieldname}
-  Run Keyword If  'features[3].title' == '${fieldname}'  Оновити сторінку з тендером
+  Run Keyword If  'features[3].title' == '${fieldname}'  smarttender.Оновити сторінку з тендером
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
   ...  ELSE  Get Text  ${selector}
   Should Not Be Empty  ${value}  Value should not be empty
