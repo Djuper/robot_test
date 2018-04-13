@@ -17,19 +17,20 @@ def tender_field_info(field):
         result = list.group('map')
         map = {
             "description": "xpath=//*[@class='table-items'][{0}]//td[1]",
-            "deliveryDate.startDate": "xpath=//*[@class='smaller-font'][{0}]/div[3]",
-            "deliveryDate.endDate": "xpath=//*[@class='smaller-font'][{0}]/div[3]",
-            "deliveryLocation.latitude": "css=.smaller-font a@href",
-            "deliveryLocation.longitude": "css=.smaller-font a@href",
-            "classification.scheme": "css=.smaller-font>div:nth-child(1)",
-            "classification.id": "css=.smaller-font>div:nth-child(1)",
-            "classification.description": "css=.smaller-font>div:nth-child(1)",
-            "unit.name": "css=[class=text-lot]",
-            "unit.code": "css=[class=text-lot]",
-            "quantity": "css=[class=text-lot]",
-            "additionalClassifications[0].scheme": "css=.smaller-font>div:nth-child(1)",
-            "additionalClassifications[0].id": "css=.smaller-font>div:nth-child(1)",
-            "additionalClassifications[0].description": "css=.smaller-font>div:nth-child(1)",
+            "deliveryDate.startDate": "xpath=(//*[@class='smaller-font'])[{0}]/div[3]",
+            "deliveryDate.endDate": "xpath=(//*[@class='smaller-font'])[{0}]/div[3]",
+            "deliveryLocation.latitude": "xpath=(//*[@class='smaller-font']//a)[{0}]@href",
+            "deliveryLocation.longitude": "xpath=(//*[@class='smaller-font']//a)[{0}]@href",
+            "classification.scheme": "xpath=(//*[@class='smaller-font']/div[1])[{0}]",
+            "classification.id": "xpath=(//*[@class='smaller-font']/div[1])[{0}]",
+            "classification.description": "xpath=(//*[@class='smaller-font']/div[1])[{0}]",
+            "unit.name": "xpath=(//*[@class='text-lot'])[{0}]",
+            "unit.code": "xpath=(//*[@class='text-lot'])[{0}]",
+            "quantity": "xpath=(//*[@class='text-lot'])[{0}]",
+            "additionalClassifications[0].scheme": "xpath=(//*[@class='smaller-font']/div[1])[{0}]",
+            "additionalClassifications[0].id": "xpath=(//*[@class='smaller-font']/div[1])[{0}]",
+            "additionalClassifications[0].description": "xpath=(//*[@class='smaller-font']/div[1])[{0}]",
+            "deliveryAddress.countryName": "xpath=(//*[@class='smaller-font']/div[4])[{0}]",
         }
         return map[result].format(item_id)
     elif "lots" in field:
@@ -66,9 +67,18 @@ def tender_field_info(field):
         award_id = int(re.search("\d",field).group(0)) + 1
         result = ''.join(re.split(r'].', ''.join(re.findall(r'\]\..+', field))))
         map = {
-            "status": "css=div#auctionResults div.row.well:nth-child({0}) h5"
+            "status": "css=div#auctionResults div.row.well:nth-child({0}) h5",
+            "documents[0].title": "xpath=(//a[@class='fileLink'])[{0}]",
         }
         return map[result].format(award_id)
+    elif "documents" in field:
+        list = re.search('(?P<documents>\w+)\[(?P<id>\d)\]\.(?P<map>.+)', field)
+        item_id = int(list.group('id')) + 1
+        result = list.group('map')
+        map = {
+            "title": "css=a.fileLink[href]",
+        }
+        return map[result].format(item_id)
     else:
         map = {
             "title": "css=.info_orderItem",
@@ -96,17 +106,28 @@ def tender_field_info(field):
             "dgfID": "css=.page-header h4:nth-of-type(2)",
             "auctionID": "css=.page-header h3:nth-of-type(3)",
             "tenderAttempts": "css=.page-header>div>h4",
+            "procuringEntity.contactPoint.name": "css=.info_contact div:nth-child(1)",
+            "procuringEntity.contactPoint.telephone": "css=.info_contact div:nth-child(2)",
+            "procuringEntity.identifier.legalName": "css=span.pop",
+            "procuringEntity.identifier.id": "css=span.info_usreou",
+            "procuringEntity.contactPoint.url": "css=span",
+            "lotValues[0].value.amount": "css=#lotAmount0>input",
+            "cancellations[0].reason": "css=span.info_cancellation_reason",
+            "cancellations[0].status": "css=span.info_cancellation_status",
+            "eligibilityCriteria": "css=span.info_eligibilityCriteria",
+            "contracts[-1].status": "css=span.info_contractStatus",
+            "dgfDecisionID": "css=span.info_dgfDecisionId",
+            "dgfDecisionDate": "css=span.info_dgfDecisionDate",
+
             "qualificationPeriod": "css=span",
             "causeDescription": "css=span",
             "cause": "css=span",
-
-            "lotValues[0].value.amount": "css=#lotAmount0>input",
-            "cancellations[0].reason": "1css=span.info_cancellation_reason",
-            "cancellations[0].status": "1css=span.info_cancellation_status",
-            "eligibilityCriteria": "1css=span.info_eligibilityCriteria",
-            "contracts[-1].status": "1css=span.info_contractStatus",
-            "dgfDecisionID": "1css=span.info_dgfDecisionId",
-            "dgfDecisionDate": "1css=span.info_dgfDecisionDate",
+            "procuringEntity.address.countryName": "css=span",
+            "procuringEntity.address.locality": "css=span",
+            "procuringEntity.address.postalCode": "css=span",
+            "procuringEntity.address.region": "css=span",
+            "procuringEntity.address.streetAddress": "css=span",
+            "procuringEntity.identifier.scheme": "css=span",
         }
     return map[field]
 
@@ -409,13 +430,6 @@ def get_attribute(value):
         return True
     else:
         return False
-
-def expand_info(value):
-    if 'delivery' in value or 'classification' in value:
-        ret = True
-    else:
-        ret = False
-    return ret
 
 def synch(string):
     list = re.search(ur'{"DateStart":"(?P<DateStart>[\d\s\:\.]+?)","DateEnd":"(?P<DateEnd>[\d\s\:\.]*?)","WorkStatus":"(?P<WorkStatus>[\w+]+?)","Success":(?P<Success>[\w+]+?)}', string)

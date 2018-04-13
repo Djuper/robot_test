@@ -212,6 +212,7 @@ waiting_for_synch
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
   [Documentation]  Отримує значення поля field_name для лоту tender_uaid. [Повертає] tender['field_name'] (значення поля).
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  ${field_name}
+  #debug
   ${response}=  Отримати та обробити данні із тендера_  ${field_name}
   [Return]  ${response}
 
@@ -853,10 +854,10 @@ Click Input Enter Wait
   ${page_needed}  ${page}=  location_converter  ${page}
   ${status}=  Run Keyword And Return Status  Location Should Contain  ${page_needed}
   Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}_  ${tender_uaid}
-  ...  ELSE  Run Keywords
-  ...  Reload Page
-  ...  AND  Run Keyword If  "${page}" == "tender" or "${page}" == "questions"
-  ...  Select Frame  ${iframe}
+  #...  ELSE  Run Keywords
+  #...  Reload Page
+  #...  AND  Run Keyword If  "${page}" == "tender" or "${page}" == "questions"
+  #...  Select Frame  ${iframe}
 
 Відкрити сторінку tender_
   [Arguments]  ${tender_uaid}
@@ -881,6 +882,7 @@ Click Input Enter Wait
   ${href}=  Get Element Attribute  ${tender found}@href
   Go To  ${href}
   Select Frame  ${iframe}
+  Розгорнути детальніше
 
 Відкрити сторінку proposal_
   [Arguments]  ${tender_uaid}
@@ -901,18 +903,23 @@ Click Input Enter Wait
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
-  ${expand}  expand_info  ${fieldname}
-  Run Keyword if  '${expand}' == '${True}'  Click Element  ${expand list}
-  ${get attribute}=  get_attribute  ${fieldname}
+  #Розгорнути детальніше
   Змінити мову  ${fieldname}
   ${selector}=  tender_field_info  ${fieldname}
+  ${get attribute}=  get_attribute  ${fieldname}
   Run Keyword If  'features[3].title' == '${fieldname}'  Оновити сторінку з тендером
-  ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}@title
+  ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
   ...  ELSE  Get Text  ${selector}
-  Should Not Be Empty  ${value}  Look to the screen
+  Should Not Be Empty  ${value}  Value should not be empty
   ${ret}=  convert_result  ${fieldname}  ${value}
-  Змінити мову на ua
+  Змінити мову на ua  ${fieldname}
   [Return]  ${ret}
+
+Розгорнути детальніше
+  ${n}  Get Matching Xpath Count  xpath=//label[@class="tooltip-label"]
+  ${end}  Evaluate  ${n}+1
+  :FOR  ${i}  in range  1  ${end}
+  \  Click Element  xpath=(//label[@class="tooltip-label"])[${i}]
 
 Змінити мову
   [Arguments]  ${fieldname}
@@ -925,14 +932,17 @@ Click Input Enter Wait
   ...       Unselect Frame
   ...  AND  Click Element  ${change language}
   ...  AND  Click Element  css=a[href="javascript:setLanguage('${lan}');"]
-  ...  AND  Select Frame  css=iframe[style]
+  ...  AND  Sleep  3
+  ...  AND  Select Frame  css=iframe
+  ...  AND  Розгорнути детальніше
 
 Змінити мову на ua
-  Unselect Frame
-  ${text}  Get Text  ${change language}
-  Run Keyword if  "Українська" not in "${text}"  Змінити мову  _ua
-  ...  ELSE  debug
-  ...  ELSE  Select Frame  css=iframe[style]
+  [Arguments]  ${fieldname}
+  ${lan}  Run Keyword if
+  ...           '_en' in '${fieldname}'  Set Variable  en
+  ...  ELSE IF  '_ru' in '${fieldname}'  Set Variable  ru
+  ...  ELSE  Set Variable  default
+  Run Keyword If  '${lan}' != 'default'  Змінити мову  _ua
 
 Отримати та обробити данні із лоту_
   [Arguments]  ${fieldname}  ${id}
