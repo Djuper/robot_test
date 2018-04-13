@@ -212,7 +212,7 @@ waiting_for_synch
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
   [Documentation]  Отримує значення поля field_name для лоту tender_uaid. [Повертає] tender['field_name'] (значення поля).
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  ${field_name}
-  #debug
+  Run Keyword if  '${field_name}' == 'status'  Оновити сторінку з тендером  ${username}  ${tender_uaid}
   ${response}=  Отримати та обробити данні із тендера_  ${field_name}
   [Return]  ${response}
 
