@@ -64,8 +64,9 @@ def tender_field_info(field):
         }
         return (map[result]).format(question_id)
     elif "awards" in field:
-        award_id = int(re.search("\d",field).group(0)) + 1
-        result = ''.join(re.split(r'].', ''.join(re.findall(r'\]\..+', field))))
+        list = re.search('(?P<documents>\w+)\[(?P<id>\d)\]\.(?P<map>.+)', field)
+        award_id = int(list.group('id')) + 1
+        result = list.group('map')
         map = {
             "status": "css=div#auctionResults div.row.well:nth-child({0}) h5",
             "documents[0].title": "xpath=(//a[@class='fileLink'])[{0}]",
@@ -73,12 +74,12 @@ def tender_field_info(field):
         return map[result].format(award_id)
     elif "documents" in field:
         list = re.search('(?P<documents>\w+)\[(?P<id>\d)\]\.(?P<map>.+)', field)
-        item_id = int(list.group('id')) + 1
+        document_id = int(list.group('id')) + 1
         result = list.group('map')
         map = {
             "title": "css=a.fileLink[href]",
         }
-        return map[result].format(item_id)
+        return map[result].format(document_id)
     else:
         map = {
             "title": "css=.info_orderItem",
