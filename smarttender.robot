@@ -1127,10 +1127,10 @@ Ignore error
   [Arguments]  ${value}
   Wait Until Page Contains Element  ${send offer button}
   Sleep  .5
-  Run Keyword If  '${NUMBER_OF_ITEMS}' != '1'  Розгорнути лот
+  Run Keyword If  '${NUMBER_OF_ITEMS}' != '1' or 'open' in '${mode}'  Розгорнути лот
   Заповнити поле з ціною учасником  ${value}
   Run Keyword If  '${mode}' != 'belowThreshold'  Підтвердити відповідність
-  Run Keyword If  '${mode}' != 'openeu'  Додати файл  1
+  Run Keyword If  '${mode}' == 'openeu'  Додати файл  1
 
 Додати файл
   [Arguments]  ${block}
