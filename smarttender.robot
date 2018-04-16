@@ -1051,7 +1051,7 @@ Click Input Enter Wait
   [Arguments]  ${title}  ${description}
   Select Frame  css=iframe#questionIframe
   Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  20
-  ${status}  ${message}  Run Keyword And Ignore Error  Wait Until Page Contains Element  ${title}
+  ${status}  ${message}  Run Keyword And Ignore Error  Wait Until Page Contains Element  id=subject
   Run Keyword If  '${status}' == 'FAIL'  Run Keywords
   ...       Reload Page
   ...  AND  Select Frame  css=iframe
