@@ -213,7 +213,6 @@ waiting_for_synch
   [Documentation]  Отримує значення поля field_name для лоту tender_uaid. [Повертає] tender['field_name'] (значення поля).
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  ${field_name}
   Run Keyword if  '${field_name}' == 'status'  smarttender.Оновити сторінку з тендером  ${username}  ${tender_uaid}
-  #debug
   ${response}=  Отримати та обробити данні із тендера_  ${field_name}
   [Return]  ${response}
 
@@ -916,7 +915,7 @@ Click Input Enter Wait
   Змінити мову  ${fieldname}
   ${selector}=  tender_field_info  ${fieldname}
   ${get attribute}=  get_attribute  ${fieldname}
-  Run Keyword If  'features[3].title' == '${fieldname}'  Оновити сторінку з тендером
+  Run Keyword If  'features[3].title' == '${fieldname}'  smarttender.Оновити сторінку з тендером
   Run Keyword If  'suppliers[0].contactPoint.telephone' in '${fieldname}'  Mouse Over  xpath=//table[@class='table-proposal'][1]//td[1]
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
   ...  ELSE  Get Text  ${selector}
