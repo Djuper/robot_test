@@ -1024,7 +1024,7 @@ Click Input Enter Wait
   [Arguments]  ${title}  ${description}  ${item_id}
   Відкрити бланк запитання_  ${item_id}
   Wait Until Element Is Not Visible  ${wraploading}  ${wait}
-  Заповнити динні для запитання_  ${title}  ${description}
+  Заповнити дані для запитання_  ${title}  ${description}
   Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
   Закрити вікно ваше запитання успішно надіслане_
 
@@ -1038,7 +1038,7 @@ Click Input Enter Wait
 Відкрити бланк запитання без id
   Wait Until Keyword Succeeds  10  2  Click Element  css=#questions span[role="presentation"]
   Click Element  css=.select2-results li:nth-child(2)
-  Click element  id=add-question
+  Click Element  id=add-question
 
 Відкрити бланк запитання з id
   [Arguments]  ${item_id}
@@ -1047,10 +1047,15 @@ Click Input Enter Wait
   Press Key  jquery=.select2-search__field:eq(0)  \\13
   Click Element  jquery=input#add-question
 
-Заповнити динні для запитання_
+Заповнити дані для запитання_
   [Arguments]  ${title}  ${description}
   Select Frame  css=iframe#questionIframe
   Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  20
+  ${status}  ${message}  Run Keyword And Ignore Error  Wait Until Page Contains Element  ${title}
+  Run Keyword If  '${status}' == 'FAIL'  Run Keywords
+  ...       Reload Page
+  ...  AND  Select Frame  css=iframe
+  ...  AND  Fail  have not found needed fields on the page
   Input Text  id=subject  ${title}
   Input Text  id=question  ${description}
   Click Element  css=button[type='button']
