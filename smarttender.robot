@@ -558,7 +558,7 @@ waiting_for_synch
   ${amount}=  Run Keyword If  'open' in '${mode}'  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
   ...  ELSE  Get From Dictionary  ${bid.data.value}  amount
   ${amount}=  convert to string  ${amount}
-  ${parameters}=  Get From Dictionary  ${bid.data}  parameters
+  ${parameters}=  Run Keyword If  '${mode}' != 'belowThreshold'  Get From Dictionary  ${bid.data}  parameters
   #Пройти кваліфікацію для подачі пропозиції_  ${username}  ${tender_uaid}  ${bid}
   Прийняти участь в тендері_  ${username}  ${tender_uaid}  ${amount}
   ${response}=  Get Value  css=#lotAmount0>input
@@ -911,7 +911,6 @@ Click Input Enter Wait
 
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
-  #Розгорнути детальніше
   Змінити мову  ${fieldname}
   ${selector}=  tender_field_info  ${fieldname}
   ${get attribute}=  get_attribute  ${fieldname}
