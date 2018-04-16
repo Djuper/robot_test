@@ -213,8 +213,8 @@ waiting_for_synch
   [Documentation]  Отримує значення поля field_name для лоту tender_uaid. [Повертає] tender['field_name'] (значення поля).
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  ${field_name}
   Run Keyword if  '${field_name}' == 'status'  smarttender.Оновити сторінку з тендером  ${username}  ${tender_uaid}
-  debug
-  #${response}=  Отримати та обробити данні із тендера_  ${field_name}
+  #debug
+  ${response}=  Отримати та обробити данні із тендера_  ${field_name}
   [Return]  ${response}
 
 Отримати інформацію із лоту
@@ -852,6 +852,7 @@ Click Input Enter Wait
   ...  questions
   ...  cancellation
   ...  proposal
+  ...  awards
   ${page_needed}  ${page}=  location_converter  ${page}
   ${status}=  Run Keyword And Return Status  Location Should Contain  ${page_needed}
   Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}_  ${tender_uaid}
@@ -902,6 +903,13 @@ Click Input Enter Wait
   Click Element  css=a#cancellation
   Select Frame  css=#widgetIframe
 
+Відкрити сторінку awards_
+  [Arguments]  ${tender_uaid}
+  Wait Until Page Contains Element  css=a.att-link[href]
+  ${href}=  Get Element Attribute  css=a.att-link[href]@href
+  Go To  ${href}
+  Wait Until Page Contains  Документи
+
 Отримати та обробити данні із тендера_
   [Arguments]  ${fieldname}
   #Розгорнути детальніше
@@ -909,6 +917,7 @@ Click Input Enter Wait
   ${selector}=  tender_field_info  ${fieldname}
   ${get attribute}=  get_attribute  ${fieldname}
   Run Keyword If  'features[3].title' == '${fieldname}'  Оновити сторінку з тендером
+  Run Keyword If  'suppliers[0].contactPoint.telephone' in '${fieldname}'  Mouse Over  xpath=//table[@class='table-proposal'][1]//td[1]
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
   ...  ELSE  Get Text  ${selector}
   Should Not Be Empty  ${value}  Value should not be empty

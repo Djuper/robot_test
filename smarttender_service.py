@@ -56,8 +56,6 @@ def tender_field_info(field):
         question_id = int(re.search("\d",field).group(0))+ 4
         result = ''.join(re.split(r'].', ''.join(re.findall(r'\]\..+', field))))
         map = {
-
-
             "title": "xpath=(//*[@id='questions']/div/div[{0}]//span)[1]",
             "description": "xpath=//*[@id='questions']/div/div[{0}]//div[@class='q-content']",
             "answer": "xpath=//*[@id='questions']/div/div[{0}]//div[@class='answer']/div[3]"
@@ -68,8 +66,16 @@ def tender_field_info(field):
         award_id = int(list.group('id')) + 1
         result = list.group('map')
         map = {
-            "status": "css=div#auctionResults div.row.well:nth-child({0}) h5",
-            "documents[0].title": "xpath=(//a[@class='fileLink'])[{0}]",
+            #"status": "css=div#auctionResults div.row.well:nth-child({0}) h5",
+            "status": "xpath=//table[@class='table-proposal'][{0}]//td[3]",
+            "documents[0].title": "xpath=(//*[@class='attachment-row']//*[@class='fileLink'])[{0}]",
+            "suppliers[0].contactPoint.telephone": "xpath=//table[@class='table-proposal'][{0}]//td[1]/div/div[4]/span",
+            "suppliers[0].contactPoint.name": "xpath=//table[@class='table-proposal'][{0}]//td[1]/div/div[2]/span",
+            "suppliers[0].contactPoint.email": "xpath=//table[@class='table-proposal'][{0}]//td[1]/div/div[3]/span",
+            "suppliers[0].identifier.legalName": "xpath=//table[@class='table-proposal'][{0}]//td[1]",
+            "suppliers[0].identifier.id": "xpath=//table[@class='table-proposal'][{0}]//td[1]/div/div[1]/span",
+            "suppliers[0].name": "xpath=//table[@class='table-proposal'][{0}]//td[1]",
+            "complaintPeriod.endDate": "css=span",
         }
         return map[result].format(award_id)
     elif "documents" in field:
@@ -98,7 +104,7 @@ def tender_field_info(field):
             "tenderPeriod.endDate": "css=.info_tenderingTo",
             "minimalStep.amount": "css=[class='price text-lot']",
             "status": "xpath=//*[@id='group-main']/div[3]",
-            "qualificationPeriod.endDate": "css=span",
+            "qualificationPeriod.endDate": "xpath=(//div[contains(text(), 'Прекваліфікация')])[last()]",
             "auctionPeriod.startDate": "css=#home span.info_dtauction",
             "auctionPeriod.endDate": "css=#home span.info_dtauctionEnd",
             "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",
@@ -116,10 +122,11 @@ def tender_field_info(field):
             "cancellations[0].reason": "css=span.info_cancellation_reason",
             "cancellations[0].status": "css=span.info_cancellation_status",
             "eligibilityCriteria": "css=span.info_eligibilityCriteria",
-            "contracts[-1].status": "css=span.info_contractStatus",
+
             "dgfDecisionID": "css=span.info_dgfDecisionId",
             "dgfDecisionDate": "css=span.info_dgfDecisionDate",
 
+            "contracts[0].status": "css=span",
             "qualificationPeriod": "css=span",
             "causeDescription": "css=span",
             "cause": "css=span",
@@ -216,6 +223,10 @@ def convert_result(field, value):
             or "auctionPeriod.startDate" in field \
             or "auctionPeriod.endDate" in field:
         ret = convert_date(value)
+    elif "qualificationPeriod.endDate" in field:
+        list = re.search(ur'(?P<data>[\d\.]+\s[\d\:]+)', value)
+        ret = list.group('data')
+        ret = convert_date(ret)
     elif "minNumberOfQualifiedBids" in field \
             or "tenderAttempts" in field:
         ret = int(value)
@@ -233,7 +244,7 @@ def convert_result(field, value):
             ret = list.group('description')
             if ret == u'Не визначено':
                 ret = u'Не відображене в інших розділах'
-    elif "status" == field or "awards" in field:
+    elif "status" in field or "awards." in field:
         ret = convert_tender_status(value)
     elif "enquiryPeriod.startDate" == field or "enquiryPeriod.endDate" == field or "tenderPeriod.startDate" == field or "tenderPeriod.endDate" in field:
         value = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}", value)))
@@ -403,6 +414,8 @@ def location_converter(value):
         ret = "discuss", "questions"
     elif "proposal" in value:
         ret = "/bid/edit/", "proposal"
+    elif "awards" in value and "documents" in value:
+        ret = "/webparts/", "awards"
     else:
         ret = "publichni-zakupivli-prozorro", "tender"
     return ret
