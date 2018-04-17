@@ -72,9 +72,9 @@ def tender_field_info(field):
             "suppliers[0].contactPoint.telephone": "xpath=//table[@class='table-proposal'][{0}]//td[1]/div/div[4]/span",
             "suppliers[0].contactPoint.name": "xpath=//table[@class='table-proposal'][{0}]//td[1]/div/div[2]/span",
             "suppliers[0].contactPoint.email": "xpath=//table[@class='table-proposal'][{0}]//td[1]/div/div[3]/span",
-            "suppliers[0].identifier.legalName": "xpath=//table[@class='table-proposal'][{0}]//td[1]",
+            "suppliers[0].identifier.legalName": "xpath=//*[@class='table-proposal'][{0}]//div[@class='organization']",
             "suppliers[0].identifier.id": "xpath=//table[@class='table-proposal'][{0}]//td[1]/div/div[1]/span",
-            "suppliers[0].name": "xpath=//table[@class='table-proposal'][{0}]//td[1]",
+            "suppliers[0].name": "xpath=//*[@class='table-proposal'][{0}]//div[@class='organization']",
             "complaintPeriod.endDate": "css=span",
         }
         return map[result].format(award_id)
@@ -122,11 +122,12 @@ def tender_field_info(field):
             "cancellations[0].reason": "css=span.info_cancellation_reason",
             "cancellations[0].status": "css=span.info_cancellation_status",
             "eligibilityCriteria": "css=span.info_eligibilityCriteria",
+            "contracts[0].status": "xpath=//table[@class='table-proposal'][1]//td[3]",
 
             "dgfDecisionID": "css=span.info_dgfDecisionId",
             "dgfDecisionDate": "css=span.info_dgfDecisionDate",
 
-            "contracts[0].status": "css=span",
+
             "qualificationPeriod": "css=span",
             "causeDescription": "css=span",
             "cause": "css=span",
@@ -332,6 +333,7 @@ def convert_tender_status(value):
         u"Очікує підтвердження протоколу": "pending.verification",
         u"Очікується оплата": "pending.payment",
         u"Переможець": "active",
+        u"Переможе": "pending",
         u"Дискваліфікований": "unsuccessful",
         u"Період уточнень": "active.enquiries",
     }
