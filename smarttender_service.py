@@ -104,7 +104,7 @@ def tender_field_info(field):
             "tenderPeriod.endDate": "css=.info_tenderingTo",
             "minimalStep.amount": "css=[class='price text-lot']",
             "status": "xpath=//*[@id='group-main']/div[3]",
-            "qualificationPeriod.endDate": "xpath=(//div[contains(text(), 'Прекваліфікация')])[last()]",
+            "qualificationPeriod.endDate": u"xpath=(//div[contains(text(), 'Прекваліфікация')])[last()]",
             "auctionPeriod.startDate": "css=#home span.info_dtauction",
             "auctionPeriod.endDate": "css=#home span.info_dtauctionEnd",
             "procurementMethodType": "xpath=//*[@class='table price']/following::div[1]//dl/dd[1]",

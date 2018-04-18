@@ -664,8 +664,9 @@ waiting_for_synch
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Отримує посилання на участь в аукціоні для користувача username для лоту tender_uaid.
   ...  [Повертає] participationUrl (посилання).
-  Click Element  css=#tenderDetail button
-  Select Frame  css=#participate-auction
+  debug
+  #Click Element  css=#tenderDetail button
+  #Select Frame  css=#participate-auction
   ${href}  Get Element Attribute  css=a.link-button[class]@href
   [Return]  ${href}
 
@@ -914,7 +915,7 @@ Click Input Enter Wait
   Змінити мову  ${fieldname}
   ${selector}=  tender_field_info  ${fieldname}
   ${get attribute}=  get_attribute  ${fieldname}
-  Run Keyword If  'features[3].title' == '${fieldname}'  smarttender.Оновити сторінку з тендером
+  Run Keyword If  'features[3].title' == '${fieldname}' or 'period' in '${fieldname}'  smarttender.Оновити сторінку з тендером
   Run Keyword If  'suppliers[0].contactPoint.telephone' in '${fieldname}'  Mouse Over  xpath=//table[@class='table-proposal'][1]//td[1]
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
   ...  ELSE  Get Text  ${selector}
