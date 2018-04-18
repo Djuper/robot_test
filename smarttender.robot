@@ -918,7 +918,8 @@ Click Input Enter Wait
   Run Keyword If  'suppliers[0].contactPoint.telephone' in '${fieldname}'  Mouse Over  xpath=//table[@class='table-proposal'][1]//td[1]
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
   ...  ELSE  Get Text  ${selector}
-  Should Not Be Empty  ${value}  Value should not be empty
+  ${length}  Get Length  ${value}
+  Run Keyword If  ${length} == 0  Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
   ${ret}=  convert_result  ${fieldname}  ${value}
   Змінити мову на ua  ${fieldname}
   [Return]  ${ret}
@@ -958,7 +959,8 @@ Click Input Enter Wait
   ${value}=  Run Keyword If
   ...  '${fieldname}' == 'description'  Get Element Attribute  ${selector}@title
   ...  ELSE  Get Text  ${selector}
-  Should Not Be Empty  ${value}  Look to the screen
+  ${length}  Get Length  ${value}
+  Run Keyword If  ${length} == 0  Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
   ${ret}  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
 
