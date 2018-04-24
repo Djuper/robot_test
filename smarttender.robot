@@ -191,6 +191,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   Wait Until Keyword Succeeds  10 min  10 sec  waiting_for_synch  ${last_modification_date}
   Reload Page
   Run Keyword And Ignore Error  Select Frame  ${iframe}
+  Run Keyword And Ignore Error  Розгорнути детальніше
 
 waiting_for_synch
   [Arguments]  ${last_modification_date}
@@ -925,6 +926,10 @@ Click Input Enter Wait
   [Return]  ${ret}
 
 Розгорнути детальніше
+  ${status}  Run Keyword and Return Status  Element Should Be Visible  xpath=(//*[@class='smaller-font']/div[1])[1]
+  Run Keyword If  '${status}' == 'False'  Розгорнути детальніше continue
+
+Розгорнути детальніше continue
   ${n}  Get Matching Xpath Count  xpath=//label[@class="tooltip-label"]
   ${end}  Evaluate  ${n}+1
   :FOR  ${i}  in range  1  ${end}
