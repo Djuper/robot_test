@@ -917,7 +917,6 @@ Click Input Enter Wait
   ${selector}=  tender_field_info  ${fieldname}
   ${get attribute}=  get_attribute  ${fieldname}
   Run Keyword If  'suppliers[0].contactPoint.telephone' in '${fieldname}'  Mouse Over  xpath=//table[@class='table-proposal'][1]//td[1]
-  Wait Until Page Contains Element  ${selector}
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
   ...  ELSE  Get Text  ${selector}
   ${length}  Get Length  ${value}
