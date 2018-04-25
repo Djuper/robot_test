@@ -1035,7 +1035,6 @@ Click Input Enter Wait
   Заповнити дані для запитання_  ${title}  ${description}
   Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
   Закрити вікно ваше запитання успішно надіслане_
-  debug
 
 Відкрити бланк запитання_
   [Arguments]  ${item_id}
