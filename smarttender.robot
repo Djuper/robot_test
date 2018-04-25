@@ -215,7 +215,7 @@ waiting_for_synch
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  ${field_name}
   Run Keyword if  '${field_name}' == 'status' or 'features[3].title' == '${fieldname}' or 'Period' in '${fieldname}'
   ...  smarttender.Оновити сторінку з тендером  ${username}  ${tender_uaid}
-  ${response}=  Отримати та обробити данні із тендера_  ${field_name}
+  ${response}=  Отримати та обробити дані із тендера_  ${field_name}
   [Return]  ${response}
 
 Отримати інформацію із лоту
@@ -223,7 +223,7 @@ waiting_for_synch
   [Documentation]  Отримати значення поля field_name з лоту з lot_id в описі для тендера tender_uaid.
   ...  [Повертає] lot['field_name']
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  ${field_name}
-  ${response}=  Отримати та обробити данні із лоту_  ${field_name}  ${lot_id}
+  ${response}=  Отримати та обробити дані із лоту_  ${field_name}  ${lot_id}
   [Return]  ${response}
 
 Внести зміни в тендер
@@ -289,7 +289,7 @@ waiting_for_synch
   [Documentation]  Отримати значення поля field_name з нецінового показника з feature_id в описі для тендера tender_uaid.
   ...  [Повертає] feature['field_name']
   Відкрити потрібну сторінку_  ${username}  ${tender_uaid}  ${field_name}
-  ${response}=  Отримати та обробити данні нецінового показника_  ${field_name}  ${feature_id}
+  ${response}=  Отримати та обробити дані нецінового показника_  ${field_name}  ${feature_id}
   [Return]  ${response}
 
 ####################################
@@ -911,12 +911,13 @@ Click Input Enter Wait
   Go To  ${href}
   Wait Until Page Contains  Документи
 
-Отримати та обробити данні із тендера_
+Отримати та обробити дані із тендера_
   [Arguments]  ${fieldname}
   Змінити мову  ${fieldname}
   ${selector}=  tender_field_info  ${fieldname}
   ${get attribute}=  get_attribute  ${fieldname}
   Run Keyword If  'suppliers[0].contactPoint.telephone' in '${fieldname}'  Mouse Over  xpath=//table[@class='table-proposal'][1]//td[1]
+  Wait Until Page Contains Element  ${selector}
   ${value}=  Run Keyword If  '${get attribute}' == '${True}'  Get Element Attribute  ${selector}
   ...  ELSE  Get Text  ${selector}
   ${length}  Get Length  ${value}
@@ -958,7 +959,7 @@ Click Input Enter Wait
   ...  ELSE  Set Variable  default
   Run Keyword If  '${lan}' != 'default'  Змінити мову  _ua
 
-Отримати та обробити данні із лоту_
+Отримати та обробити дані із лоту_
   [Arguments]  ${fieldname}  ${id}
   ${selector}  lot_field_info  ${fieldname}  ${id}
   ${value}=  Run Keyword If
@@ -969,7 +970,7 @@ Click Input Enter Wait
   ${ret}  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
 
-Отримати та обробити данні нецінового показника_
+Отримати та обробити дані нецінового показника_
   [Arguments]  ${fieldname}  ${id}
   ${selector}  non_price_field_info  ${fieldname}  ${id}
   ${value}=  Run Keyword If
@@ -1034,6 +1035,7 @@ Click Input Enter Wait
   Заповнити дані для запитання_  ${title}  ${description}
   Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
   Закрити вікно ваше запитання успішно надіслане_
+  debug
 
 Відкрити бланк запитання_
   [Arguments]  ${item_id}
