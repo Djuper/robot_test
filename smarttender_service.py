@@ -1,4 +1,5 @@
-﻿from munch import munchify as smarttender_munchify
+﻿# coding=utf-8
+from munch import munchify as smarttender_munchify
 from iso8601 import parse_date
 from dateutil.parser import parse
 from dateutil.parser import parserinfo
@@ -30,7 +31,11 @@ def tender_field_info(field):
             "additionalClassifications[0].scheme": "xpath=(//*[@class='smaller-font']/div[1])[{0}]",
             "additionalClassifications[0].id": "xpath=(//*[@class='smaller-font']/div[1])[{0}]",
             "additionalClassifications[0].description": "xpath=(//*[@class='smaller-font']/div[1])[{0}]",
-            "deliveryAddress.countryName": "xpath=(//*[@class='smaller-font']/div[4])[{0}]",
+            "deliveryAddress.countryName": "xpath=(//div[@id='tooltipID']//td[@class='smaller-font']//div[4])[{0}]",
+            "deliveryAddress.postalCode": "xpath=(//div[@id='tooltipID']//td[@class='smaller-font']//div[4])[{0}]",
+            "deliveryAddress.region": "xpath=(//div[@id='tooltipID']//td[@class='smaller-font']//div[4])[{0}]",
+            "deliveryAddress.locality": "xpath=(//div[@id='tooltipID']//td[@class='smaller-font']//div[4])[{0}]",
+            "deliveryAddress.streetAddress": "xpath=(//div[@id='tooltipID']//td[@class='smaller-font']//div[4])[{0}]",
         }
         return map[result].format(item_id)
     elif "lots" in field:
@@ -53,7 +58,7 @@ def tender_field_info(field):
         }
         return map[result].format(features_id)
     elif "questions" in field:
-        question_id = int(re.search("\d",field).group(0))+ 4
+        question_id = int(re.search("\d", field).group(0)) + 4
         result = ''.join(re.split(r'].', ''.join(re.findall(r'\]\..+', field))))
         map = {
             "title": "xpath=(//*[@id='questions']/div/div[{0}]//span)[1]",
@@ -66,7 +71,7 @@ def tender_field_info(field):
         award_id = int(list.group('id')) + 1
         result = list.group('map')
         map = {
-            #"status": "css=div#auctionResults div.row.well:nth-child({0}) h5",
+            # "status": "css=div#auctionResults div.row.well:nth-child({0}) h5",
             "status": "xpath=//table[@class='table-proposal'][{0}]//td[3]",
             "documents[0].title": "xpath=(//*[@class='attachment-row']//*[@class='fileLink'])[{0}]",
             "suppliers[0].contactPoint.telephone": "xpath=//table[@class='table-proposal'][{0}]//td[1]/div/div[4]/span",
@@ -75,6 +80,8 @@ def tender_field_info(field):
             "suppliers[0].identifier.legalName": "xpath=//*[@class='table-proposal'][{0}]//div[@class='organization']",
             "suppliers[0].identifier.id": "xpath=//table[@class='table-proposal'][{0}]//td[1]/div/div[1]/span",
             "suppliers[0].name": "xpath=//*[@class='table-proposal'][{0}]//div[@class='organization']",
+            "value.amount": "xpath=//table[@class='table-proposal'][{0}]//td[2]",
+            "value.currency": "xpath=//table[@class='table-proposal'][1]//tr/th[2]",
             "complaintPeriod.endDate": "css=span",
         }
         return map[result].format(award_id)
@@ -117,12 +124,18 @@ def tender_field_info(field):
             "procuringEntity.contactPoint.telephone": "css=.info_contact div:nth-child(2)",
             "procuringEntity.identifier.legalName": "css=span.pop",
             "procuringEntity.identifier.id": "css=span.info_usreou",
-            "procuringEntity.contactPoint.url": "css=span",
+            "procuringEntity.contactPoint.url": "css=.info_contact div:nth-child(2)",
             "lotValues[0].value.amount": "css=#lotAmount0>input",
             "cancellations[0].reason": "css=span.info_cancellation_reason",
             "cancellations[0].status": "css=span.info_cancellation_status",
             "eligibilityCriteria": "css=span.info_eligibilityCriteria",
             "contracts[0].status": "xpath=//table[@class='table-proposal'][1]//td[3]",
+
+            "procuringEntity.address.countryName": "css=td.smaller-font div:nth-child(4)",
+            "procuringEntity.address.locality": "css=td.smaller-font div:nth-child(4)",
+            "procuringEntity.address.postalCode": "css=td.smaller-font div:nth-child(4)",
+            "procuringEntity.address.region": "css=td.smaller-font div:nth-child(4)",
+            "procuringEntity.address.streetAddress": "css=span",
 
             "dgfDecisionID": "css=span.info_dgfDecisionId",
             "dgfDecisionDate": "css=span.info_dgfDecisionDate",
@@ -131,23 +144,17 @@ def tender_field_info(field):
             "qualificationPeriod": "css=span",
             "causeDescription": "css=span",
             "cause": "css=span",
-            "procuringEntity.address.countryName": "css=span",
-            "procuringEntity.address.locality": "css=span",
-            "procuringEntity.address.postalCode": "css=span",
-            "procuringEntity.address.region": "css=span",
-            "procuringEntity.address.streetAddress": "css=span",
             "procuringEntity.identifier.scheme": "css=span",
         }
     return map[field]
 
 def proposal_field_info(field):
-    map= {
+    map = {
         "lotValues[0].value.amount": "css=#lotAmount0>input",
         "value.amount": "css=#lotAmount0>input",
         "status": "css=.ivu-alert-desc span",
     }
     return map[field]
-
 
 def lot_field_info(field, id):
     map = {
@@ -189,9 +196,30 @@ def question_field_info(field, id):
     }
     return (map[field]).format(id)
 
+def claim_field_info(field):
+    map = {
+        "status": "css=div.complaint-status",
+        "cancellationReason": "xpath=//*[@class='content break-word']",
+    }
+    return map[field]
+
+def convert_claim_result_from_smarttender(value):
+    map = {
+        u"Відхилена": 'cancelled',
+        u"Отменена жалобщиком": 'cancelled',
+    }
+    if value in map:
+        result = map[value]
+    else:
+        result = value
+    return result
+
 def convert_result(field, value):
-    if "amount" in field:
-        ret = float(re.sub(ur'[^\d.]', '', ''.join(re.findall(ur'[\d\s.]+\sгрн', value))))
+    global ret
+    if 'awards' in field and 'value.amount' in field:
+        ret = delete_spaces(value)
+    elif "amount" in field:
+        ret = float(re.sub(u'[^\d.]', '', ''.join(re.findall(u'[\d\s.]+\sгрн', value))))
     elif "procurementMethodType" in field:
         if u"Оренда" in value:
             ret = 'dgfOtherAssets'
@@ -206,7 +234,7 @@ def convert_result(field, value):
         else:
             ret = value
     elif "unit" in field or "quantity" in field:
-        list = re.search(ur'(?P<count>[\d,.]+?)\s(?P<name>.+)', value)
+        list = re.search(u'(?P<count>[\d,.]+?)\s(?P<name>.+)', value)
         if 'quantity' in field:
             ret = int(list.group('count'))
         else:
@@ -216,16 +244,16 @@ def convert_result(field, value):
         elif 'name' in field:
             ret = convert_unit_from_smarttender_format(ret, 'name')
     elif "quantity" in field:
-        ret = re.search(ur'(?P<count>[\d,.]+?)\s(?P<name>.+)', value).group('count')
+        ret = re.search(u'(?P<count>[\d,.]+?)\s(?P<name>.+)', value).group('count')
     elif "additionalClassifications" in field:
-        ret = ''.join(re.findall(ur'[^\(][^\)]', ''.join(re.findall(ur'\(.+\)', value))))
+        ret = ''.join(re.findall(u'[^\(][^\)]', ''.join(re.findall(u'\(.+\)', value))))
     elif "contractPeriod.startDate" in field \
             or "contractPeriod.endDate" in field \
             or "auctionPeriod.startDate" in field \
             or "auctionPeriod.endDate" in field:
         ret = convert_date(value)
     elif "qualificationPeriod.endDate" in field:
-        list = re.search(ur'(?P<data>[\d\.]+\s[\d\:]+)', value)
+        list = re.search(u'(?P<data>[\d\.]+\s[\d\:]+)', value)
         ret = list.group('data')
         ret = convert_date(ret)
     elif "minNumberOfQualifiedBids" in field \
@@ -234,9 +262,9 @@ def convert_result(field, value):
     elif "dgfDecisionDate" in field:
         ret = convert_date_offset_naive(value)
     elif "quantity" in field:
-        ret = re.search(ur'(?P<count>[\d,.]+?)\s(?P<name>.+)', value).group('count')
+        ret = re.search(u'(?P<count>[\d,.]+?)\s(?P<name>.+)', value).group('count')
     elif "classification" in field:
-        list = re.search(ur'Код\s(?P<scheme>.+?):\s(?P<id>.+?)\s—\s(?P<description>.+)', value)
+        list = re.search(u'Код\s(?P<scheme>.+?):\s(?P<id>.+?)\s—\s(?P<description>.+)', value)
         if 'scheme' in field:
             ret = list.group('scheme')
         elif 'id' in field:
@@ -247,15 +275,16 @@ def convert_result(field, value):
                 ret = u'Не відображене в інших розділах'
     elif "status" in field or "awards." in field:
         ret = convert_tender_status(value)
-    elif "enquiryPeriod.startDate" == field or "enquiryPeriod.endDate" == field or "tenderPeriod.startDate" == field or "tenderPeriod.endDate" in field:
+    elif "enquiryPeriod.startDate" == field or "enquiryPeriod.endDate" == field or "tenderPeriod.startDate" == field \
+            or "tenderPeriod.endDate" in field:
         value = str(''.join(re.findall(r"\d{2}.\d{2}.\d{4} \d{2}:\d{2}", value)))
         ret = convert_date(value)
     elif "deliveryDate.startDate" in field:
-        value = re.findall(ur"\d{2}.\d{2}.\d{4}", value)
+        value = re.findall(u"\d{2}.\d{2}.\d{4}", value)
         ret = value[0]
         ret = convert_date(ret)
     elif "deliveryDate.endDate" in field:
-        value = re.findall(ur"\d{2}.\d{2}.\d{4}", value)
+        value = re.findall(u"\d{2}.\d{2}.\d{4}", value)
         ret = value[1]
         ret = convert_date(ret)
     elif "deliveryLocation" in field:
@@ -273,6 +302,21 @@ def convert_result(field, value):
             ret = 'item'
         else:
             ret = False
+    elif 'deliveryAddress' in field:
+        list = re.search(
+            u'Адреса постачання\: '
+            u'(?P<postalCode>\d+?), (?P<countryName>.+?), (?P<region>.+?), (?P<locality>.+?), (?P<streetAddress>.+)',
+            value)
+        if 'postalCode' in field:
+            ret = list.group('postalCode')
+        elif 'countryName' in field:
+            ret = list.group('countryName')
+        elif 'region' in field:
+            ret = list.group('region')
+        elif 'locality' in field:
+            ret = list.group('locality')
+        elif 'streetAddress' in field:
+            ret = list.group('streetAddress')
     else:
         ret = value
     return ret
@@ -304,7 +348,6 @@ def convert_unit_from_smarttender_format(unit, field):
         u"набір": {"code": "SET", "name": u"набір"},
         u"пачок": {"code": "NMP", "name": u"пачок"},
         u"метри": {"code": "MTR", "name": u"метри"},
-        u"лот": {"code": "LO", "name": u"лот"},
         u"метри кубічні": {"code": "MTQ", "name": u"метри кубічні"},
         u"ящик": {"code": "BX", "name": u"ящик"},
         u"рейс": {"code": "E54", "name": u"рейс"},
@@ -336,6 +379,12 @@ def convert_tender_status(value):
         u"Переможе": "pending",
         u"Дискваліфікований": "unsuccessful",
         u"Період уточнень": "active.enquiries",
+    }
+    return map[value]
+
+def convert_claim_status(value):
+    map = {
+        "Відхилена": 'cancelled'
     }
     return map[value]
 
@@ -376,6 +425,11 @@ def adapt_data(tender_data):
             item.unit['name'] = u"м.кв."
         elif item.unit['name'] == u"штуки":
             item.unit['name'] = u"шт"
+    for item in tender_data.data['items']:
+        if item.deliveryAddress['region'] == u"місто Київ":
+            item.deliveryAddress['region'] = u"Київська обл."
+        elif item.deliveryAddress['locality'] == u"Дніпро":
+            item.deliveryAddress['locality'] = u"Кривий ріг"
     return tender_data
 
 def get_question_data(id):
@@ -395,13 +449,14 @@ def map_to_smarttender_document_type(doctype):
 
 def map_from_smarttender_document_type(doctype):
     map = {
-        u"Презентація" : u"x_presentation",
-        u"Паспорт торгів" : u"tenderNotice",
+        u"Презентація": u"x_presentation",
+        u"Паспорт торгів": u"tenderNotice",
         u"Договір NDA": u"x_nda",
         u"Технические спецификации": u"technicalSpecifications",
         u"Порядок ознайомлення з майном/активом у кімнаті даних": u"x_dgfAssetFamiliarization",
         u"Посиланння на Публічний Паспорт Активу": u"x_dgfPublicAssetCertificate",
-        u"Місце та форма прийому заявок на участь, банківські реквізити для зарахування гарантійних внесків": u"x_dgfPlatformLegalDetails",
+        u"Місце та форма прийому заявок на участь, банківські реквізити для зарахування гарантійних внесків":
+            u"x_dgfPlatformLegalDetails",
         u"\u2015": u"none",
         u"Ілюстрація": u"illustration",
         u"Віртуальна кімната": u"vdr",
@@ -411,18 +466,20 @@ def map_from_smarttender_document_type(doctype):
 
 def location_converter(value):
     if "cancellation" in value:
-        ret = "cancellation", "cancellation"
+        response = "cancellation", "cancellation"
     elif "questions" in value:
-        ret = "discuss", "questions"
+        response = "discuss", "questions"
     elif "proposal" in value:
-        ret = "/bid/edit/", "proposal"
+        response = "/bid/edit/", "proposal"
     elif "awards" in value and "documents" in value:
-        ret = "/webparts/", "awards"
+        response = "/webparts/", "awards"
+    elif "claims" in value:
+        response = "/AppealNew/", "claims"
     else:
-        ret = "publichni-zakupivli-prozorro", "tender"
-    return ret
+        response = "publichni-zakupivli-prozorro", "tender"
+    return response
 
-def download_file(url,download_path):
+def download_file(url, download_path):
     response = urllib2.urlopen(url)
     file_content = response.read()
     open(download_path, 'a').close()
@@ -430,7 +487,7 @@ def download_file(url,download_path):
     f.write(file_content)
     f.close()
 
-def normalize_index(first,second):
+def normalize_index(first, second):
     if first == "-1":
         return "2"
     else:
@@ -447,10 +504,13 @@ def get_attribute(value):
     else:
         return False
 
-def synch(string):
-    list = re.search(ur'{"DateStart":"(?P<DateStart>[\d\s\:\.]+?)","DateEnd":"(?P<DateEnd>[\d\s\:\.]*?)","WorkStatus":"(?P<WorkStatus>[\w+]+?)","Success":(?P<Success>[\w+]+?)}', string)
-    DateStart = list.group('DateStart')
-    DateEnd = list.group('DateEnd')
-    WorkStatus = list.group('WorkStatus')
-    Success = list.group('Success')
-    return DateStart, DateEnd, WorkStatus, Success
+def synchronization(string):
+    list = re.search(u'{"DateStart":"(?P<date_start>[\d\s\:\.]+?)",'
+                     u'"DateEnd":"(?P<date_end>[\d\s\:\.]*?)",'
+                     u'"WorkStatus":"(?P<work_status>[\w+]+?)",'
+                     u'"Success":(?P<success>[\w+]+?)}', string)
+    date_start = list.group('date_start')
+    date_end = list.group('date_end')
+    work_status = list.group('work_status')
+    success = list.group('success')
+    return date_start, date_end, work_status, success
