@@ -49,7 +49,7 @@ def tender_field_info(field):
         return map[result].format(lot_id)
     elif "features" in field:
         list = re.search('(?P<features>\w+)\[(?P<id>\d)\]\.(?P<map>.+)', field)
-        features_id = int(list.group('id'))
+        features_id = int(list.group('id')) + 1
         result = list.group('map')
         map = {
             "title": "xpath=//*[@class='text-lot criteria-tip'][{0}]",
@@ -166,13 +166,20 @@ def lot_field_info(field, id):
         "minimalStep.amount": "css=[class='price text-lot']",
         "minimalStep.currency": "css=[class='price text-lot']",
         "minimalStep.valueAddedTaxIncluded": "css=[class=price]",
+
+    }
+    return map[field].format(id)
+
+def item_field_info(field, id):
+    map = {
+        "description": "xpath=//*[@class='table-items']//td[contains(text(), '{0}')]",
     }
     return map[field].format(id)
 
 def non_price_field_info(field, id):
     map = {
         "title": "xpath=//*[contains(text(), '{0}')]",
-        "description": "xpath=//*[contains(text(), '{0}')]",
+        "description": "xpath=//*[contains(text(), '{0}')]@title",
         "featureOf": "xpath=//*[contains(text(), '{0}')]/preceding-sibling::div[@class='title-lot  cr-title'][1]",
     }
     return map[field].format(id)
@@ -196,23 +203,41 @@ def question_field_info(field, id):
     }
     return (map[field]).format(id)
 
-def claim_field_info(field):
+def claim_field_info(field, title):
     map = {
-        "status": "css=div.complaint-status",
-        "cancellationReason": "xpath=//*[@class='content break-word']",
+        "title": u"xpath=//*[contains(text(), '{0}')]/../../../*[@data-qa='title']/div[1]/span[1]",
+        "status": u"xpath=//*[contains(text(), '{0}')]/../../../*[@data-qa='type-status']/div",
+        "description": u"xpath=//*[contains(text(), '{0}')]/../../..//span[@data-qa='description']",
+        "cancellationReason": u"xpath=//*[contains(text(), '{0}')]/../../..//*[@data-qa='events']//div[@class='content break-word']",
+        "resolutionType": u"xpath=//*[contains(text(), 'Тип рішення: ')]/span",
+        "resolution": u"xpath=//*[contains(text(), 'Тип рішення: ')]/../*[@class='content break-word']",
+        "satisfied": u"xpath=//*[contains(text(), 'Участник дал ответ на решение организатора')]/../../..//*[@class='content break-word']",
     }
-    return map[field]
+    return map[field].format(title)
 
 def convert_claim_result_from_smarttender(value):
     map = {
+        u"Вимога": "claim",
+        u"Отменена жалобщиком": 'invalid',
+        u"Дана відповідь": "answered",
+        u"Вирішена": "resolved",
+        u"Вирішено": "resolved",
         u"Відхилена": 'cancelled',
-        u"Отменена жалобщиком": 'cancelled',
+        u"Не задоволена": "declined",
+        u"Вимога задовільнена": True,
+        u"Вимога не задовільнена": False,
     }
     if value in map:
         result = map[value]
     else:
         result = value
     return result
+
+def claim_file_field_info(field, doc_id):
+    map = {
+        "title": u"xpath=//*[contains(text(), '{0}')]",
+    }
+    return map[field].format(doc_id)
 
 def convert_result(field, value):
     global ret
@@ -466,17 +491,19 @@ def map_from_smarttender_document_type(doctype):
 
 def location_converter(value):
     if "cancellation" in value:
-        response = "cancellation", "cancellation"
+        response = "/cancellation/", "cancellation"
     elif "questions" in value:
-        response = "discuss", "questions"
+        response = "/discuss/", "questions"
     elif "proposal" in value:
         response = "/bid/edit/", "proposal"
     elif "awards" in value and "documents" in value:
         response = "/webparts/", "awards"
     elif "claims" in value:
         response = "/AppealNew/", "claims"
+    elif "multiple_items" in value:
+        response = "/webparts/", "multiple_items"
     else:
-        response = "publichni-zakupivli-prozorro", "tender"
+        response = "/publichni-zakupivli-prozorro/", "tender"
     return response
 
 def download_file(url, download_path):

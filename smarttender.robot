@@ -3,7 +3,6 @@ Library           String
 Library           DateTime
 Library           smarttender_service.py
 Library           op_robot_tests.tests_files.service_keywords
-Library           Selenium2Library
 
 *** Variables ***
 ${browserAlias}                        'main_browser'
@@ -252,7 +251,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   log  ${mode}
   ${last_modification_date}  convert_datetime_to_kot_format  ${TENDER.LAST_MODIFICATION_DATE}
   Open Browser  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.GET.LAST.SYNCHRONIZATION&args={"SEGMENT":3}  chrome
-  Wait Until Keyword Succeeds  10 min  10 sec  waiting_for_synch  ${last_modification_date}
+  Wait Until Keyword Succeeds  10 min  5 sec  waiting_for_synch  ${last_modification_date}
   Reload Page
   Run Keyword And Ignore Error  Select Frame  ${iframe}
   Run Keyword And Ignore Error  Розгорнути детальніше
@@ -287,7 +286,9 @@ waiting_for_synch
   [Documentation]  Отримати значення поля field_name з лоту з lot_id в описі для тендера tender_uaid.
   ...  [Повертає] lot['field_name']
   Відкрити потрібну сторінку  ${username}  ${tender_uaid}  ${field_name}
+  Відкрити сторінку с потрібним лотом за необхідністю  ${username}  ${tender_uaid}
   ${response}=  Отримати та обробити дані із лоту_  ${field_name}  ${lot_id}
+  Повернутися до тендеру від лоту за необхідністю
   [Return]  ${response}
 
 Внести зміни в тендер
@@ -352,9 +353,34 @@ waiting_for_synch
   [Arguments]  ${username}  ${tender_uaid}  ${feature_id}  ${field_name}
   [Documentation]  Отримати значення поля field_name з нецінового показника з feature_id в описі для тендера tender_uaid.
   ...  [Повертає] feature['field_name']
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  ${field_name}
-  ${response}=  Отримати та обробити дані нецінового показника_  ${field_name}  ${feature_id}
+  Відкрити сторінку с потрібним лотом за необхідністю  ${username}  ${tender_uaid}
+  ${response}=  Отримати та обробити дані нецінового показника  ${field_name}  ${feature_id}
+  Повернутися до тендеру від лоту за необхідністю
   [Return]  ${response}
+
+Отримати та обробити дані нецінового показника
+  [Arguments]  ${field_name}  ${feature_id}
+  ${selector}  non_price_field_info  ${field_name}  ${feature_id}
+  ${value}=  Run Keyword If
+  ...  '${field_name}' == 'description'
+  ...        Get Element Attribute  ${selector}
+  ...  ELSE
+  ...        Get Text  ${selector}
+  ${ret}  convert_result  ${field_name}  ${value}
+  [Return]  ${ret}
+
+Відкрити сторінку с потрібним лотом за необхідністю
+  [Arguments]  ${username}  ${tender_uaid}
+  ${number_of_lots}  Get Matching Xpath Count  xpath=//*[@class='group-element']//*[@class='table-header']/following-sibling::tr
+  Run Keyword If  '${number_of_lots}' != '0'
+  ...  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  multiple_items
+
+Повернутися до тендеру від лоту за необхідністю
+  ${location status}  Run Keyword And Return Status  Location Should Contain  /webparts/
+  Run Keyword If  '${location status}' == '${True}'  Run Keywords
+  ...  Go Back
+  ...  AND  Select Frame  ${iframe}
+  ...  AND  Розгорнути детальніше
 
 ####################################
 #      Робота з документами        #
@@ -526,10 +552,22 @@ waiting_for_synch
   [Teardown]  Закрити вікно редагування_
 
 Отримати інформацію із предмету
-  [Arguments]  ${username}  ${tender_uaid}  ${item_id}  ${fieldname}
+  [Arguments]  ${username}  ${tender_uaid}  ${item_id}  ${field_name}
   [Documentation]  Отримує значення поля field_name з предмету з item_id в описі лоту tender_uaid.
   ...  [Повертає] item['field_name'] (значення поля).
-  Fail  Temporary using keyword 'Отримати інформацію із тендера' until will be updated keyword 'Отримати інформацію із предмету'
+  Відкрити сторінку с потрібним лотом за необхідністю  ${username}  ${tender_uaid}
+  ${response}=  Отримати та обробити дані із предмету  ${field_name}  ${item_id}
+  Повернутися до тендеру від лоту за необхідністю
+  [Return]  ${response}
+
+Отримати та обробити дані із предмету
+  [Arguments]  ${fieldname}  ${id}
+  ${selector}  item_field_info  ${fieldname}  ${id}
+  ${value}=  Get Text  ${selector}
+  ${length}  Get Length  ${value}
+  Run Keyword If  ${length} == 0  Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
+  #${ret}  convert_result  ${fieldname}  ${value}
+  [Return]  ${value}
 
 Видалити предмет закупівлі
   [Arguments]  ${user}  ${tenderId}  ${itemId}
@@ -833,9 +871,11 @@ waiting_for_synch
   ...  proposal
   ...  awards
   ...  claims
-  ${page_needed}  ${page}=  location_converter  ${page}
-  ${status}=  Run Keyword And Return Status  Location Should Contain  ${page_needed}
-  Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}  ${tender_uaid}
+  ...  item
+  ${location}  ${page}=  location_converter  ${page}
+  ${status}=  Run Keyword And Return Status  Location Should Contain  ${location}
+  ${location}  Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}  ${tender_uaid}
+  ...  ELSE  Get Location
 
 Відкрити сторінку tender
   [Arguments]  ${tender_uaid}
@@ -856,9 +896,6 @@ waiting_for_synch
   #${status}  Run Keyword And Return Status  Wait Until Page Contains Element  ${tender found}
   #Run Keyword If  '${status}' == '${True}'  Відкрити сторінку tender loop
   #...  ELSE  Відкрити сторінку tender continue  ${tender_uaid}
-  Відкрити сторінку tender loop
-
-Відкрити сторінку tender loop
   ${href}=  Get Element Attribute  ${tender found}@href
   Go To  ${href}
   Select Frame  ${iframe}
@@ -890,22 +927,24 @@ waiting_for_synch
 
 Відкрити сторінку claims
   [Arguments]  ${tender_uaid}
-  log to console  Відкрити сторінку claims
   Wait Until Page Contains Element  ${link to claims}
   ${href}=  Get Element Attribute  ${link to claims}@href
   Go To  ${href}
   Location Should Contain  /AppealNew/
-  #Розгорнути всі скарги
 
-#Розгорнути всі скарги
-#  ${status}  Run Keyword and Return Status  Element Should Be Visible  ${claim collapse button}
-#  Run Keyword If  '${status}' == 'True'  claims_collapse_loop
+Відкрити сторінку multiple_items
+  [Arguments]  ${tender_uaid}
+  # повертае id лоту до я кого прив'язана номенклатура
+  ${relatedLot_id}  Set Variable  ${USERS.users['${tender_owner}'].item_data.item.relatedLot}
+  # повертае тайтл лоту по id
+  :FOR  ${i}  IN RANGE  20
+  \  ${id}  Get From Dictionary  ${USERS.users['${tender_owner}'].tender_data.data['lots'][${i}]}  id
+  \  EXIT For Loop If  '${id}' == '${relatedLot_id}'
+  ${lot_title}  Get From Dictionary  ${USERS.users['${tender_owner}'].tender_data.data['lots'][${i}]}  title
+  # відкривае сторінку лоту по title
+  ${href}  Get Element Attribute  xpath=//a[contains(text(), '${lot_title}')]@href
+  Go To  ${href}
 
-#claims_collapse_loop
-#  ${n}  Get Matching Xpath Count  xpath=//span[@class='appeal-expander']
-#  ${end}  Evaluate  ${n}+1
-#  :FOR  ${i}  in range  1  ${end}
-#  \  Click Element  xpath=(//span[@class='appeal-expander'])[${i}]
 ################################################
 #            SMARTTENDER KEYWORDS              #
 ################################################
@@ -985,15 +1024,6 @@ Click Input Enter Wait
   ...  ELSE  Get Text  ${selector}
   ${length}  Get Length  ${value}
   Run Keyword If  ${length} == 0  Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
-  ${ret}  convert_result  ${fieldname}  ${value}
-  [Return]  ${ret}
-
-Отримати та обробити дані нецінового показника_
-  [Arguments]  ${fieldname}  ${id}
-  ${selector}  non_price_field_info  ${fieldname}  ${id}
-  ${value}=  Run Keyword If
-  ...  '${fieldname}' == 'description'  Get Element Attribute  ${selector}@title
-  ...  ELSE  Get Text  ${selector}
   ${ret}  convert_result  ${fieldname}  ${value}
   [Return]  ${ret}
 
@@ -1207,14 +1237,13 @@ Ignore error
   [Documentation]  Отримати значення поля field_name скарги/вимоги complaintID про виправлення умов закупівлі/лоту
   ...  для тендера tender_uaid (скарги/вимоги про виправлення визначення переможця під номером award_index,
   ...  якщо award_index != None).
-  log to console  Отримати інформацію із скарги
   Відкрити потрібну сторінку  ${username}  ${tender_uaid}  claims
-  ${status}  Run Keyword and Return Status  Element Should Be Visible  ${claim collapse button}
-  Run Keyword If  '${status}' == 'True'  Click Element  xpath=//span[@class='appeal-expander']
-  debug
-  #${selector}  claim_field_info  ${field_name}
-  #${value}  Get Text  ${selector}
-  #${response}  convert_claim_result_from_smarttender  ${value}
+  Run Keyword If  '${field_name}' == 'satisfied' or '${field_name}' == 'status'  smarttender.Оновити сторінку з тендером  ${username}  ${tender_uaid}
+  Reload Page
+  ${title}  Розгорнути потрібну скаргу та порнути title
+  ${selector}  claim_field_info  ${field_name}  ${title}
+  ${value}  Get Text  ${selector}
+  ${response}  convert_claim_result_from_smarttender  ${value}
   [Return]  ${response}
 
 Отримати інформацію із документа до скарги
@@ -1222,10 +1251,16 @@ Ignore error
   [Documentation]  Отримати значення поля field_name з документу doc_id до скарги/вимоги
   ...  complaintID для тендера tender_uaid.
   log to console  Отримати інформацію із документа до скарги
-  debug
-  [Return]  document['field_name']
+  ${title}  Розгорнути потрібну скаргу та порнути title
+  ${selector}  claim_file_field_info  ${field_name}  ${doc_id}
+  ${response}  Get Text  ${selector}
+  [Return]  ${response}
 
-
+Розгорнути потрібну скаргу та порнути title
+  ${title}=  Set Variable  ${USERS.users['${provider}'].tender_claim_data.claim.data.title}
+  ${status}  Run Keyword and Return Status  Element Should Be Visible  xpath=//*[contains(text(), '${title}')]/../../..//*[@class='appeal-expander']
+  Run Keyword If  '${status}' == 'True'  Click Element  xpath=//*[contains(text(), '${title}')]/../../..//*[@class='appeal-expander']
+  [Return]  ${title}
 ####################################
 #             LEGACY               #
 ####################################
