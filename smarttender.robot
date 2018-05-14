@@ -897,6 +897,7 @@ waiting_for_synch
   #Run Keyword If  '${status}' == '${True}'  Відкрити сторінку tender loop
   #...  ELSE  Відкрити сторінку tender continue  ${tender_uaid}
   ${href}=  Get Element Attribute  ${tender found}@href
+  Log  ${href}  WARN
   Go To  ${href}
   Select Frame  ${iframe}
   Розгорнути детальніше
@@ -1238,9 +1239,10 @@ Ignore error
   ...  для тендера tender_uaid (скарги/вимоги про виправлення визначення переможця під номером award_index,
   ...  якщо award_index != None).
   Відкрити потрібну сторінку  ${username}  ${tender_uaid}  claims
-  Run Keyword If  '${field_name}' == 'satisfied' or '${field_name}' == 'status'  smarttender.Оновити сторінку з тендером  ${username}  ${tender_uaid}
+  Run Keyword If  '${field_name}' == 'satisfied' or '${field_name}' == 'status' or "${TESTNAME}" == "Відображення кінцевих статусів двох останніх вимог"  smarttender.Оновити сторінку з тендером  ${username}  ${tender_uaid}
+  Run Keyword If  "${TESTNAME}" == "Відображення кінцевих статусів двох останніх вимог"  Sleep  60
   Reload Page
-  ${title}  Розгорнути потрібну скаргу та порнути title
+  ${title}  Розгорнути потрібну скаргу та порнути title  ${complaintID}
   ${selector}  claim_field_info  ${field_name}  ${title}
   ${value}  Get Text  ${selector}
   ${response}  convert_claim_result_from_smarttender  ${value}
@@ -1250,16 +1252,19 @@ Ignore error
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${doc_id}  ${field_name}
   [Documentation]  Отримати значення поля field_name з документу doc_id до скарги/вимоги
   ...  complaintID для тендера tender_uaid.
-  log to console  Отримати інформацію із документа до скарги
-  ${title}  Розгорнути потрібну скаргу та порнути title
+  ${title}  Розгорнути потрібну скаргу та порнути title  ${complaintID}
   ${selector}  claim_file_field_info  ${field_name}  ${doc_id}
   ${response}  Get Text  ${selector}
   [Return]  ${response}
 
 Розгорнути потрібну скаргу та порнути title
-  ${title}=  Set Variable  ${USERS.users['${provider}'].tender_claim_data.claim.data.title}
-  ${status}  Run Keyword and Return Status  Element Should Be Visible  xpath=//*[contains(text(), '${title}')]/../../..//*[@class='appeal-expander']
-  Run Keyword If  '${status}' == 'True'  Click Element  xpath=//*[contains(text(), '${title}')]/../../..//*[@class='appeal-expander']
+  [Arguments]  ${complaintID}
+  ${title}=  Run Keyword If  "${complaintID}" == "${USERS.users['${provider}'].tender_claim_data.complaintID}"
+  ...        Set Variable  ${USERS.users['${provider}'].tender_claim_data.claim.data.title}
+  ...  ELSE  Set Variable  ${USERS.users['${provider}'].lot_claim_data.claim.data.title}
+  ${expand element}  Set Variable  xpath=//*[contains(text(), "${title}")]/../../..//*[@class='appeal-expander']
+  ${status}  Run Keyword and Return Status  Element Should Be Visible  ${expand element}
+  Run Keyword If  '${status}' == 'True'  Click Element  ${expand element}
   [Return]  ${title}
 ####################################
 #             LEGACY               #

@@ -205,10 +205,10 @@ def question_field_info(field, id):
 
 def claim_field_info(field, title):
     map = {
-        "title": u"xpath=//*[contains(text(), '{0}')]/../../../*[@data-qa='title']/div[1]/span[1]",
-        "status": u"xpath=//*[contains(text(), '{0}')]/../../../*[@data-qa='type-status']/div",
-        "description": u"xpath=//*[contains(text(), '{0}')]/../../..//span[@data-qa='description']",
-        "cancellationReason": u"xpath=//*[contains(text(), '{0}')]/../../..//*[@data-qa='events']//div[@class='content break-word']",
+        "title": u"""xpath=//*[contains(text(), "{0}")]/../../../*[@data-qa='title']/div[1]/span[1]""",
+        "status": u"""xpath=//*[contains(text(), "{0}")]/../../../*[@data-qa='type-status']/div""",
+        "description": u"""xpath=//*[contains(text(), "{0}")]/../../..//span[@data-qa='description']""",
+        "cancellationReason": u"""xpath=//*[contains(text(), "{0}")]/../../..//*[@data-qa='events']//div[@class='content break-word']""",
         "resolutionType": u"xpath=//*[contains(text(), 'Тип рішення: ')]/span",
         "resolution": u"xpath=//*[contains(text(), 'Тип рішення: ')]/../*[@class='content break-word']",
         "satisfied": u"xpath=//*[contains(text(), 'Участник дал ответ на решение организатора')]/../../..//*[@class='content break-word']",
@@ -218,7 +218,8 @@ def claim_field_info(field, title):
 def convert_claim_result_from_smarttender(value):
     map = {
         u"Вимога": "claim",
-        u"Отменена жалобщиком": 'invalid',
+        u"Недійсна": 'invalid',
+        u"Недійсне": 'invalid',
         u"Дана відповідь": "answered",
         u"Вирішена": "resolved",
         u"Вирішено": "resolved",
