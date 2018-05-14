@@ -1233,6 +1233,7 @@ Ignore error
 ####################################
 #             CLAIMS               #
 ####################################
+##############viewer
 Отримати інформацію із скарги
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${field_name}  ${award_index}=None
   [Documentation]  Отримати значення поля field_name скарги/вимоги complaintID про виправлення умов закупівлі/лоту
@@ -1266,6 +1267,173 @@ Ignore error
   ${status}  Run Keyword and Return Status  Element Should Be Visible  ${expand element}
   Run Keyword If  '${status}' == 'True'  Click Element  ${expand element}
   [Return]  ${title}
+
+Вибрати тип вимоги у фільтрі
+  [Arguments]  ${type}=None
+  Click Element  xpath=//*[@data-qa="filter"]
+  Sleep  1
+  Run Keyword If  "${type}" == "None"  Run Keywords  Click Element  xpath=//*[@data-qa="filter"]//ul[2]/li[1]
+  ...  AND  Wait Until Element Is Not Visible  xpath=//*[@data-qa="filter"]//ul[2]/li[1]
+  ...  ELSE  debug
+
+Подати вимогу авторизованим користувачем
+  [Arguments]  ${title}  ${description}
+  CLick Element  xpath=//*[@data-qa="submit-claim"]
+  log to console  Створити чернетку вимоги про виправлення умов закупівлі
+  debug
+
+###############provider
+Створити чернетку вимоги про виправлення умов закупівлі
+  [Arguments]  ${username}  ${tender_uaid}  ${claim}
+  [Documentation]  Створює вимогу claim про виправлення умов закупівлі у статусі draft для тендера tender_uaid.
+  log to console  Створити чернетку вимоги про виправлення умов закупівлі
+  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  claims
+  ${title}  Set Variable  ${claim.data.title}
+  ${description}  Set Variable  ${claim.data.description}
+  Вибрати тип вимоги у фільтрі
+  Подати вимогу авторизованим користувачем  ${title}  ${description}
+  [Return]  ${complaintID}
+
+Створити чернетку вимоги про виправлення умов лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${claim}  ${lot_id}
+  [Documentation]   Створює вимогу claim про виправлення умов лоту у статусі draft для тендера tender_uaid.
+  log to console  Створити чернетку вимоги про виправлення умов лоту
+  debug
+  [Return]  ${complaintID}
+
+Створити чернетку вимоги про виправлення визначення переможця
+  [Arguments]  ${username}  ${tender_uaid}  ${claim}  ${award_index}
+  [Documentation]   Створює вимогу claim про виправлення визначення переможця під номером award_index в статусі draft для тендера tender_uaid.
+  log to console  Створити чернетку вимоги про виправлення визначення переможця
+  debug
+  [Return]  ${complaintID}
+
+Створити вимогу про виправлення умов закупівлі
+  [Arguments]  ${username}  ${tender_uaid}  ${claim}  ${document}=None
+  [Documentation]   Створює вимогу claim про виправлення умов закупівлі у статусі claim для тендера tender_uaid. Можна створити вимогу як з документом, який знаходиться за шляхом document, так і без нього.
+  log to console  Створити вимогу про виправлення умов закупівлі
+  debug
+  [Return]  ${complaintID}
+
+Створити вимогу про виправлення умов лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${claim}  ${lot_id}  ${document}=None
+  [Documentation]   Створює вимогу claim про виправлення умов лоту у статусі claim для тендера tender_uaid. Можна створити вимогу як з документом, який знаходиться за шляхом document, так і без нього.
+  log to console  Створити вимогу про виправлення умов лоту
+  debug
+  [Return]  ${complaintID}
+
+Створити вимогу про виправлення визначення переможця
+  [Arguments]  ${username}  ${tender_uaid}  ${claim}  ${award_index}  ${document}=None
+  [Documentation]   Створює вимогу claim про виправлення визначення переможця під номером award_index в статусі claim для тендера tender_uaid. Можна створити вимогу як з документом, який знаходиться за шляхом document, так і без нього.
+  log to console  Створити вимогу про виправлення визначення переможця
+  debug
+  [Return]  ${complaintID}
+
+Завантажити документацію до вимоги
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${document}
+  [Documentation]   Додати документ, який знаходиться за шляхом document, до вимоги complaintID для тендера tender_uaid.
+  log to console  Завантажити документацію до вимоги
+  debug
+
+Завантажити документацію до вимоги про виправлення визначення переможця
+  [Arguments]   ${username}  ${tender_uaid}  ${complaintID}  ${award_index}  ${document}
+  [Documentation]   Додати документ, який знаходиться за шляхом document, до вимоги complaintID про виправлення визначення переможця під номером award_index для тендера tender_uaid.
+  log to console  Завантажити документацію до вимоги про виправлення визначення переможця
+  debug
+
+Подати вимогу
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${confirmation_data}
+  [Documentation]   Переводить вимогу complaintID для тендера tender_uaid зі статусу draft у статус claim, використовуючи при цьому дані confirmation_data.
+  log to console  Подати вимогу
+  debug
+
+Подати вимогу про виправлення визначення переможця
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${award_index}  ${confirmation_data}
+  [Documentation]   Переводить вимогу complaintID про виправлення визначення переможця під номером award_index для тендера tender_uaid зі статусу draft у статус claim, використовуючи при цьому дані confirmation_data.
+  log to console  Подати вимогу про виправлення визначення переможця
+  debug
+
+Відповісти на вимогу про виправлення умов закупівлі
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${answer_data}
+  [Documentation]   Відповісти на вимогу complaintID про виправлення умов закупівлі для тендера tender_uaid, використовуючи при цьому дані answer_data.
+  log to console  Відповісти на вимогу про виправлення умов закупівлі
+  debug
+
+Відповісти на вимогу про виправлення умов лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${answer_data}
+  [Documentation]   Відповісти на вимогу complaintID про виправлення умов лоту для тендера tender_uaid, використовуючи при цьому дані answer_data.
+  log to console  Відповісти на вимогу про виправлення умов лоту
+  debug
+
+Відповісти на вимогу про виправлення визначення переможця
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${answer_data}  ${award_index}
+  [Documentation]   Відповісти на вимогу complaintID про виправлення визначення переможця під номером award_index для тендера tender_uaid, використовуючи при цьому дані answer_data.
+  log to console  Відповісти на вимогу про виправлення визначення переможця
+  debug
+
+Підтвердити вирішення вимоги про виправлення умов закупівлі
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${confirmation_data}
+  [Documentation]   Перевести вимогу complaintID про виправлення умов закупівлі для тендера tender_uaid у статус resolved, використовуючи при цьому дані confirmation_data.
+  log to console  Підтвердити вирішення вимоги про виправлення умов закупівлі
+  debug
+
+Підтвердити вирішення вимоги про виправлення умов лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${confirmation_data}
+  [Documentation]   Перевести вимогу complaintID про виправлення умов лоту для тендера tender_uaid у статус resolved, використовуючи при цьому дані confirmation_data.
+  log to console  Підтвердити вирішення вимоги про виправлення умов лоту
+  debug
+
+Підтвердити вирішення вимоги про виправлення визначення переможця
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${confirmation_data}  ${award_index}
+  [Documentation]   Перевести вимогу complaintID про виправлення визначення переможця під номером award_index для тендера tender_uaid у статус resolved, використовуючи при цьому дані cancellation_data.
+  log to console  Підтвердити вирішення вимоги про виправлення визначення переможця
+  debug
+
+Скасувати вимогу про виправлення умов закупівлі
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${cancellation_data}
+  [Documentation]   Перевести вимогу complaintID про виправлення умов закупівлі для тендера tender_uaid у статус cancelled, використовуючи при цьому дані cancellation_data.
+  log to console  Скасувати вимогу про виправлення умов закупівлі
+  debug
+
+Скасувати вимогу про виправлення умов лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${cancellation_data}
+  [Documentation]   Перевести вимогу complaintID про виправлення умов лоту для тендера tender_uaid у статус cancelled, використовуючи при цьому дані cancellation_data.
+  log to console  Скасувати вимогу про виправлення умов лоту
+  debug
+
+Скасувати вимогу про виправлення визначення переможця
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${cancellation_data}  ${award_index}
+  [Documentation]  Перевести вимогу complaintID про виправлення визначення переможця під номером award_index для тендера tender_uaid у статус cancelled, використовуючи при цьому дані confirmation_data.
+  log to console  Скасувати вимогу про виправлення визначення переможця
+  debug
+
+Перетворити вимогу про виправлення умов закупівлі в скаргу
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${escalating_data}
+  [Documentation]   Перевести вимогу complaintID про виправлення умов закупівлі для тендера tender_uaid у статус pending, використовуючи при цьому дані cancellation_data.
+  log to console  Перетворити вимогу про виправлення умов закупівлі в скаргу
+  debug
+
+Перетворити вимогу про виправлення умов лоту в скаргу
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${escalating_data}
+  [Documentation]   Перевести вимогу complaintID про виправлення умов лоту для тендера tender_uaid у статус pending, використовуючи при цьому дані escalating_data.
+  log to cosnole  Перетворити вимогу про виправлення умов лоту в скаргу
+  debug
+
+Перетворити вимогу про виправлення визначення переможця в скаргу
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${escalating_data}
+  [Documentation]   Перевести вимогу complaintID про виправлення визначення переможця під номером award_index для тендера tender_uaid у статус pending, використовуючи при цьому дані escalating_data. award_index
+  log to console  Перетворити вимогу про виправлення визначення переможця в скаргу
+  debug
+
+Отримати документ до скарги
+  [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${doc_id}
+  [Documentation]   Завантажити файл doc_id до скарги complaintID для тендера tender_uaid в директорію ${OUTPUT_DIR} для перевірки вмісту цього файлу.
+  log to console  Отримати документ до скарги
+  debug
+  [Return]  ${filename}
+
+
+
 ####################################
 #             LEGACY               #
 ####################################
