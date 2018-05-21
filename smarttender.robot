@@ -30,7 +30,7 @@ ${block}                                xpath=.//*[@class='ivu-card ivu-card-bor
 ${cancellation offers button}           ${block}[last()]//div[@class="ivu-poptip-rel"]/button
 ${cancel. offers confirm button}        ${block}[last()]//div[@class="ivu-poptip-footer"]/button[2]
 ${ok button}                            xpath=.//div[@class="ivu-modal-body"]/div[@class="ivu-modal-confirm"]//button
-${loading}                              css=#app .smt-load .box
+${loading}                              css=.smt-load div.box
 ${your request is sending}              css=.ivu-message-notice-content-textddd
 ${wraploading}                          css=#wrapLoading .load-icon-div i
 ${send offer button}                    css=button#submitBidPlease
@@ -243,7 +243,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
 Пошук тендера по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Шукає лот з uaid = tender_uaid. [Повертає] tender (словник з інформацією про лот)
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  tender
+  Відкрити сторінку  tender  ${tender_uaid}
 
 Оновити сторінку з тендером
   [Arguments]  ${username}  ${tender_uaid}
@@ -275,7 +275,7 @@ waiting_for_synch
 Отримати інформацію із тендера
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
   [Documentation]  Отримує значення поля field_name для лоту tender_uaid. [Повертає] tender['field_name'] (значення поля).
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  ${field_name}
+  Відкрити сторінку  ${field_name}  ${tender_uaid}
   Run Keyword if  '${field_name}' == 'status' or 'features[3].title' == '${fieldname}' or 'Period' in '${fieldname}'
   ...  smarttender.Оновити сторінку з тендером  ${username}  ${tender_uaid}
   ${response}=  Отримати та обробити дані із тендера_  ${field_name}
@@ -285,7 +285,7 @@ waiting_for_synch
   [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${field_name}
   [Documentation]  Отримати значення поля field_name з лоту з lot_id в описі для тендера tender_uaid.
   ...  [Повертає] lot['field_name']
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  ${field_name}
+  Відкрити сторінку  ${field_name}  ${tender_uaid}
   Відкрити сторінку с потрібним лотом за необхідністю  ${username}  ${tender_uaid}
   ${response}=  Отримати та обробити дані із лоту_  ${field_name}  ${lot_id}
   Повернутися до тендеру від лоту за необхідністю
@@ -373,7 +373,7 @@ waiting_for_synch
   [Arguments]  ${username}  ${tender_uaid}
   ${number_of_lots}  Get Matching Xpath Count  xpath=//*[@class='group-element']//*[@class='table-header']/following-sibling::tr
   Run Keyword If  '${number_of_lots}' != '0'
-  ...  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  multiple_items
+  ...  Відкрити сторінку  multiple_items  ${tender_uaid}
 
 Повернутися до тендеру від лоту за необхідністю
   ${location status}  Run Keyword And Return Status  Location Should Contain  /webparts/
@@ -499,7 +499,7 @@ waiting_for_synch
   [Documentation]  Отримує значення поля field документа doc_id з лоту tender_uaid
   ...  для перевірки правильності відображення цього поля.
   ...  [Повертає] document['field'] (значення поля field)
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  tender
+  Відкрити сторінку  tender  ${tender_uaid}
   ${selector}=  document_fields_info  ${field}  ${doc_id}
   ${result}  Get Text  ${selector}
   [Return]  ${result}
@@ -518,7 +518,7 @@ waiting_for_synch
   [Documentation]  Завантажує файл з doc_id в заголовку з лоту tender_uaid в директорію ${OUTPUT_DIR}
   ...  для перевірки вмісту цього файлу.
   ...  [Повертає] filename (ім'я завантаженого файлу)
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  tender
+  Відкрити сторінку  tender  ${tender_uaid}
   ${fileUrl}=  Get Element Attribute  xpath=//*[contains(text(), '${doc_id}')]@href
   ${filename}=  Get Text  xpath=//*[contains(text(), '${doc_id}')]
   smarttender_service.download_file  ${fileUrl}  ${OUTPUT_DIR}/${filename}
@@ -528,7 +528,7 @@ waiting_for_synch
   [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${doc_id}
   [Documentation]  Завантажити файл doc_id до лоту з lot_id в описі для тендера tender_uaid в директорію ${OUTPUT_DIR} для перевірки вмісту цього файлу.
   ...  [Повертає] filename (ім'я завантаженого файлу)
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  tender
+  Відкрити сторінку  tender  ${tender_uaid}
   ${fileUrl}=  Get Element Attribute  xpath=//*[contains(text(), '${doc_id}')]@href
   ${filename}=  Get Text  xpath=//*[contains(text(), '${doc_id}')]
   smarttender_service.download_file  ${fileUrl}  ${OUTPUT_DIR}/${filename}
@@ -596,7 +596,7 @@ waiting_for_synch
   ...  [Повертає] reply (словник з інформацією про запитання).  discuss
   ${title}=  Get From Dictionary  ${question.data}  title
   ${description}=  Get From Dictionary  ${question.data}  description
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  questions
+  Відкрити сторінку  questions  ${tender_uaid}
   ${question_data}=  Задати запитання_  ${title}  ${description}  ${item_id}
   [Return]  ${question_data}
 
@@ -606,7 +606,7 @@ waiting_for_synch
   ...  [Повертає] reply (словник з інформацією про запитання).
   ${title}=  Get From Dictionary  ${question.data}  title
   ${description}=  Get From Dictionary  ${question.data}  description
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  questions
+  Відкрити сторінку  questions  ${tender_uaid}
   ${question_data}=  Задати запитання_  ${title}  ${description}  no_id
   [Return]  ${question_data}
 
@@ -644,8 +644,7 @@ waiting_for_synch
   [Documentation]  Створити запитання з даними question до лоту з lot_id в описі для тендера tender_uaid.
   ${title}=  Get From Dictionary  ${question.data}  title
   ${description}=  Get From Dictionary  ${question.data}  description
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  questions
-  Відкрити сторінку questions  ${tender_uaid}
+  Відкрити сторінку  questions  ${tender_uaid}
   Задати запитання_  ${title}  ${description}  no_id
 
 
@@ -659,12 +658,13 @@ waiting_for_synch
   ...  ${ARGUMENTS[1]}  features_ids=None
   ...  Подає цінову пропозицію bid до лоту tender_uaid користувачем username.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію).
-  ${amount}=  Run Keyword If  'open' in '${mode}'  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
+  Відкрити сторінку  proposal  ${tender_uaid}
+  ${amount}=  Run Keyword If  'open' in '${mode}' or "${NUMBER_OF_LOTS}"  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
   ...  ELSE  Get From Dictionary  ${bid.data.value}  amount
   ${amount}=  convert to string  ${amount}
   ${parameters}=  Run Keyword If  '${mode}' != 'belowThreshold'  Get From Dictionary  ${bid.data}  parameters
   #Пройти кваліфікацію для подачі пропозиції_  ${username}  ${tender_uaid}  ${bid}
-  Прийняти участь в тендері_  ${username}  ${tender_uaid}  ${amount}
+  Прийняти участь в тендері  ${username}  ${tender_uaid}  ${amount}
   ${response}=  Get Value  css=#lotAmount0>input
   ${response}=  smarttender_service.delete_spaces  ${response}
   [Return]  ${response}
@@ -674,7 +674,7 @@ waiting_for_synch
   [Documentation]  Змінює поле fieldname на fieldvalue цінової пропозиції користувача username до лоту tender_uaid.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію)
   ${amount}=  convert to string  ${fieldvalue}
-  Прийняти участь в тендері_  ${username}  ${tender_uaid}  ${amount}
+  Прийняти участь в тендері  ${username}  ${tender_uaid}  ${amount}
   ${response}=  Get Value  css=#lotAmount0>input
   ${response}=  smarttender_service.delete_spaces  ${response}
   [Return]  ${response}
@@ -683,7 +683,7 @@ waiting_for_synch
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Змінює статус цінової пропозиції до лоту tender_uaid користувача username на cancelled.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію). Цей ківорд реалізовуємо лише для процедур на цбд1.
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  proposal
+  Відкрити сторінку  proposal  ${tender_uaid}
   Unselect Frame
   Wait Until Page Contains Element  ${cancellation offers button}
   Run Keyword And Ignore Error  Click Element  ${cancellation offers button}
@@ -732,7 +732,7 @@ waiting_for_synch
 
 Отримати інформацію із пропозиції Get Text
   [Arguments]  ${username}  ${tender_uaid}  ${selector}  ${field}
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  proposal
+  Відкрити сторінку  proposal  ${tender_uaid}
   ${text}  Get Text  ${selector}
   ${ret}  smarttender_service.convert_result  ${field}  ${text}
   [Return]  ${ret}
@@ -862,8 +862,8 @@ waiting_for_synch
 ################################################
 #                 OPEN PAGE                    #
 ################################################
-Відкрити потрібну сторінку
-  [Arguments]  ${username}  ${tender_uaid}  ${page}
+Відкрити сторінку
+  [Arguments]  ${page}  ${tender_uaid}=None  ${award_index}=None
   [Documentation]  Відкриває сторінку location або оновлює поточну
   ...  tender
   ...  questions
@@ -872,20 +872,14 @@ waiting_for_synch
   ...  awards
   ...  claims
   ...  item
+  ...  award_claims
   ${location}  ${page}=  location_converter  ${page}
   ${status}=  Run Keyword And Return Status  Location Should Contain  ${location}
-  ${location}  Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}  ${tender_uaid}
+  ${location}  Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}  ${tender_uaid}  ${award_index}
   ...  ELSE  Get Location
 
 Відкрити сторінку tender
-  [Arguments]  ${tender_uaid}
-  ${location}  Run Keyword if  '${mode}' != 'dgfInsider'  Set variable  publichni-zakupivli-prozorro
-  ...  ELSE  Set Variable  auktsiony-na-prodazh-aktyviv-derzhpidpryemstv
-  ${status}  Run Keyword And Return Status  Location Should Contain  ${location}
-  Run keyword if  '${status}' == '${False}'  Відкрити сторінку tender continue  ${tender_uaid}
-
-Відкрити сторінку tender continue
-  [Arguments]  ${tender_uaid}
+  [Arguments]  ${tender_uaid}  ${award_index}=None
   Go To  ${path to find tender}
   Wait Until page Contains Element  ${find tender field }  ${wait}
   Run Keyword If  '${mode}' == 'negotiation' or '${mode}' == 'reporting'  Click Element  css=li:nth-child(2)>a[data-toggle=tab]
@@ -893,48 +887,56 @@ waiting_for_synch
   Press Key  ${find tender field }  \\13
   Location Should Contain  f=${tender_uaid}
   Wait Until Page Contains Element  ${tender found}
-  #${status}  Run Keyword And Return Status  Wait Until Page Contains Element  ${tender found}
-  #Run Keyword If  '${status}' == '${True}'  Відкрити сторінку tender loop
-  #...  ELSE  Відкрити сторінку tender continue  ${tender_uaid}
-  ${href}=  Get Element Attribute  ${tender found}@href
-  Log  ${href}  WARN
-  Go To  ${href}
+  ${tender_href}=  Get Element Attribute  ${tender found}@href
+  Log  ${tender_href}  WARN
+  Set Global Variable  ${tender_href}
+  Go To  ${tender_href}
   Select Frame  ${iframe}
   Розгорнути детальніше
+  ${info_idcbd}  Get Text  css=.info_idcbd
+  Set Global Variable  ${info_idcbd}
 
 Відкрити сторінку proposal
-  [Arguments]  ${tender_uaid}
+  [Arguments]  ${tender_uaid}=None  ${award_index}=None
   Wait Until Page Contains Element  css=a[class='show-control button-lot']
   ${href}=  Get Element Attribute  css=a[class='show-control button-lot']@href
   Go To  ${href}
   Wait Until Page Contains  Пропозиція
 
 Відкрити сторінку questions
-  [Arguments]  ${tender_uaid}
+  [Arguments]  ${tender_uaid}=None  ${award_index}=None
   smarttender.Оновити сторінку з тендером  none  ${tender_uaid}
   Click Element  css=span#questionToggle
 
 Відкрити сторінку cancellation
-  [Arguments]  ${tender_uaid}
+  [Arguments]  ${tender_uaid}=None  ${award_index}=None
   Click Element  css=a#cancellation
   Select Frame  css=#widgetIframe
 
 Відкрити сторінку awards
-  [Arguments]  ${tender_uaid}
+  [Arguments]  ${tender_uaid}=None  ${award_index}=None
   Wait Until Page Contains Element  css=a.att-link[href]
   ${href}=  Get Element Attribute  css=a.att-link[href]@href
   Go To  ${href}
   Wait Until Page Contains  Документи
 
 Відкрити сторінку claims
-  [Arguments]  ${tender_uaid}
+  [Arguments]  ${tender_uaid}=None  ${award_index}=None
   Wait Until Page Contains Element  ${link to claims}
   ${href}=  Get Element Attribute  ${link to claims}@href
   Go To  ${href}
   Location Should Contain  /AppealNew/
 
+Відкрити сторінку award_claims
+  [Arguments]  ${tender_uaid}  ${award_index}
+  Wait Until Page Contains Element  xpath=//*[@class='table-proposal']//tr[not(@class='header-row')][${award_index}+1]//td[contains(@class, 'complaint')]/a
+  ${href}  Get Element Attribute   xpath=//*[@class='table-proposal']//tr[not(@class='header-row')][${award_index}+1]//td[contains(@class, 'complaint')]/a@href
+  Go To  ${href}
+  Location Should Contain  /AppealNew/
+
 Відкрити сторінку multiple_items
   [Arguments]  ${tender_uaid}
+  Відкрити сторінку tender  ${tender_uaid}
   # повертае id лоту до я кого прив'язана номенклатура
   ${relatedLot_id}  Set Variable  ${USERS.users['${tender_owner}'].item_data.item.relatedLot}
   # повертае тайтл лоту по id
@@ -1127,7 +1129,7 @@ Click Input Enter Wait
 
 Пройти кваліфікацію для подачі пропозиції_
   [Arguments]  ${username}  ${tender_uaid}  ${bid}
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  tender
+  Відкрити сторінку  tender  ${tender_uaid}
   ${shouldQualify}=  Get Variable Value  ${bid['data'].qualified}
   Return From Keyword If  '${shouldQualify}' == '${False}'
   Wait Until Page Contains Element  jquery=a#participate  10
@@ -1157,9 +1159,10 @@ Click Input Enter Wait
   Reload Page
   Select Frame  ${iframe}
 
-Прийняти участь в тендері_
+Прийняти участь в тендері
   [Arguments]  ${username}  ${tender_uaid}  ${amount}
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  proposal
+  Відкрити сторінку  proposal  ${tender_uaid}
+  Розгорнути всі лоти
   Заповнити дані для подачі пропозиції_  ${amount}
   Подати пропозицію
 
@@ -1239,11 +1242,13 @@ Ignore error
   [Documentation]  Отримати значення поля field_name скарги/вимоги complaintID про виправлення умов закупівлі/лоту
   ...  для тендера tender_uaid (скарги/вимоги про виправлення визначення переможця під номером award_index,
   ...  якщо award_index != None).
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  claims
+  Run Keyword If  '${award_index}' == 'None'  Відкрити сторінку  claims
+  ...  ELSE  Відкрити сторінку  award_claims  ${award_index}  ${award_index}
   Run Keyword If  '${field_name}' == 'satisfied' or '${field_name}' == 'status' or "${TESTNAME}" == "Відображення кінцевих статусів двох останніх вимог"  smarttender.Оновити сторінку з тендером  ${username}  ${tender_uaid}
   Run Keyword If  "${TESTNAME}" == "Відображення кінцевих статусів двох останніх вимог"  Sleep  60
   Reload Page
-  ${title}  Розгорнути потрібну скаргу та порнути title  ${complaintID}
+  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}  ${award_index}
+  Розгорнути потрібну скаргу  ${title}
   ${selector}  claim_field_info  ${field_name}  ${title}
   ${value}  Get Text  ${selector}
   ${response}  convert_claim_result_from_smarttender  ${value}
@@ -1253,52 +1258,121 @@ Ignore error
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${doc_id}  ${field_name}
   [Documentation]  Отримати значення поля field_name з документу doc_id до скарги/вимоги
   ...  complaintID для тендера tender_uaid.
-  ${title}  Розгорнути потрібну скаргу та порнути title  ${complaintID}
+  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}  ${award_index}
+  Розгорнути потрібну скаргу  ${title}
   ${selector}  claim_file_field_info  ${field_name}  ${doc_id}
   ${response}  Get Text  ${selector}
   [Return]  ${response}
 
-Розгорнути потрібну скаргу та порнути title
-  [Arguments]  ${complaintID}
-  ${title}=  Run Keyword If  "${complaintID}" == "${USERS.users['${provider}'].tender_claim_data.complaintID}"
-  ...        Set Variable  ${USERS.users['${provider}'].tender_claim_data.claim.data.title}
-  ...  ELSE  Set Variable  ${USERS.users['${provider}'].lot_claim_data.claim.data.title}
+Розгорнути потрібну скаргу
+  [Arguments]  ${title}
   ${expand element}  Set Variable  xpath=//*[contains(text(), "${title}")]/../../..//*[@class='appeal-expander']
   ${status}  Run Keyword and Return Status  Element Should Be Visible  ${expand element}
   Run Keyword If  '${status}' == 'True'  Click Element  ${expand element}
-  [Return]  ${title}
 
 Вибрати тип вимоги у фільтрі
   [Arguments]  ${type}=None
+  Unselect Frame
   Click Element  xpath=//*[@data-qa="filter"]
   Sleep  1
-  Run Keyword If  "${type}" == "None"  Run Keywords  Click Element  xpath=//*[@data-qa="filter"]//ul[2]/li[1]
-  ...  AND  Wait Until Element Is Not Visible  xpath=//*[@data-qa="filter"]//ul[2]/li[1]
-  ...  ELSE  debug
+  Run Keyword If  "${type}" == "None"
+  ...        Click Element  xpath=//*[@data-qa="filter"]//ul[2]/li[1]
+  ...  ELSE  Click Element  xpath=//*[contains(text(), "${type}")]
+  Wait Until Element Is Not Visible  xpath=//*[@data-qa="filter"]//ul[2]/li[1]
 
 Подати вимогу авторизованим користувачем
-  [Arguments]  ${title}  ${description}
+  [Arguments]  ${title}  ${description}  ${document}=None  ${award_index}=None
+  # Натиснути подати вимогу
   CLick Element  xpath=//*[@data-qa="submit-claim"]
-  log to console  Створити чернетку вимоги про виправлення умов закупівлі
-  debug
+  Wait For Loading
+  # Заповнити дані
+  Input Text  xpath=//*[@data-qa='subject']//input  ${title}
+  Input Text  xpath=//*[@data-qa='description']//textarea  ${description}
+  # Додати файл
+  Run Keyword If  '${document}' != 'None'  Choose File  xpath=//*[@data-qa="add-files"]//input[@multiple]  ${document}
+  # Натиснути подати вимогу
+  Click Element  xpath=//*[@data-qa="add-complaint"]
+  Wait For Loading
+  Wait Until Element Is Not Visible  xpath=//*[@data-qa='subject']//input  ${wait}
+  # return complaintID from the CDB
+  Log To Console  Подати вимогу авторизованим користувачем
+  ${complaintID}  Отримати complaintID по title із ЦБД  ${title}  ${award_index}
+  [Return]  ${complaintID}
 
-###############provider
+# Отримати complaintID по title із ЦБД
+Отримати complaintID по title із ЦБД
+  [Arguments]  ${title}  ${award_index}=None
+  ${data}  get_tender_data  ${API_HOST_URL}/api/${API_VERSION}/tenders/${info_idcbd}
+  ${data}  evaluate  json.loads($data)  json
+  ${complaintID}  Run Keyword If  '${award_index}' == 'None'
+  ...        Отримати complaintID по title із ЦБД на умові закупівлі  ${data}  ${title}
+  ...  ELSE  Отримати complaintID по title із ЦБД на award  ${data}  ${title}  ${award_index}
+  [Return]  ${complaintID}
+
+Отримати complaintID по title із ЦБД на умові закупівлі
+  [Arguments]  ${data}  ${title}
+  ${n}  Get Length  ${data['data']['complaints']}
+  :FOR  ${item}  IN RANGE  ${n}
+  \  ${status}  Run Keyword If  "${title}" == "${data['data']['complaints'][${item}]['title']}"  Set Variable  Pass
+  \  ${complaintID}  Run Keyword If  "${status}" == "Pass"  Set Variable  ${data['data']['complaints'][${item}]['complaintID']}
+  \  Run Keyword If  "${status}" == "Pass"  Exit For Loop
+  [Return]  ${complaintID}
+
+Отримати complaintID по title із ЦБД на award
+  [Arguments]  ${data}  ${title}  ${award_index}
+  ${n}  Get Length  ${data['data']['awards'][${award_index}]['complaints']}
+  :FOR  ${item}  IN RANGE  ${n}
+  \  ${status}  Run Keyword If  "${title}" == "${data['data']['awards'][${award_index}]['complaints'][${item}]['title']}"  Set Variable  Pass
+  \  ${complaintID}  Run Keyword If  "${status}" == "Pass"  Set Variable  ${data['data']['awards'][${award_index}]['complaints'][${item}]['complaintID']}
+  \  Run Keyword If  "${status}" == "Pass"  Exit For Loop
+  [Return]  ${complaintID}
+
+# Отримати title по complaintID із ЦБД
+Отримати title по complaintID із ЦБД
+  [Arguments]  ${complaintID}  ${award_index}=None
+  ${data}  get_tender_data  ${API_HOST_URL}/api/${API_VERSION}/tenders/${info_idcbd}
+  ${data}  evaluate  json.loads($data)  json
+  ${title}  Run Keyword If  '${award_index}' == 'None'
+  ...        Отримати title по complaintID із ЦБД на умові закупівлі  ${data}  ${complaintID}
+  ...  ELSE  Отримати title по complaintID із ЦБД на award  ${data}  ${complaintID}  ${award_index}
+  [Return]  ${title}
+
+Отримати title по complaintID із ЦБД на умові закупівлі
+  [Arguments]  ${data}  ${complaintID}
+  ${n}  Get Length  ${data['data']['complaints']}
+  :FOR  ${item}  IN RANGE  ${n}
+  \  ${status}  Run Keyword If  "${complaintID}" == "${data['data']['complaints'][${item}]['complaintID']}"  Set Variable  Pass
+  \  ${title}  Run Keyword If  "${status}" == "Pass"  Set Variable  ${data['data']['complaints'][${item}]['title']}
+  \  Run Keyword If  "${status}" == "Pass"  Exit For Loop
+  [Return]  ${title}
+
+Отримати title по complaintID із ЦБД на award
+  [Arguments]  ${data}  ${complaintID}  ${award_index}
+   ${n}  Get Length  ${data['data']['awards'][${award_index}]['complaints']}
+  :FOR  ${item}  IN RANGE  ${n}
+  \  ${status}  Run Keyword If  "${complaintID}" == "${data['data']['awards'][${award_index}]['complaints'][${item}]['complaintID']}"  Set Variable  Pass
+  \  ${title}  Run Keyword If  "${status}" == "Pass"  Set Variable  ${data['data']['awards'][${award_index}]['complaints'][${item}]['title']}
+  \  Run Keyword If  "${status}" == "Pass"  Exit For Loop
+  [Return]  ${title}
+
 Створити чернетку вимоги про виправлення умов закупівлі
   [Arguments]  ${username}  ${tender_uaid}  ${claim}
   [Documentation]  Створює вимогу claim про виправлення умов закупівлі у статусі draft для тендера tender_uaid.
-  log to console  Створити чернетку вимоги про виправлення умов закупівлі
-  Відкрити потрібну сторінку  ${username}  ${tender_uaid}  claims
+  Відкрити сторінку  claims  ${tender_uaid}
   ${title}  Set Variable  ${claim.data.title}
   ${description}  Set Variable  ${claim.data.description}
   Вибрати тип вимоги у фільтрі
-  Подати вимогу авторизованим користувачем  ${title}  ${description}
+  ${complaintID}  Подати вимогу авторизованим користувачем  ${title}  ${description}
   [Return]  ${complaintID}
 
 Створити чернетку вимоги про виправлення умов лоту
   [Arguments]  ${username}  ${tender_uaid}  ${claim}  ${lot_id}
   [Documentation]   Створює вимогу claim про виправлення умов лоту у статусі draft для тендера tender_uaid.
-  log to console  Створити чернетку вимоги про виправлення умов лоту
-  debug
+  Відкрити сторінку  claims  ${tender_uaid}
+  ${title}  Set Variable  ${claim.data.title}
+  ${description}  Set Variable  ${claim.data.description}
+  Вибрати тип вимоги у фільтрі  ${lot_id}
+  ${complaintID}  Подати вимогу авторизованим користувачем  ${title}  ${description}
   [Return]  ${complaintID}
 
 Створити чернетку вимоги про виправлення визначення переможця
@@ -1311,22 +1385,28 @@ Ignore error
 Створити вимогу про виправлення умов закупівлі
   [Arguments]  ${username}  ${tender_uaid}  ${claim}  ${document}=None
   [Documentation]   Створює вимогу claim про виправлення умов закупівлі у статусі claim для тендера tender_uaid. Можна створити вимогу як з документом, який знаходиться за шляхом document, так і без нього.
-  log to console  Створити вимогу про виправлення умов закупівлі
-  debug
+  ${title}  Set Variable  ${claim.data.title}
+  ${description}  Set Variable  ${claim.data.description}
+  Вибрати тип вимоги у фільтрі
+  ${complaintID}  Подати вимогу авторизованим користувачем  ${title}  ${description}  ${document}
   [Return]  ${complaintID}
 
 Створити вимогу про виправлення умов лоту
   [Arguments]  ${username}  ${tender_uaid}  ${claim}  ${lot_id}  ${document}=None
   [Documentation]   Створює вимогу claim про виправлення умов лоту у статусі claim для тендера tender_uaid. Можна створити вимогу як з документом, який знаходиться за шляхом document, так і без нього.
-  log to console  Створити вимогу про виправлення умов лоту
-  debug
+  ${title}  Set Variable  ${claim.data.title}
+  ${description}  Set Variable  ${claim.data.description}
+  Вибрати тип вимоги у фільтрі  ${lot_id}
+  ${complaintID}  Подати вимогу авторизованим користувачем  ${title}  ${description}  ${document}
   [Return]  ${complaintID}
 
 Створити вимогу про виправлення визначення переможця
   [Arguments]  ${username}  ${tender_uaid}  ${claim}  ${award_index}  ${document}=None
   [Documentation]   Створює вимогу claim про виправлення визначення переможця під номером award_index в статусі claim для тендера tender_uaid. Можна створити вимогу як з документом, який знаходиться за шляхом document, так і без нього.
-  log to console  Створити вимогу про виправлення визначення переможця
-  debug
+  ${title}  Set Variable  ${claim.data.title}
+  ${description}  Set Variable  ${claim.data.description}
+  Відкрити сторінку  award_claims  ${award_index}  ${award_index}
+  ${complaintID}  Подати вимогу авторизованим користувачем  ${title}  ${description}  ${document}  ${award_index}
   [Return]  ${complaintID}
 
 Завантажити документацію до вимоги
@@ -1374,8 +1454,13 @@ Ignore error
 Підтвердити вирішення вимоги про виправлення умов закупівлі
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${confirmation_data}
   [Documentation]   Перевести вимогу complaintID про виправлення умов закупівлі для тендера tender_uaid у статус resolved, використовуючи при цьому дані confirmation_data.
-  log to console  Підтвердити вирішення вимоги про виправлення умов закупівлі
-  debug
+  ${satisfied}  Set Variable  ${confirmation_data['data']['satisfied']}
+  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}
+  Натиснути коригувати  ${title}
+  Run Keyword If  "${satisfied}" == "True"  Click Element  xpath=//*[@data-qa="satisfied-decision"]
+  ...  ELSE  Click Element  xpath=//*[@data-qa="unsatisfied-decision"]
+  Wait For Loading
+  Wait Until Element Is Not Visible  xpath=//*[@data-qa="satisfied-decision"]
 
 Підтвердити вирішення вимоги про виправлення умов лоту
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${confirmation_data}
@@ -1386,20 +1471,43 @@ Ignore error
 Підтвердити вирішення вимоги про виправлення визначення переможця
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${confirmation_data}  ${award_index}
   [Documentation]   Перевести вимогу complaintID про виправлення визначення переможця під номером award_index для тендера tender_uaid у статус resolved, використовуючи при цьому дані cancellation_data.
-  log to console  Підтвердити вирішення вимоги про виправлення визначення переможця
-  debug
+  ${satisfied}  Set Variable  ${confirmation_data['data']['satisfied']}
+  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}  ${award_index}
+  Натиснути коригувати  ${title}
+  Run Keyword If  "${satisfied}" == "True"  Click Element  xpath=//*[@data-qa="satisfied-decision"]
+  ...  ELSE  Click Element  xpath=//*[@data-qa="unsatisfied-decision"]
+  Wait For Loading
+  Wait Until Element Is Not Visible  xpath=//*[@data-qa="satisfied-decision"]
 
 Скасувати вимогу про виправлення умов закупівлі
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${cancellation_data}
   [Documentation]   Перевести вимогу complaintID про виправлення умов закупівлі для тендера tender_uaid у статус cancelled, використовуючи при цьому дані cancellation_data.
-  log to console  Скасувати вимогу про виправлення умов закупівлі
-  debug
+  ${cancellationReason}  Set Variable   ${cancellation_data['data']['cancellationReason']}
+  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}
+  Натиснути коригувати  ${title}
+  Скасувати вимогу  ${complaintID}  ${cancellationReason}
+
+Натиснути коригувати
+  [Arguments]  ${title}
+  Unselect Frame
+  Click Element  xpath=//*[contains(text(), '${title}')]/../..//*[@data-qa="start-edit-mode"]
+  Wait For Loading
+
+Скасувати вимогу
+  [Arguments]  ${complaintID}  ${cancellationReason}
+  Click Element  xpath=//*[@data-qa="cancel-complaint"]
+  Input Text  xpath=//*[@data-qa="cancel-reason"]//input  ${cancellationReason}
+  Click Element  xpath=//*[@data-qa="cancel-modal-submit"]
+  Wait For Loading
+  Wait Until Element Is Not Visible   xpath=//*[@data-qa="cancel-modal-submit"]
 
 Скасувати вимогу про виправлення умов лоту
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${cancellation_data}
   [Documentation]   Перевести вимогу complaintID про виправлення умов лоту для тендера tender_uaid у статус cancelled, використовуючи при цьому дані cancellation_data.
-  log to console  Скасувати вимогу про виправлення умов лоту
-  debug
+  ${cancellationReason}  Set Variable   ${cancellation_data['data']['cancellationReason']}
+  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}
+  Натиснути коригувати  ${title}
+  Скасувати вимогу  ${complaintID}  ${cancellationReason}
 
 Скасувати вимогу про виправлення визначення переможця
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${cancellation_data}  ${award_index}
@@ -1432,7 +1540,9 @@ Ignore error
   debug
   [Return]  ${filename}
 
-
+Wait For Loading
+  Run Keyword And Ignore Error  Wait Until Element Is Visible  ${loading}  10
+  Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  600
 
 ####################################
 #             LEGACY               #
@@ -1458,3 +1568,14 @@ Ignore error
   Click Element  jquery=div.dxbButton_DevEx:eq(2)
   Click Element  xpath=//span[text()="Зберегти"]
   Click Element  id=IMMessageBoxBtnYes_CD
+
+Розгорнути всі лоти
+  [Documentation]  expand all lots
+  Sleep  1
+  ${blocks amount}=  Get Matching Xpath Count  .//*[@class='ivu-card ivu-card-bordered']
+  Run Keyword If  '${blocks amount}'<'3'
+  ...  fatal error  Нету нужных елементов на странице(не та страница)
+  ${lots amount}  Evaluate  ${blocks amount}-2
+  :FOR  ${INDEX}  IN RANGE  ${lots amount}
+  \  ${n}  Evaluate  ${INDEX}+2
+  \  Click Element  ${block}[${n}]//button

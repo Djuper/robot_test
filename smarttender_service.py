@@ -7,6 +7,16 @@ from pytz import timezone
 import urllib2
 import os
 import re
+import requests
+import ast
+
+
+
+def get_tender_data(link):
+    r = requests.get(link).text
+    #s = r.replace('true', 'True')
+    #dictionary = ast.literal_eval(s)
+    return r
 
 TZ = timezone(os.environ['TZ'] if 'TZ' in os.environ else 'Europe/Kiev')
 number_of_tabs = 1
@@ -499,6 +509,8 @@ def location_converter(value):
         response = "/bid/edit/", "proposal"
     elif "awards" in value and "documents" in value:
         response = "/webparts/", "awards"
+    elif "award_claims" in value:
+        response = "/AppealNew/", "award_claims"
     elif "claims" in value:
         response = "/AppealNew/", "claims"
     elif "multiple_items" in value:
