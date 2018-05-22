@@ -922,6 +922,7 @@ waiting_for_synch
 
 Відкрити сторінку claims
   [Arguments]  ${tender_uaid}=None  ${award_index}=None
+
   Wait Until Page Contains Element  ${link to claims}
   ${href}=  Get Element Attribute  ${link to claims}@href
   Go To  ${href}
