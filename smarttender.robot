@@ -1295,7 +1295,6 @@ Ignore error
   Wait For Loading
   Wait Until Element Is Not Visible  xpath=//*[@data-qa='subject']//input  ${wait}
   # return complaintID from the CDB
-  Log To Console  Подати вимогу авторизованим користувачем
   ${complaintID}  Отримати complaintID по title із ЦБД  ${title}  ${award_index}
   [Return]  ${complaintID}
 
@@ -1354,6 +1353,7 @@ Ignore error
   \  ${title}  Run Keyword If  "${status}" == "Pass"  Set Variable  ${data['data']['awards'][${award_index}]['complaints'][${item}]['title']}
   \  Run Keyword If  "${status}" == "Pass"  Exit For Loop
   [Return]  ${title}
+#end
 
 Створити чернетку вимоги про виправлення умов закупівлі
   [Arguments]  ${username}  ${tender_uaid}  ${claim}
@@ -1378,8 +1378,10 @@ Ignore error
 Створити чернетку вимоги про виправлення визначення переможця
   [Arguments]  ${username}  ${tender_uaid}  ${claim}  ${award_index}
   [Documentation]   Створює вимогу claim про виправлення визначення переможця під номером award_index в статусі draft для тендера tender_uaid.
-  log to console  Створити чернетку вимоги про виправлення визначення переможця
-  debug
+  Відкрити сторінку  award_claims  ${award_index}  ${award_index}
+  ${title}  Set Variable  ${claim.data.title}
+  ${description}  Set Variable  ${claim.data.description}
+  ${complaintID}  Подати вимогу авторизованим користувачем  ${title}  ${description}  None  ${award_index}
   [Return]  ${complaintID}
 
 Створити вимогу про виправлення умов закупівлі
