@@ -922,6 +922,7 @@ waiting_for_synch
 
 Відкрити сторінку claims
   [Arguments]  ${tender_uaid}=None  ${award_index}=None
+
   Wait Until Page Contains Element  ${link to claims}
   ${href}=  Get Element Attribute  ${link to claims}@href
   Go To  ${href}
@@ -1258,7 +1259,7 @@ Ignore error
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${doc_id}  ${field_name}
   [Documentation]  Отримати значення поля field_name з документу doc_id до скарги/вимоги
   ...  complaintID для тендера tender_uaid.
-  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}  ${award_index}
+  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}
   Розгорнути потрібну скаргу  ${title}
   ${selector}  claim_file_field_info  ${field_name}  ${doc_id}
   ${response}  Get Text  ${selector}
@@ -1492,7 +1493,7 @@ Ignore error
 Натиснути коригувати
   [Arguments]  ${title}
   Unselect Frame
-  Click Element  xpath=//*[contains(text(), '${title}')]/../..//*[@data-qa="start-edit-mode"]
+  Click Element  xpath=//*[contains(text(), "${title}")]/../..//*[@data-qa="start-edit-mode"]
   Wait For Loading
 
 Скасувати вимогу
