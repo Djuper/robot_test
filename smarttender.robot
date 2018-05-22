@@ -1488,7 +1488,7 @@ Ignore error
   ${cancellationReason}  Set Variable   ${cancellation_data['data']['cancellationReason']}
   ${title}  Отримати title по complaintID із ЦБД  ${complaintID}
   Натиснути коригувати  ${title}
-  Скасувати вимогу  ${complaintID}  ${cancellationReason}
+  Скасувати вимогу  ${cancellationReason}
 
 Натиснути коригувати
   [Arguments]  ${title}
@@ -1497,7 +1497,7 @@ Ignore error
   Wait For Loading
 
 Скасувати вимогу
-  [Arguments]  ${complaintID}  ${cancellationReason}
+  [Arguments]  ${cancellationReason}
   Click Element  xpath=//*[@data-qa="cancel-complaint"]
   Input Text  xpath=//*[@data-qa="cancel-reason"]//input  ${cancellationReason}
   Click Element  xpath=//*[@data-qa="cancel-modal-submit"]
@@ -1510,13 +1510,16 @@ Ignore error
   ${cancellationReason}  Set Variable   ${cancellation_data['data']['cancellationReason']}
   ${title}  Отримати title по complaintID із ЦБД  ${complaintID}
   Натиснути коригувати  ${title}
-  Скасувати вимогу  ${complaintID}  ${cancellationReason}
+  Скасувати вимогу  ${cancellationReason}
 
 Скасувати вимогу про виправлення визначення переможця
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${cancellation_data}  ${award_index}
   [Documentation]  Перевести вимогу complaintID про виправлення визначення переможця під номером award_index для тендера tender_uaid у статус cancelled, використовуючи при цьому дані confirmation_data.
   log to console  Скасувати вимогу про виправлення визначення переможця
-  debug
+  ${cancellationReason}  Set Variable   ${cancellation_data['data']['cancellationReason']}
+  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}  ${award_index}
+  Натиснути коригувати  ${title}
+  Скасувати вимогу  ${cancellationReason}
 
 Перетворити вимогу про виправлення умов закупівлі в скаргу
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${escalating_data}

@@ -237,6 +237,7 @@ def convert_claim_result_from_smarttender(value):
         u"Не задоволена": "declined",
         u"Вимога задовільнена": True,
         u"Вимога не задовільнена": False,
+        u"Залишено без розгляду": "ignored",
     }
     if value in map:
         result = map[value]
