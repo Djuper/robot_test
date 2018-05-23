@@ -1409,6 +1409,7 @@ Ignore error
   ${title}  Set Variable  ${claim.data.title}
   ${description}  Set Variable  ${claim.data.description}
   Відкрити сторінку  award_claims  ${award_index}  ${award_index}
+  Unselect Frame
   ${complaintID}  Подати вимогу авторизованим користувачем  ${title}  ${description}  ${document}  ${award_index}
   [Return]  ${complaintID}
 
@@ -1515,7 +1516,6 @@ Ignore error
 Скасувати вимогу про виправлення визначення переможця
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${cancellation_data}  ${award_index}
   [Documentation]  Перевести вимогу complaintID про виправлення визначення переможця під номером award_index для тендера tender_uaid у статус cancelled, використовуючи при цьому дані confirmation_data.
-  log to console  Скасувати вимогу про виправлення визначення переможця
   ${cancellationReason}  Set Variable   ${cancellation_data['data']['cancellationReason']}
   ${title}  Отримати title по complaintID із ЦБД  ${complaintID}  ${award_index}
   Натиснути коригувати  ${title}
