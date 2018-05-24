@@ -5,6 +5,7 @@ Library           smarttender_service.py
 Library           op_robot_tests.tests_files.service_keywords
 
 *** Variables ***
+${tender_href}                          None
 ${browserAlias}                        'main_browser'
 ${synchronization}                      http://test.smarttender.biz/ws/webservice.asmx/ExecuteEx?calcId=_SYNCANDMOVE&args=&ticket=&pureJson=
 ${path to find tender}                  http://test.smarttender.biz/test-tenders/
@@ -880,6 +881,11 @@ waiting_for_synch
 
 Відкрити сторінку tender
   [Arguments]  ${tender_uaid}  ${award_index}=None
+  Run Keyword If  "${tender_href}" != "None"  Go To  ${tender_href}
+  ...  ELSE   Відкрити сторінку tender перший пошук  ${tender_uaid}
+
+Відкрити сторінку tender перший пошук
+  [Arguments]  ${tender_uaid}
   Go To  ${path to find tender}
   Wait Until page Contains Element  ${find tender field }  ${wait}
   Run Keyword If  '${mode}' == 'negotiation' or '${mode}' == 'reporting'  Click Element  css=li:nth-child(2)>a[data-toggle=tab]
@@ -936,8 +942,11 @@ waiting_for_synch
   Location Should Contain  /AppealNew/
 
 Відкрити сторінку multiple_items
-  [Arguments]  ${tender_uaid}
-  Відкрити сторінку tender  ${tender_uaid}
+  [Arguments]  ${tender_uaid}  ${award_index}=None
+  ${location}  Get Location
+  Run Keyword If  '${location}' != '${tender_href}'  Run Keywords
+  ...  Go To   ${tender_href}
+  Select Frame  ${iframe}
   # повертае id лоту до я кого прив'язана номенклатура
   ${relatedLot_id}  Set Variable  ${USERS.users['${tender_owner}'].item_data.item.relatedLot}
   # повертае тайтл лоту по id
