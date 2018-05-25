@@ -893,6 +893,7 @@ waiting_for_synch
   ...  AND  Розгорнути детальніше
   ...  ELSE  Відкрити сторінку tender перший пошук  ${tender_uaid}
 
+
 Відкрити сторінку tender перший пошук
   [Arguments]  ${tender_uaid}
   Go To  ${path to find tender}
