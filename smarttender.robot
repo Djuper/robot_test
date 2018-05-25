@@ -375,10 +375,34 @@ waiting_for_synch
   ${data}  get_tender_data  ${API_HOST_URL}/api/${API_VERSION}/tenders/${info_idcbd}
   ${data}  evaluate  json.loads($data)  json
   ${number_of_lots}  Get Length  ${data['data']['lots']}
+  ${title}  Run Keyword If  '${number_of_lots}' > '1'
+  ...  Отримати title лоту  ${id}  ${data}
   log to console  Відкрити сторінку с потрібним лотом за необхідністю
-  Run Keyword If  '${number_of_lots}' > '1'
-  ...  debug
+  debug
   #Відкрити сторінку  multiple_items  ${id}
+
+Отримати title лоту
+  [Arguments]  ${id}  ${data}
+  ${first letter}  Set Variable  ${id[0]}
+  ${title}  Run Keyword if  "${first letter}" == "i"  Get title from items  ${id}  ${data}
+  ...  ELSE  debug
+
+Get title from items
+  [Arguments]  ${id}  ${data}
+  ${n}  get length  ${data['data']['items']}
+  :FOR  ${i}  in range  ${n}
+  \  ${status}  Run Keyword If  "${id}" in "${data['data']['items'][${i}]['description']}"  Set Variable  Pass
+  \  ${relatedLot}  Run Keyword If  "${status}" == "Pass"  Set Variable  ${data['data']['items'][${i}]['relatedLot']}
+  \  ${title}  Get title by lotid  ${data}  ${relatedLot}
+  \  Run Keyword If  "${status}" == "Pass"  Exit For Loop
+
+Get title by lotid
+  [Arguments]  ${data}  ${relatedLot}
+  ${n}  get length  ${data['data']['lots']}
+  :FOR  ${i}  in range  ${n}
+  \  ${status}  Run Keyword If  "${relatedLot}" == "${data['data']['lots'][${i}]['id']}"  Set Variable  Pass
+  \  ${title}  Run Keyword If  "${status}" == "Pass"  Set Variable  ${data['data']['lots'][${i}]['title']}
+  \  Run Keyword If  "${status}" == "Pass"  Exit For Loop
 
 Повернутися до тендеру від лоту за необхідністю
   ${location status}  Run Keyword And Return Status  Location Should Contain  /webparts/
