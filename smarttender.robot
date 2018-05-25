@@ -5,6 +5,7 @@ Library           smarttender_service.py
 Library           op_robot_tests.tests_files.service_keywords
 
 *** Variables ***
+${tender_href}                          None
 ${browserAlias}                        'main_browser'
 ${synchronization}                      http://test.smarttender.biz/ws/webservice.asmx/ExecuteEx?calcId=_SYNCANDMOVE&args=&ticket=&pureJson=
 ${path to find tender}                  http://test.smarttender.biz/test-tenders/
@@ -286,7 +287,7 @@ waiting_for_synch
   [Documentation]  Отримати значення поля field_name з лоту з lot_id в описі для тендера tender_uaid.
   ...  [Повертає] lot['field_name']
   Відкрити сторінку  ${field_name}  ${tender_uaid}
-  Відкрити сторінку с потрібним лотом за необхідністю  ${username}  ${tender_uaid}
+  Відкрити сторінку с потрібним лотом за необхідністю  ${lot_id}
   ${response}=  Отримати та обробити дані із лоту_  ${field_name}  ${lot_id}
   Повернутися до тендеру від лоту за необхідністю
   [Return]  ${response}
@@ -353,7 +354,7 @@ waiting_for_synch
   [Arguments]  ${username}  ${tender_uaid}  ${feature_id}  ${field_name}
   [Documentation]  Отримати значення поля field_name з нецінового показника з feature_id в описі для тендера tender_uaid.
   ...  [Повертає] feature['field_name']
-  Відкрити сторінку с потрібним лотом за необхідністю  ${username}  ${tender_uaid}
+  Відкрити сторінку с потрібним лотом за необхідністю  ${feature_id}
   ${response}=  Отримати та обробити дані нецінового показника  ${field_name}  ${feature_id}
   Повернутися до тендеру від лоту за необхідністю
   [Return]  ${response}
@@ -370,10 +371,14 @@ waiting_for_synch
   [Return]  ${ret}
 
 Відкрити сторінку с потрібним лотом за необхідністю
-  [Arguments]  ${username}  ${tender_uaid}
-  ${number_of_lots}  Get Matching Xpath Count  xpath=//*[@class='group-element']//*[@class='table-header']/following-sibling::tr
-  Run Keyword If  '${number_of_lots}' != '0'
-  ...  Відкрити сторінку  multiple_items  ${tender_uaid}
+  [Arguments]  ${id}
+  ${data}  get_tender_data  ${API_HOST_URL}/api/${API_VERSION}/tenders/${info_idcbd}
+  ${data}  evaluate  json.loads($data)  json
+  ${number_of_lots}  Get Length  ${data['data']['lots']}
+  log to console  Відкрити сторінку с потрібним лотом за необхідністю
+  Run Keyword If  '${number_of_lots}' > '1'
+  ...  debug
+  #Відкрити сторінку  multiple_items  ${id}
 
 Повернутися до тендеру від лоту за необхідністю
   ${location status}  Run Keyword And Return Status  Location Should Contain  /webparts/
@@ -555,7 +560,7 @@ waiting_for_synch
   [Arguments]  ${username}  ${tender_uaid}  ${item_id}  ${field_name}
   [Documentation]  Отримує значення поля field_name з предмету з item_id в описі лоту tender_uaid.
   ...  [Повертає] item['field_name'] (значення поля).
-  Відкрити сторінку с потрібним лотом за необхідністю  ${username}  ${tender_uaid}
+  Відкрити сторінку с потрібним лотом за необхідністю  ${item_id}
   ${response}=  Отримати та обробити дані із предмету  ${field_name}  ${item_id}
   Повернутися до тендеру від лоту за необхідністю
   [Return]  ${response}
@@ -863,7 +868,7 @@ waiting_for_synch
 #                 OPEN PAGE                    #
 ################################################
 Відкрити сторінку
-  [Arguments]  ${page}  ${tender_uaid}=None  ${award_index}=None
+  [Arguments]  ${page}  ${tender_uaid}=None  ${index}=None
   [Documentation]  Відкриває сторінку location або оновлює поточну
   ...  tender
   ...  questions
@@ -875,14 +880,25 @@ waiting_for_synch
   ...  award_claims
   ${location}  ${page}=  location_converter  ${page}
   ${status}=  Run Keyword And Return Status  Location Should Contain  ${location}
-  ${location}  Run keyword if  '${status}' == '${False}'  Відкрити сторінку ${page}  ${tender_uaid}  ${award_index}
+  ${location}  Run keyword if  '${status}' == '${False}'  Run Keywords
+  ...       Відкрити сторінку tender  ${tender_uaid}
+  ...  AND  Відкрити сторінку ${page}  ${tender_uaid}  ${index}
   ...  ELSE  Get Location
 
 Відкрити сторінку tender
-  [Arguments]  ${tender_uaid}  ${award_index}=None
+  [Arguments]  ${tender_uaid}  ${index}=None
+  Run Keyword If  "${tender_href}" != "None"  Run Keywords
+  ...       Go To  ${tender_href}
+  ...  AND  Select Frame  ${iframe}
+  ...  AND  Розгорнути детальніше
+  ...  ELSE  Відкрити сторінку tender перший пошук  ${tender_uaid}
+
+Відкрити сторінку tender перший пошук
+  [Arguments]  ${tender_uaid}
   Go To  ${path to find tender}
   Wait Until page Contains Element  ${find tender field }  ${wait}
-  Run Keyword If  '${mode}' == 'negotiation' or '${mode}' == 'reporting'  Click Element  css=li:nth-child(2)>a[data-toggle=tab]
+  Run Keyword If  '${mode}' == 'negotiation' or '${mode}' == 'reporting'
+  ...  Click Element  css=li:nth-child(2)>a[data-toggle=tab]
   Input Text  ${find tender field }  ${tender_uaid}
   Press Key  ${find tender field }  \\13
   Location Should Contain  f=${tender_uaid}
@@ -897,31 +913,31 @@ waiting_for_synch
   Set Global Variable  ${info_idcbd}
 
 Відкрити сторінку proposal
-  [Arguments]  ${tender_uaid}=None  ${award_index}=None
+  [Arguments]  ${tender_uaid}=None  ${index}=None
   Wait Until Page Contains Element  css=a[class='show-control button-lot']
   ${href}=  Get Element Attribute  css=a[class='show-control button-lot']@href
   Go To  ${href}
   Wait Until Page Contains  Пропозиція
 
 Відкрити сторінку questions
-  [Arguments]  ${tender_uaid}=None  ${award_index}=None
+  [Arguments]  ${tender_uaid}=None  ${index}=None
   smarttender.Оновити сторінку з тендером  none  ${tender_uaid}
   Click Element  css=span#questionToggle
 
 Відкрити сторінку cancellation
-  [Arguments]  ${tender_uaid}=None  ${award_index}=None
+  [Arguments]  ${tender_uaid}=None  ${index}=None
   Click Element  css=a#cancellation
   Select Frame  css=#widgetIframe
 
 Відкрити сторінку awards
-  [Arguments]  ${tender_uaid}=None  ${award_index}=None
+  [Arguments]  ${tender_uaid}=None  ${index}=None
   Wait Until Page Contains Element  css=a.att-link[href]
   ${href}=  Get Element Attribute  css=a.att-link[href]@href
   Go To  ${href}
   Wait Until Page Contains  Документи
 
 Відкрити сторінку claims
-  [Arguments]  ${tender_uaid}=None  ${award_index}=None
+  [Arguments]  ${tender_uaid}=None  ${index}=None
 
   Wait Until Page Contains Element  ${link to claims}
   ${href}=  Get Element Attribute  ${link to claims}@href
@@ -936,16 +952,7 @@ waiting_for_synch
   Location Should Contain  /AppealNew/
 
 Відкрити сторінку multiple_items
-  [Arguments]  ${tender_uaid}
-  Відкрити сторінку tender  ${tender_uaid}
-  # повертае id лоту до я кого прив'язана номенклатура
-  ${relatedLot_id}  Set Variable  ${USERS.users['${tender_owner}'].item_data.item.relatedLot}
-  # повертае тайтл лоту по id
-  :FOR  ${i}  IN RANGE  20
-  \  ${id}  Get From Dictionary  ${USERS.users['${tender_owner}'].tender_data.data['lots'][${i}]}  id
-  \  EXIT For Loop If  '${id}' == '${relatedLot_id}'
-  ${lot_title}  Get From Dictionary  ${USERS.users['${tender_owner}'].tender_data.data['lots'][${i}]}  title
-  # відкривае сторінку лоту по title
+  [Arguments]  ${tender_uaid}  ${lot_title}=None
   ${href}  Get Element Attribute  xpath=//a[contains(text(), '${lot_title}')]@href
   Go To  ${href}
 
