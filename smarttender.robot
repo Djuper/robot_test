@@ -378,7 +378,7 @@ waiting_for_synch
   ${title}  Run Keyword If  '${number_of_lots}' > '1'
   ...  Отримати title лоту  ${id}  ${data}
   log to console  Відкрити сторінку с потрібним лотом за необхідністю
-  debug
+  Run Keyword If  '${title}' != 'None'  debug
   #Відкрити сторінку  multiple_items  ${id}
 
 Отримати title лоту
