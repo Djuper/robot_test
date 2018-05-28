@@ -1585,6 +1585,155 @@ Wait For Loading
   Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  600
 
 ####################################
+#          PRIVATIZATION           #
+####################################
+Створити об’єкт МП
+  [Arguments]  ${username}  ${tender_data}
+  [Documentation]  Створює об’єкт МП з початковими даними tender_data  return:  (ідентифікатор новоствореного об’єкта МП)
+  [Return]  ${tender_uaid}
+
+Пошук об’єкта МП по ідентифікатору
+  [Arguments]  ${username}  ${tender_uaid}
+  [Documentation]  Шукає об’єкт МП з uaid = tender_uaid.  return: (словник з інформацією про об’єкт МП)
+  log to console  Пошук об’єкта МП по ідентифікатору
+  debug
+  [Return]  ${tender}
+
+Отримати інформацію із об'єкта МП
+  [Arguments]  ${username}  ${tender_uaid}  ${field_name}
+  [Documentation]  Отримує значення поля field_name для об’єкту МП tender_uaid. return: tender['field_name'] (значення поля).
+  log to console  Отримати інформацію із об'єкта МП
+  debug
+  [Return]  ${result}
+
+Отримати інформацію з активу об'єкта МП
+  [Arguments]  ${username}  ${tender_uaid}  ${item_id}  ${field_name}
+  [Documentation]  Отримує значення поля field_name з активу з item_id в описі об’єкта МП tender_uaid. Return: item['field_name'] (значення поля).
+  log to console  Отримати інформацію з активу об'єкта МП
+  debug
+  [Return] ${result}
+
+Внести зміни в об'єкт МП
+  [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
+  [Documentation] Змінює значення поля fieldname на fieldvalue для об’єкта МП tender_uaid.
+  log to console  Внести зміни в об'єкт МП
+
+Внести зміни в актив об'єкта МП
+  [Arguments]  ${username}  ${item_id}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
+  [Documentation] Змінює значення поля fieldname на fieldvalue для активу item_id об’єкта МП tender_uaid.
+  log to console  Внести зміни в актив об'єкта МП
+  debug
+
+Завантажити ілюстрацію в об'єкт МП
+  [Arguments]  ${username}   ${filepath}   ${tender_uaid}
+  [Documentation] Завантажує ілюстрацію, яка знаходиться по шляху filepath і має documentType = illustration, до об’єкта МП tender_uaid користувачем username.
+  log to console  Завантажити ілюстрацію в об'єкт МП
+  debug
+
+Завантажити документ в об'єкт МП з типом
+  [Arguments]  ${username}  ${filepath}  ${tender_uaid}  ${documentType}
+  [Documentation] Завантажує документ, який знаходиться по шляху filepath і має певний documentType (наприклад, notice і т.д), до об’єкта МП tender_uaid користувачем username.
+  log to console  Завантажити документ в об'єкт МП з типом
+  [Return] reply (словник з інформацією про документ).
+
+Додати актив до об'єкта МП
+  [Arguments]  ${username}  ${tender_uaid}  ${item}
+  [Documentation] Додає дані про предмет item до об’єкта МП tender_uaid користувачем username.
+  log to console  Додати актив до об'єкта МП
+  debug
+
+Завантажити документ для видалення об'єкта МП
+  [Arguments]  ${username}  ${filepath}  ${tender_uaid}
+  [Documentation] Завантажує документ, який знаходиться по шляху filepath і має documentType = cancellationDetails, до об’єкта МП tender_uaid користувачем username.
+  log to console  Завантажити документ для видалення об'єкта МП
+  debug
+
+Видалити об'єкт МП
+  [Arguments]  ${username}  ${tender_uaid}
+  [Documentation] Видаляє об’єкт МП tender_uaid користувачем username.
+  log to console  Видалити об'єкт МП
+  debug
+
+######Лоти:
+Створити лот
+  [Arguments]  ${username}  ${tender_data}
+  [Documentation] Створює об’єкт МП з початковими даними tender_data
+  log to console  Створити лот
+  debug
+  [Return] tender_uaid (ідентифікатор новоствореного лоту)
+
+Пошук лоту по ідентифікатору
+  [Arguments]  ${username}  ${tender_uaid}
+  [Documentation] Шукає лот з uaid = tender_uaid. return: tender_uaid (словник з інформацією про лот)
+  log to console  Пошук лоту по ідентифікатору
+  debug
+  [Return] ${tender_uaid} (словник з інформацією про лот)
+
+Отримати інформацію із лоту
+  [Arguments]  ${username}  ${tender_uaid}  ${field_name}
+  [Documentation] Отримує значення поля field_name для лоту tender_uaid. return: tender['field_name'] (значення поля).
+  log to console  Отримати інформацію із лоту
+  debug
+  [Return]  ${result}
+
+Отримати інформацію з активу лоту
+  [Arguments]  ${username}  ${tender_uaid}   ${item_id}  ${field_name}
+  [Documentation] Отримує значення поля field_name з активу з item_id в описі лоту tender_uaid. return: item['field_name'] (значення поля).
+  log to console  Отримати інформацію з активу лоту
+  debug
+  [Return]  ${result}
+
+Внести зміни в лот
+  [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
+  [Documentation] Змінює значення поля fieldname на fieldvalue для лоту tender_uaid.
+  log to console  Внести зміни в лот
+  debug
+
+Внести зміни в актив лоту
+  [Arguments]  ${username}  ${item_id}   ${tender_uaid}  ${fieldname}  ${fieldvalue}
+  [Documentation] Змінює значення поля fieldname на fieldvalue для активу item_id лоту tender_uaid.
+  log to console  Внести зміни в актив лоту
+  debug
+
+Завантажити ілюстрацію в лот
+  [Arguments]  ${username}  ${filepath}  ${tender _uaid}
+  [Documentation] Завантажує ілюстрацію, яка знаходиться по шляху filepath і має documentType = illustration, до лоту tender_uaid користувачем username.
+  log to console  Завантажити ілюстрацію в лот
+  debug
+
+Завантажити документ в лот з типом
+  [Arguments]  ${username}  ${filepath}  ${tender_uaid}  ${documentType}
+  [Documentation] Завантажує документ, який знаходиться по шляху filepath і має певний documentType (наприклад, notice і т.д), до лоту tender_uaid користувачем username.
+  ...  return: reply (словник з інформацією про документ).
+  log to console  Завантажити документ в лот з типом
+  debug
+  [Return]  ${reply}
+
+Завантажити документ для видалення лоту
+  [Arguments]  ${username}  ${filepath}  ${tender _uaid}
+  [Documentation] Завантажує документ, який знаходиться по шляху filepath і має documentType = cancellationDetails, до лоту tender_uaid користувачем username.
+  log to console  Завантажити документ для видалення лоту
+  debug
+
+Видалити лот
+  [Arguments]  ${username}  ${tender_uaid}
+  [Documentation] Видаляє лот tender_uaid користувачем username.
+  log to console  Видалити лот
+
+Додати умови проведення аукціону
+  [Arguments]  ${username}  ${auction}
+  [Documentation]  Додає умови проведення аукціону auction користувачем username  return: reply (словник з інформацією про умови проведення аукціону).
+  ...  (викликається двічі, окремо для вказання умов проведення першого аукціону і окремо для другого)
+  log to console  Додати умови проведення аукціону
+  debug
+  [Return]  ${reply}
+
+
+
+
+
+
+####################################
 #             LEGACY               #
 ####################################
 Отримати текст із поля і показати на сторінці
