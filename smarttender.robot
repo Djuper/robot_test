@@ -282,15 +282,15 @@ waiting_for_synch
   ${response}=  Отримати та обробити дані із тендера_  ${field_name}
   [Return]  ${response}
 
-Отримати інформацію із лоту
-  [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${field_name}
-  [Documentation]  Отримати значення поля field_name з лоту з lot_id в описі для тендера tender_uaid.
-  ...  [Повертає] lot['field_name']
-  Відкрити сторінку  ${field_name}  ${tender_uaid}
-  Відкрити сторінку с потрібним лотом за необхідністю  ${lot_id}
-  ${response}=  Отримати та обробити дані із лоту_  ${field_name}  ${lot_id}
-  Повернутися до тендеру від лоту за необхідністю
-  [Return]  ${response}
+#Отримати інформацію із лоту
+#  [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${field_name}
+#  [Documentation]  Отримати значення поля field_name з лоту з lot_id в описі для тендера tender_uaid.
+#  ...  [Повертає] lot['field_name']
+#  Відкрити сторінку  ${field_name}  ${tender_uaid}
+#  Відкрити сторінку с потрібним лотом за необхідністю  ${lot_id}
+#  ${response}=  Отримати та обробити дані із лоту_  ${field_name}  ${lot_id}
+#  Повернутися до тендеру від лоту за необхідністю
+#  [Return]  ${response}
 
 Внести зміни в тендер
   [Arguments]  ${user}  ${tenderId}  ${field}  ${value}
@@ -1727,11 +1727,6 @@ Wait For Loading
   log to console  Додати умови проведення аукціону
   debug
   [Return]  ${reply}
-
-
-
-
-
 
 ####################################
 #             LEGACY               #
