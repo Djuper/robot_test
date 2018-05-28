@@ -936,7 +936,7 @@ waiting_for_synch
   Location Should Contain  /AppealNew/
 
 Відкрити сторінку multiple_items
-  [Arguments]  ${tender_uaid}
+  [Arguments]  ${tender_uaid}  ${award_index}=None
   Відкрити сторінку tender  ${tender_uaid}
   # повертае id лоту до я кого прив'язана номенклатура
   ${relatedLot_id}  Set Variable  ${USERS.users['${tender_owner}'].item_data.item.relatedLot}
@@ -1332,7 +1332,7 @@ Ignore error
   [Arguments]  ${complaintID}  ${award_index}=None
   ${data}  get_tender_data  ${API_HOST_URL}/api/${API_VERSION}/tenders/${info_idcbd}
   ${data}  evaluate  json.loads($data)  json
-  ${title}  Run Keyword If  '${award_index}' == 'None'
+  ${title}  Run Keyword If  '${award_index}' == 'None' or '${award_index}' == 0
   ...        Отримати title по complaintID із ЦБД на умові закупівлі  ${data}  ${complaintID}
   ...  ELSE  Отримати title по complaintID із ЦБД на award  ${data}  ${complaintID}  ${award_index}
   [Return]  ${title}
