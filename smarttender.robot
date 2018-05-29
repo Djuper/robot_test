@@ -1297,8 +1297,7 @@ Ignore error
   [Documentation]  Отримати значення поля field_name з документу doc_id до скарги/вимоги
   ...  complaintID для тендера tender_uaid.
   log to console  Отримати інформацію із документа до скарги
-  debug
-  #${title}  Отримати title по complaintID із ЦБД  ${complaintID}
+  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}
   Розгорнути потрібну скаргу  ${title}
   ${selector}  claim_file_field_info  ${field_name}  ${doc_id}
   ${response}  Get Text  ${selector}
