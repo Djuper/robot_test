@@ -375,17 +375,16 @@ waiting_for_synch
   ${data}  get_tender_data  ${API_HOST_URL}/api/${API_VERSION}/tenders/${info_idcbd}
   ${data}  evaluate  json.loads($data)  json
   ${number_of_lots}  Get Length  ${data['data']['lots']}
-  ${title}  Run Keyword If  '${number_of_lots}' > '1'
-  ...  Отримати title лоту  ${id}  ${data}
-  log to console  Відкрити сторінку с потрібним лотом за необхідністю
-  Run Keyword If  '${title}' != 'None'  debug
-  #Відкрити сторінку  multiple_items  ${id}
+  ${title}  Run Keyword If  '${number_of_lots}' > '1'  Отримати title лоту  ${id}  ${data}
+  Run Keyword If  '${number_of_lots}' > '1'  Відкрити сторінку  multiple_items  ${title}  ${title}
 
 Отримати title лоту
   [Arguments]  ${id}  ${data}
   ${first letter}  Set Variable  ${id[0]}
   ${title}  Run Keyword if  "${first letter}" == "i"  Get title from items  ${id}  ${data}
+  ...  ELSE IF  "${first letter}" == "l"  Set Variable  ${id}
   ...  ELSE  debug
+  [Return]  ${title}
 
 Get title from items
   [Arguments]  ${id}  ${data}
@@ -395,6 +394,7 @@ Get title from items
   \  ${relatedLot}  Run Keyword If  "${status}" == "Pass"  Set Variable  ${data['data']['items'][${i}]['relatedLot']}
   \  ${title}  Get title by lotid  ${data}  ${relatedLot}
   \  Run Keyword If  "${status}" == "Pass"  Exit For Loop
+  [Return]  ${title}
 
 Get title by lotid
   [Arguments]  ${data}  ${relatedLot}
@@ -403,6 +403,7 @@ Get title by lotid
   \  ${status}  Run Keyword If  "${relatedLot}" == "${data['data']['lots'][${i}]['id']}"  Set Variable  Pass
   \  ${title}  Run Keyword If  "${status}" == "Pass"  Set Variable  ${data['data']['lots'][${i}]['title']}
   \  Run Keyword If  "${status}" == "Pass"  Exit For Loop
+  [Return]  ${title}
 
 Повернутися до тендеру від лоту за необхідністю
   ${location status}  Run Keyword And Return Status  Location Should Contain  /webparts/
@@ -911,12 +912,16 @@ Get title by lotid
 
 Відкрити сторінку tender
   [Arguments]  ${tender_uaid}  ${index}=None
+  ${status}=  Run Keyword And Return Status  Location Should Contain  /publichni-zakupivli-prozorro/
+  Run Keyword If  "${status}" != "True"  Відкрити сторінку tender continue  ${tender_uaid}
+
+Відкрити сторінку tender continue
+  [Arguments]  ${tender_uaid}
   Run Keyword If  "${tender_href}" != "None"  Run Keywords
   ...       Go To  ${tender_href}
   ...  AND  Select Frame  ${iframe}
   ...  AND  Розгорнути детальніше
   ...  ELSE  Відкрити сторінку tender перший пошук  ${tender_uaid}
-
 
 Відкрити сторінку tender перший пошук
   [Arguments]  ${tender_uaid}
