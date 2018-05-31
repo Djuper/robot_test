@@ -72,6 +72,11 @@ ${add file button}                      css=#cpModalMode div[data-name='BTADDATT
 ${choice file path}                     xpath=//*[@type='file'][1]
 ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]//span[text()='Завантаження документації']
 
+# Privatization
+${privatization_start_page}             http://test.smarttender.biz/small-privatization/registry/privatization-objects
+${search input field privatization}     css=.ivu-card-body input[type=text]
+${do search privatization}              css=.ivu-card-body button>i
+${ss_id}                                None
 *** Keywords ***
 ####################################
 #        Операції з лотом          #
@@ -250,12 +255,17 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Оновлює сторінку з лотом для отримання потенційно оновлених даних.
   log  ${mode}
-  ${last_modification_date}  convert_datetime_to_kot_format  ${TENDER.LAST_MODIFICATION_DATE}
-  Open Browser  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.GET.LAST.SYNCHRONIZATION&args={"SEGMENT":3}  chrome
-  Wait Until Keyword Succeeds  10 min  5 sec  waiting_for_synch  ${last_modification_date}
-  Reload Page
-  Run Keyword And Ignore Error  Select Frame  ${iframe}
-  Run Keyword And Ignore Error  Розгорнути детальніше
+  log to console  Оновити сторінку з тендером
+  Run Keyword If  "${ss_id}" != "None"  Run Keywords
+  ...  Go To  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.CALLSYNCHRONIZER.PRIVAS&args={"IDCDB":"${ss_id}"}
+  ...  AND  Wait Until Page Contains  <string xmlns="http://tempuri.org/">True</string>  60
+  ...  AND  Go Back
+  #${last_modification_date}  convert_datetime_to_kot_format  ${TENDER.LAST_MODIFICATION_DATE}
+  #Open Browser  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.GET.LAST.SYNCHRONIZATION&args={"SEGMENT":3}  chrome
+  #Wait Until Keyword Succeeds  10 min  5 sec  waiting_for_synch  ${last_modification_date}
+  #Reload Page
+  #Run Keyword And Ignore Error  Select Frame  ${iframe}
+  #Run Keyword And Ignore Error  Розгорнути детальніше
 
 waiting_for_synch
   [Arguments]  ${last_modification_date}
@@ -1591,31 +1601,209 @@ Wait For Loading
 ####################################
 #          PRIVATIZATION           #
 ####################################
-Створити об’єкт МП
+Створити об'єкт МП
   [Arguments]  ${username}  ${tender_data}
   [Documentation]  Створює об’єкт МП з початковими даними tender_data  return:  (ідентифікатор новоствореного об’єкта МП)
+  Відкрити бланк дя створення об’єкту
+  Заповнити title для assets  ${tender_data.data.title}
+  Заповнити description для assets  ${tender_data.data.description}
+  Заповнити name для assetHolder  ${tender_data.data.assetHolder.name}
+  Заповнити legalName для assetHolder  ${tender_data.data.assetHolder.identifier.legalName}
+  Заповнити scheme для assetHolder  ${tender_data.data.assetHolder.identifier.scheme}
+  Заповнити id для assetHolder  ${tender_data.data.assetHolder.identifier.id}
+  Заповнити postalCode для assetHolder  ${tender_data.data.assetHolder.address.postalCode}
+  Заповнити countryName для assetHolder  ${tender_data.data.assetHolder.address.countryName}
+  Заповнити locality для assetHolder  ${tender_data.data.assetHolder.address.locality}
+  Заповнити streetAddress для assetHolder  ${tender_data.data.assetHolder.address.streetAddress}
+  Заповнити name для assetHolder.contactPoint  ${tender_data.data.assetHolder.contactPoint.name}
+  Заповнити telephone для assetHolder.contactPoint  ${tender_data.data.assetHolder.contactPoint.telephone}
+  Заповнити faxNumber для assetHolder.contactPoint  ${tender_data.data.assetHolder.contactPoint.faxNumber}
+  Заповнити email для assetHolder.contactPoint  ${tender_data.data.assetHolder.contactPoint.email}
+  Заповнити url для assetHolder.contactPoint  ${tender_data.data.assetHolder.contactPoint.url}
+  Заповнити title для decision  ${tender_data.data.decisions.title}
+  Заповнити decisionID для decision  ${tender_data.data.decisions.decisionID}
+  Заповнити decisionDate для decision  ${tender_data.data.decisions.decisionDate}
+
+  Заповнити description для item  ${tender_data.data.items.description}
+  Заповнити classification для item  ${tender_data.data.items.classification.id}
+  ...  ${tender_data.data.items.classification.scheme}
+  ...  ${tender_data.data.items.classification.description}
+  Заповнити quantity для item  ${tender_data.data.items.quantity}
+  Заповнити items.unit для item  ${tender_data.data.items.unit}
+  Заповнити postalCode для item  ${tender_data.data.items.address.postalCode}
+  Заповнити countryName для item  ${tender_data.data.items.address.countryName}
+  Заповнити locality для item  ${tender_data.data.items.address.locality}
+  Заповнити streetAddress для item  ${tender_data.data.items.address.streetAddress}
+  Заповнити registrationDetails.status для item  ${tender_data.data.items.registrationDetails.status}
   [Return]  ${tender_uaid}
+
+Відкрити бланк дя створення об’єкту
+  Go to  http://test.smarttender.biz/cabinet/registry/privatization-objects/
+  Click Element  xpath=//button/*[contains(text(), "Створити об'єкт приватизації")]
+
+Заповнити title для assets
+  [Arguments]  ${text}
+  Input Text  xpath=(//*[contains(text(), "Найменування")]/..//input)[1]  ${text}
+
+Заповнити description для assets
+  [Arguments]  ${text}
+  Input Text  xpath=//*[contains(text(), "Опис об'єкту приватизації")]/..//textarea  ${text}
+
+Заповнити name для assetHolder
+  [Arguments]  ${text}
+  Input text  xpath=//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[1]//input  ${text}
+
+Заповнити legalName для assetHolder
+  [Arguments]  ${text}
+  Input text  xpath=//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[2]//input  ${text}
+
+Заповнити scheme для assetHolder
+  [Arguments]  ${text}
+  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[3]//input)[2]  ${text}
+
+Заповнити id для assetHolder
+  [Arguments]  ${text}
+  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[3]//input)[3]  ${text}
+
+Заповнити postalCode для assetHolder
+  [Arguments]  ${text}
+  Input text  xpath=//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[4]//input  ${text}
+
+Заповнити countryName для assetHolder
+  [Arguments]  ${text}
+  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[4]//input)[3]  ${text}
+
+Заповнити locality для assetHolder
+  [Arguments]  ${text}
+  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[4]//input)[5]  ${text}
+
+Заповнити streetAddress для assetHolder
+  [Arguments]  ${text}
+  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[4]//input)[6]  ${text}
+
+Заповнити name для assetHolder.contactPoint
+  [Arguments]  ${text}
+  Input text  xpath=//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[5]//input  ${text}
+
+Заповнити telephone для assetHolder.contactPoint
+  [Arguments]  ${text}
+  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[6]//input)[1]  ${text}
+
+Заповнити faxNumber для assetHolder.contactPoint
+  [Arguments]  ${text}
+  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[6]//input)[2]  ${text}
+
+Заповнити email для assetHolder.contactPoint
+  [Arguments]  ${text}
+  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[7]//input)[1]  ${text}
+
+Заповнити url для assetHolder.contactPoint
+  [Arguments]  ${text}
+  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[7]//input)[2]  ${text}
+
+Заповнити title для decision
+  [Arguments]  ${text}
+  Input text  xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../div[1]//input  ${text}
+
+Заповнити decisionID для decision
+  [Arguments]  ${text}
+  Input text  xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../div[2]/div/div/div[1]//input  ${text}
+
+Заповнити decisionDate для decision
+  [Arguments]  ${text}
+  Input text  xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../div[2]/div/div/div[3]//input  ${text}
+
+Заповнити description для item
+  [Arguments]  ${text}
+  Input Text  xpath=//*[contains(text(), "Об'єкт що продається")]/../div[1]//textarea  ${text}
+
+Заповнити classification для item
+
+Заповнити quantity для item
+Заповнити items.unit для item
+Заповнити postalCode для item
+Заповнити countryName для item
+Заповнити locality для item
+Заповнити streetAddress для item
+Заповнити registrationDetails.status для item
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Пошук об’єкта МП по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Шукає об’єкт МП з uaid = tender_uaid.  return: (словник з інформацією про об’єкт МП)
-  log to console  Пошук об’єкта МП по ідентифікатору
-  debug
-  [Return]  ${tender}
+  Wait Until Keyword Succeeds  10 min  5 sec  Пошук об’єкта МП по ідентифікатору продовження  ${tender_uaid}
+  #[Return]  ${tender}
+
+Пошук об’єкта МП по ідентифікатору продовження
+  [Arguments]  ${tender_uaid}
+  Go to  ${privatization_start_page}
+  Input Text  ${search input field privatization}  ${tender_uaid}
+  Click Element  ${do search privatization}
+  Wait Until Page Contains Element  xpath=//span[contains(text(), "${tender_uaid}")]
+  ${privatization assets page}  Get Element Attribute  xpath=//p[contains(text(), "${tender_uaid}")]/..//a[@href]@href
+  Go To  ${privatization assets page}
+  Set Global Variable  ${privatization assets page}
+  Знайти id активу
+
+Знайти id активу
+  ${href}  get element attribute  css=h4>a[href]@href
+  ${ss_id}  get_id_from_tender_href  ${href}
+  Set Global Variable  ${ss_id}
 
 Отримати інформацію із об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
   [Documentation]  Отримує значення поля field_name для об’єкту МП tender_uaid. return: tender['field_name'] (значення поля).
-  log to console  Отримати інформацію із об'єкта МП
-  debug
+  #log to console  Отримати інформацію із об'єкта МП
+  #log to console  ${field_name}
+  #debug
+  ${result}  Отримати та обробити дані із об'єкта МП  ${field_name}
+  [Return]  ${result}
+
+Отримати та обробити дані із об'єкта МП
+  [Arguments]  ${field_name}
+  ${selector}  object_field_info  ${field_name}
+  ${value}  Get Text  ${selector}
+  ${length}  Get Length  ${value}
+  Run Keyword If  ${length} == 0  Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
+  ${result}  convert_object_result  ${field_name}  ${value}
   [Return]  ${result}
 
 Отримати інформацію з активу об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${item_id}  ${field_name}
   [Documentation]  Отримує значення поля field_name з активу з item_id в описі об’єкта МП tender_uaid. Return: item['field_name'] (значення поля).
-  log to console  Отримати інформацію з активу об'єкта МП
-  debug
-  [Return] ${result}
+  #log to console  Отримати інформацію з активу об'єкта МП
+  #log to console  ${field_name}
+  #log to console  ${item_id}
+  #debug
+  ${result}  Отримати та обробити дані з активу об'єкта МП  ${field_name}  ${item_id}
+  [Return]  ${result}
+
+Отримати та обробити дані з активу об'єкта МП
+  [Arguments]  ${field_name}  ${item_id}
+  ${selector}  asset_field_info  ${fieldname}  ${item_id}
+  ${value}  Get Text  ${selector}
+  ${length}  Get Length  ${value}
+  Run Keyword If  ${length} == 0  Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
+  ${result}=  convert_asset_result  ${fieldname}  ${value}
+  [Return]  ${result}
 
 Внести зміни в об'єкт МП
   [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}

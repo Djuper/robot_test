@@ -11,15 +11,16 @@ import requests
 import ast
 
 
-
 def get_tender_data(link):
     r = requests.get(link).text
-    #s = r.replace('true', 'True')
-    #dictionary = ast.literal_eval(s)
+    # s = r.replace('true', 'True')
+    # dictionary = ast.literal_eval(s)
     return r
+
 
 TZ = timezone(os.environ['TZ'] if 'TZ' in os.environ else 'Europe/Kiev')
 number_of_tabs = 1
+
 
 def tender_field_info(field):
     if "items" in field:
@@ -150,13 +151,13 @@ def tender_field_info(field):
             "dgfDecisionID": "css=span.info_dgfDecisionId",
             "dgfDecisionDate": "css=span.info_dgfDecisionDate",
 
-
             "qualificationPeriod": "css=span",
             "causeDescription": "css=span",
             "cause": "css=span",
             "procuringEntity.identifier.scheme": "css=span",
         }
     return map[field]
+
 
 def proposal_field_info(field):
     map = {
@@ -165,6 +166,7 @@ def proposal_field_info(field):
         "status": "css=.ivu-alert-desc span",
     }
     return map[field]
+
 
 def lot_field_info(field, id):
     map = {
@@ -180,11 +182,13 @@ def lot_field_info(field, id):
     }
     return map[field].format(id)
 
+
 def item_field_info(field, id):
     map = {
         "description": "xpath=//*[@class='table-items']//td[contains(text(), '{0}')]",
     }
     return map[field].format(id)
+
 
 def non_price_field_info(field, id):
     map = {
@@ -193,6 +197,7 @@ def non_price_field_info(field, id):
         "featureOf": "xpath=//*[contains(text(), '{0}')]/preceding-sibling::div[@class='title-lot  cr-title'][1]",
     }
     return map[field].format(id)
+
 
 def document_fields_info(field, id):
     map = {
@@ -204,6 +209,7 @@ def document_fields_info(field, id):
     }
     return map[field].format(id)
 
+
 def question_field_info(field, id):
     map = {
 
@@ -212,6 +218,7 @@ def question_field_info(field, id):
         "answer": "div.answer div:eq(2)"
     }
     return (map[field]).format(id)
+
 
 def claim_field_info(field, title):
     map = {
@@ -224,6 +231,7 @@ def claim_field_info(field, title):
         "satisfied": u"xpath=//*[contains(text(), 'Участник дал ответ на решение организатора')]/../../..//*[@class='content break-word']",
     }
     return map[field].format(title)
+
 
 def convert_claim_result_from_smarttender(value):
     map = {
@@ -245,11 +253,13 @@ def convert_claim_result_from_smarttender(value):
         result = value
     return result
 
+
 def claim_file_field_info(field, doc_id):
     map = {
         "title": u"xpath=//*[contains(text(), '{0}')]",
     }
     return map[field].format(doc_id)
+
 
 def convert_result(field, value):
     global ret
@@ -358,6 +368,7 @@ def convert_result(field, value):
         ret = value
     return ret
 
+
 def convert_unit_to_smarttender_format(unit):
     map = {
         u"кілограми": u"кг",
@@ -369,6 +380,7 @@ def convert_unit_to_smarttender_format(unit):
         u"шт": u"шт"
     }
     return map[unit]
+
 
 def convert_unit_from_smarttender_format(unit, field):
     map = {
@@ -398,6 +410,7 @@ def convert_unit_from_smarttender_format(unit, field):
     }
     return map[unit][field]
 
+
 def convert_tender_status(value):
     map = {
         u"Прийом пропозицій": "active.tendering",
@@ -419,34 +432,41 @@ def convert_tender_status(value):
     }
     return map[value]
 
+
 def convert_claim_status(value):
     map = {
         "Відхилена": 'cancelled'
     }
     return map[value]
 
+
 def convert_datetime_to_smarttender_format(isodate):
     iso_dt = parse_date(isodate)
     date_string = iso_dt.strftime("%d.%m.%Y %H:%M")
     return date_string
+
 
 def convert_datetime_to_kot_format(isodate):
     iso_dt = parse_date(isodate)
     date_string = iso_dt.strftime("%d.%m.%Y %H:%M:%S")
     return date_string
 
+
 def convert_datetime_to_smarttender_form(isodate):
     iso_dt = parse_date(isodate)
     date_string = iso_dt.strftime("%d.%m.%Y")
     return date_string
 
+
 def convert_date_offset_naive(s):
     dt = parse(s, parserinfo(True, False))
     return dt.strftime('%Y-%m-%d')
 
+
 def convert_date(s):
     dt = parse(s, parserinfo(True, False))
     return dt.strftime('%Y-%m-%dT%H:%M:%S+03:00')
+
 
 def adapt_data(tender_data):
     tender_data.data.procuringEntity[
@@ -469,8 +489,10 @@ def adapt_data(tender_data):
             item.deliveryAddress['locality'] = u"Кривий ріг"
     return tender_data
 
+
 def get_question_data(id):
     return smarttender_munchify({'data': {'id': id}})
+
 
 def map_to_smarttender_document_type(doctype):
     map = {
@@ -483,6 +505,7 @@ def map_to_smarttender_document_type(doctype):
         u"eligibility_documents": u"Документи, що підтверджують відповідність",
     }
     return map[doctype]
+
 
 def map_from_smarttender_document_type(doctype):
     map = {
@@ -500,6 +523,7 @@ def map_from_smarttender_document_type(doctype):
         u"Публічний паспорт активу": u"x_dgfPublicAssetCertificate"
     }
     return map[doctype]
+
 
 def location_converter(value):
     if "cancellation" in value:
@@ -520,6 +544,7 @@ def location_converter(value):
         response = "/publichni-zakupivli-prozorro/", "tender"
     return response
 
+
 def download_file(url, download_path):
     response = urllib2.urlopen(url)
     file_content = response.read()
@@ -528,14 +553,17 @@ def download_file(url, download_path):
     f.write(file_content)
     f.close()
 
+
 def normalize_index(first, second):
     if first == "-1":
         return "2"
     else:
         return str(int(first) + int(second))
 
+
 def delete_spaces(value):
     return float(''.join(re.findall(r'\S', value)))
+
 
 def get_attribute(value):
     if 'latitude' in value or 'longitude' in value:
@@ -544,6 +572,7 @@ def get_attribute(value):
         return True
     else:
         return False
+
 
 def synchronization(string):
     list = re.search(u'{"DateStart":"(?P<date_start>[\d\s\:\.]+?)",'
@@ -555,3 +584,100 @@ def synchronization(string):
     work_status = list.group('work_status')
     success = list.group('success')
     return date_start, date_end, work_status, success
+
+
+def object_field_info(field):
+    map = {
+        "assetID": "css=h4>a[href]",
+        "date": "xpath=//*[@class='key' and contains(text(), 'Період коригування')]/../../div[2]/span",
+        "rectificationPeriod.endDate": "xpath=//*[@class='key' and contains(text(), 'Період коригування')]/../../div[2]/span",
+        "status": "css=.action-block-item.text-center.bold",
+        "title": "css=h3>span",
+        "description": "css=div.ivu-card-body .ivu-row>span",
+        "decisions[0].title": 'xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../../div[2]/span',
+        "decisions[0].decisionDate": 'xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../../div[2]/span',
+        "decisions[0].decisionID": 'xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../../div[2]/span',
+        "assetHolder.name": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[1]/div[2]/span',
+        "assetHolder.identifier.scheme": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[2]/div[2]/span',
+        "assetHolder.identifier.id": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[3]/div[2]/span',
+        "assetCustodian.identifier.scheme": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[2]/div[2]/span',
+        "assetCustodian.identifier.id": 'xpath=//*[contains(text(), "Розпорядник активу")]/../div[2]/div[2]',
+        "assetCustodian.identifier.legalName": 'xpath=//*[contains(text(), "Розпорядник активу")]/../div[1]/div[2]',
+        "assetCustodian.contactPoint.name": 'xpath=//*[contains(text(), "Розпорядник активу")]/../div[3]/div[2]',
+        "assetCustodian.contactPoint.telephone": 'xpath=//*[contains(text(), "Розпорядник активу")]/../div[4]/div[2]',
+        "assetCustodian.contactPoint.email": 'xpath=//*[contains(text(), "Розпорядник активу")]/../div[5]/div[2]',
+        "assetCustodian.address.countryName": '????????????????????????????????',
+        "documents[0].documentType": "xpath=(//*[contains(text(), 'Документи')]/..//*[@class='ivu-row']//p)[3]",
+        "items[0].address.countryName": "xpath=(//*[contains(text(), 'Документи')]/..//*[@class='ivu-row']//p)[3]",
+    }
+    return map[field]
+
+
+def convert_object_result(field, value):
+    if field == "date" or field == "rectificationPeriod.endDate":
+        list = re.search(u'\з\s(?P<start_date>[\d\.\s\:]+)\s\по\s(?P<end_date>[\d\.\s\:]+)', value)
+        start_date = list.group('start_date')
+        end_date = list.group('end_date')
+        if 'end_date' in field:
+            response = convert_date(end_date)
+        else:
+            response = convert_date(start_date)
+    elif field == "status":
+        response = map_object_status(value)
+    elif "decisions[0]" in field:
+        list = re.search(u'(?P<decisions>.+?)\.\s(?P<decisionID>.+)\.\s\від\s(?P<date>.+)\.', value)
+        if "title" in field:
+            response = list.group("decisions")
+        elif "decisionDate" in field:
+            date = list.group("date")
+            response = convert_date_offset_naive(date)
+        elif "decisionID" in field:
+            response = list.group("decisionID")
+    else:
+        response = value
+    return response
+
+
+def map_object_status(doctype):
+    map = {
+        u"Опубліковано. Очікування інформаційного повідомлення": u"pending",
+        u"Об'єкт реєструється.": u"registering",
+    }
+    return map[doctype]
+
+
+def asset_field_info(field, id):
+    map = {
+        "description": "xpath=//*[contains(text(), '{0}')]".format(id),
+        "address.countryName": "xpath=//*[contains(text(), '{0}')]/../../../div[4]/div[2]".format(id),
+        "unit.name": "xpath=//*[contains(text(), '{0}')]/../../../div[3]/div[2]".format(id),
+        "quantity": "xpath=//*[contains(text(), '{0}')]/../../../div[3]/div[2]".format(id),
+        "registrationDetails.status": "xpath=//*[contains(text(), '{0}')]/../../../div[5]/div/div[2]".format(id),
+    }
+    return map[field]
+
+
+def convert_asset_result(field, value):
+    if "address" in field:
+        list = re.search(
+            u'(?P<countryName>.+)\.\s(?P<region>.+\.)\.\s(?P<locality>.+)\.\s(?P<postalCode>\d+)\.\s(?P<streetAddress>.+)\.',
+            value)
+        if "countryName" in field:
+            response = list.group("countryName")
+    elif "unit" in field or "quantity" == field:
+        list = re.search(u'(?P<quantity>[\d\.]+)\s\.(?P<name>.+)', value)
+        if "name" in field:
+            name = list.group("name")
+            response = convert_unit_from_smarttender_format(name, 'name')
+        else:
+            response = float(list.group("quantity"))
+    elif "registrationDetails.status" == field:
+        response = map_object_status(value)
+    else:
+        response = value
+    return response
+
+def get_id_from_tender_href(href):
+    id = re.search(u'.+\/assets/(?P<id>.+)', href)
+    id = id.group('id')
+    return id
