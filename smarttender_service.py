@@ -206,10 +206,9 @@ def document_fields_info(field, id):
 
 def question_field_info(field, id):
     map = {
-
-        "description": "xpath=//span[contains(text(),'{0}')]/../following-sibling::div[@class='q-content']",
-        "title": "div.title-question span.question-title-inner",
-        "answer": "div.answer div:eq(2)"
+        "title": "xpath=//*[@class='ivu-row']//*[descendant::*[contains(text(), '{0}')]]//span",
+        "description": "xpath=//*[@class='ivu-row']//*[descendant::*[contains(text(), '{0}')]]//div[@class='break-word']",
+        "answer": "div.answer div:eq(2)",
     }
     return (map[field]).format(id)
 
@@ -505,7 +504,7 @@ def location_converter(value):
     if "cancellation" in value:
         response = "/cancellation/", "cancellation"
     elif "questions" in value:
-        response = "/discuss/", "questions"
+        response = "/publichni-zakupivli-prozorro", "questions"
     elif "proposal" in value:
         response = "/bid/edit/", "proposal"
     elif "awards" in value and "documents" in value:

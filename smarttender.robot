@@ -626,8 +626,10 @@ Get title by lotid
   ...  [Повертає] reply (словник з інформацією про запитання).  discuss
   ${title}=  Get From Dictionary  ${question.data}  title
   ${description}=  Get From Dictionary  ${question.data}  description
-  Відкрити сторінку  questions  ${tender_uaid}
-  ${question_data}=  Задати запитання_  ${title}  ${description}  ${item_id}
+  debug
+  log to console  Задати запитання на предмет
+  #Відкрити сторінку  questions  ${tender_uaid}
+  #${question_data}=  Задати запитання_  ${title}  ${description}  ${item_id}
   [Return]  ${question_data}
 
 Задати запитання на тендер
@@ -636,7 +638,7 @@ Get title by lotid
   ...  [Повертає] reply (словник з інформацією про запитання).
   ${title}=  Get From Dictionary  ${question.data}  title
   ${description}=  Get From Dictionary  ${question.data}  description
-  Відкрити сторінку  questions  ${tender_uaid}
+  Відкрити сторінку questions
   ${question_data}=  Задати запитання_  ${title}  ${description}  no_id
   [Return]  ${question_data}
 
@@ -644,38 +646,40 @@ Get title by lotid
   [Arguments]  ${user}  ${tenderId}  ${objectId}  ${field}
   [Documentation]  Отримує значення поля field_name із запитання з question_id в описі для тендера tender_uaid.
   ...  [Повертає] question['field_name'] (значення поля).
-  Fail  it should not work
   ${selector}=  question_field_info  ${field}  ${objectId}
-  Run Keyword And Ignore Error  Відкрити сторінку із даними запитань_
-  ${ret}=  Execute JavaScript  return (function() { return $("${selector}").text() })()
+  ${ret}  Get Text  ${selector}
   [Return]  ${ret}
 
 Відповісти на запитання
   [Arguments]  ${username}  ${tender_uaid}  ${answer_data}  ${question_id}
   [Documentation]  Надає відповідь answer_data на запитання з question_id до лоту tender_uaid.
   ...  [Повертає] reply (словник з інформацією про відповідь).
-  Підготуватися до редагування_  ${username}  ${tender_uaid}
-  ${answerText}=  Get From Dictionary  ${answer_data.data}  answer
-  Click Element  jquery=#MainSted2PageControl_TENDER ul.dxtc-stripContainer li.dxtc-tab:eq(1)
-  Wait Until Page Contains  ${question_id}
-  Input Text  jquery=div[data-placeid='TENDER'] table.hdr:eq(3) tbody tr:eq(1) td:eq(2) input:eq(0)  ${question_id}
-  Press Key  jquery=div[data-placeid='TENDER'] table.hdr:eq(3) tbody tr:eq(1) td:eq(2) input:eq(0)  \\13
-  Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
-  Click Image  jquery=.dxrControl_DevEx a[title*='Змінити'] img:eq(0)
-  Set Focus To Element  jquery=#cpModalMode textarea:eq(0)
-  Input Text  jquery=#cpModalMode textarea:eq(0)  ${answerText}
-  Click Element  jquery=#cpModalMode span.dxICheckBox_DevEx:eq(0)
-  Click Image  jquery=#cpModalMode .dxrControl_DevEx .dxr-buttonItem:eq(0) img
-  Click Element  jquery=#cpIMMessageBox .dxbButton_DevEx:eq(0)
-  Wait Until Page Contains  Відповідь надіслана на сервер ЦБД  ${wait}
+  log to console  Відповісти на запитання
+  debug
+  #Підготуватися до редагування_  ${username}  ${tender_uaid}
+  #${answerText}=  Get From Dictionary  ${answer_data.data}  answer
+  #Click Element  jquery=#MainSted2PageControl_TENDER ul.dxtc-stripContainer li.dxtc-tab:eq(1)
+  #Wait Until Page Contains  ${question_id}
+  #Input Text  jquery=div[data-placeid='TENDER'] table.hdr:eq(3) tbody tr:eq(1) td:eq(2) input:eq(0)  ${question_id}
+  #Press Key  jquery=div[data-placeid='TENDER'] table.hdr:eq(3) tbody tr:eq(1) td:eq(2) input:eq(0)  \\13
+  #Wait Until Element Is Not Visible  ${webClient loading}  ${wait}
+  #Click Image  jquery=.dxrControl_DevEx a[title*='Змінити'] img:eq(0)
+  #Set Focus To Element  jquery=#cpModalMode textarea:eq(0)
+  #Input Text  jquery=#cpModalMode textarea:eq(0)  ${answerText}
+  #Click Element  jquery=#cpModalMode span.dxICheckBox_DevEx:eq(0)
+  #Click Image  jquery=#cpModalMode .dxrControl_DevEx .dxr-buttonItem:eq(0) img
+  #Click Element  jquery=#cpIMMessageBox .dxbButton_DevEx:eq(0)
+  #Wait Until Page Contains  Відповідь надіслана на сервер ЦБД  ${wait}
 
 Задати запитання на лот
   [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${question}
   [Documentation]  Створити запитання з даними question до лоту з lot_id в описі для тендера tender_uaid.
   ${title}=  Get From Dictionary  ${question.data}  title
   ${description}=  Get From Dictionary  ${question.data}  description
-  Відкрити сторінку  questions  ${tender_uaid}
-  Задати запитання_  ${title}  ${description}  no_id
+  log to console  Задати запитання на лот
+  debug
+  #Відкрити сторінку  questions  ${tender_uaid}
+  #Задати запитання_  ${title}  ${description}  no_id
 
 
 ####################################
@@ -951,8 +955,10 @@ Get title by lotid
 
 Відкрити сторінку questions
   [Arguments]  ${tender_uaid}=None  ${index}=None
-  smarttender.Оновити сторінку з тендером  none  ${tender_uaid}
-  Click Element  css=span#questionToggle
+  ${status}  Run Keyword And Return Status  Current Frame Contains  Відгуки Dozorro
+  Run Keyword If  "${status}" == "True"  Run Keywords
+  ...  Click Element  xpath=//a[@data-toggle='tab' and text()='Запитання ']
+  ...  AND  Select frame  css=#iframeQuestions
 
 Відкрити сторінку cancellation
   [Arguments]  ${tender_uaid}=None  ${index}=None
@@ -1120,50 +1126,33 @@ Click Input Enter Wait
 Задати запитання_
   [Arguments]  ${title}  ${description}  ${item_id}
   Відкрити бланк запитання_  ${item_id}
-  Wait Until Element Is Not Visible  ${wraploading}  ${wait}
   Заповнити дані для запитання_  ${title}  ${description}
-  Wait Until Element Is Not Visible  ${your request is sending}  ${wait}
-  Закрити вікно ваше запитання успішно надіслане_
+  Відправити запитання та перевірити відповідь
 
 Відкрити бланк запитання_
   [Arguments]  ${item_id}
   Run Keyword if  '${item_id}' == 'no_id'
-  ...    Відкрити бланк запитання без id
+  ...    Click Element  css=button.question-button
   ...  ELSE
   ...    Відкрити бланк запитання з id  ${item_id}
 
-Відкрити бланк запитання без id
-  Wait Until Keyword Succeeds  10  2  Click Element  css=#questions span[role="presentation"]
-  Click Element  css=.select2-results li:nth-child(2)
-  Click Element  id=add-question
-
 Відкрити бланк запитання з id
   [Arguments]  ${item_id}
-  Click Element  jquery=#select2-question-relation-container:eq(0)
-  Input Text  jquery=.select2-search__field:eq(0)  ${item_id}
-  Press Key  jquery=.select2-search__field:eq(0)  \\13
-  Click Element  jquery=input#add-question
+  log to console  Відкрити бланк запитання з id
+  debug
+  #Click Element  jquery=#select2-question-relation-container:eq(0)
+  #Input Text  jquery=.select2-search__field:eq(0)  ${item_id}
+  #Press Key  jquery=.select2-search__field:eq(0)  \\13
+  #Click Element  jquery=input#add-question
 
 Заповнити дані для запитання_
   [Arguments]  ${title}  ${description}
-  Select Frame  css=iframe#questionIframe
-  Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  20
-  ${status}  ${message}  Run Keyword And Ignore Error  Wait Until Page Contains Element  id=subject
-  Run Keyword If  '${status}' == 'FAIL'  Run Keywords
-  ...       Reload Page
-  ...  AND  Select Frame  css=iframe
-  ...  AND  Fail  have not found needed fields on the page
-  Input Text  id=subject  ${title}
-  Input Text  id=question  ${description}
-  Click Element  css=button[type='button']
+  Input Text  xpath=//*[@class="ivu-form-item-content"]//input  ${title}
+  Input Text  xpath=//*[@class="ivu-form-item-content"]//textarea  ${description}
 
-Закрити вікно ваше запитання успішно надіслане_
-  Sleep  5
-  ${status}=  get text  css=.ivu-alert-message span
-  Should Be Equal  ${status}  Ваше запитання успішно надіслане
-  Unselect Frame
-  Select Frame  ${iframe}
-  Click Element  css=#inputFormQuestion i[onclick]
+Відправити запитання та перевірити відповідь
+  Click Element  xpath=//button[@type='button']//*[text()='Подати']
+  Wait Until Page Contains  Ваше питання було успішно надіслане  120
 
 Пройти кваліфікацію для подачі пропозиції_
   [Arguments]  ${username}  ${tender_uaid}  ${bid}
