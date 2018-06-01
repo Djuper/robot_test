@@ -94,7 +94,8 @@ ${ss_id}                                None
   ...  (наприклад, необхідно тільки для ролі tender_owner забрати з початкових даних поле mode: test, а для інших ролей не потрібно робити нічого).
   ...  Це ключове слово викликається в циклі для кожної ролі, яка бере участь в поточному сценарії.
   ...  З ключового слова потрібно повернути адаптовані дані tender_data. Різниця між початковими даними і кінцевими буде виведена в консоль під час запуску тесту.
-  ${tender_data}=  smarttender_service.adapt_data  ${tender_data}
+  ${tender_data}  Run Keyword If  "${mode}" == "assets"  smarttender_service.adapt_data_assets  ${tender_data}
+  ...  ELSE  smarttender_service.adapt_data  ${tender_data}
   [Return]  ${tender_data}
 
 Створити тендер
@@ -1607,6 +1608,7 @@ Wait For Loading
   Відкрити бланк дя створення об’єкту
   Заповнити title для assets  ${tender_data.data.title}
   Заповнити description для assets  ${tender_data.data.description}
+  Додати assetHolder
   Заповнити name для assetHolder  ${tender_data.data.assetHolder.name}
   Заповнити legalName для assetHolder  ${tender_data.data.assetHolder.identifier.legalName}
   Заповнити scheme для assetHolder  ${tender_data.data.assetHolder.identifier.scheme}
@@ -1620,26 +1622,40 @@ Wait For Loading
   Заповнити faxNumber для assetHolder.contactPoint  ${tender_data.data.assetHolder.contactPoint.faxNumber}
   Заповнити email для assetHolder.contactPoint  ${tender_data.data.assetHolder.contactPoint.email}
   Заповнити url для assetHolder.contactPoint  ${tender_data.data.assetHolder.contactPoint.url}
-  Заповнити title для decision  ${tender_data.data.decisions.title}
-  Заповнити decisionID для decision  ${tender_data.data.decisions.decisionID}
-  Заповнити decisionDate для decision  ${tender_data.data.decisions.decisionDate}
 
-  Заповнити description для item  ${tender_data.data.items.description}
-  Заповнити classification для item  ${tender_data.data.items.classification.id}
-  ...  ${tender_data.data.items.classification.scheme}
-  ...  ${tender_data.data.items.classification.description}
-  Заповнити quantity для item  ${tender_data.data.items.quantity}
-  Заповнити items.unit для item  ${tender_data.data.items.unit}
-  Заповнити postalCode для item  ${tender_data.data.items.address.postalCode}
-  Заповнити countryName для item  ${tender_data.data.items.address.countryName}
-  Заповнити locality для item  ${tender_data.data.items.address.locality}
-  Заповнити streetAddress для item  ${tender_data.data.items.address.streetAddress}
-  Заповнити registrationDetails.status для item  ${tender_data.data.items.registrationDetails.status}
+  :FOR  ${decision}  in  @{tender_data.data['decisions']}
+  \  Заповнити title для decision  ${decision.title}
+  \  Заповнити decisionID для decision  ${decision.decisionID}
+  \  Заповнити decisionDate для decision  ${decision.decisionDate}
+
+  :FOR  ${item}  in  @{tender_data.data['items']}
+  \  Заповнити description для item  ${item.description}
+  \  Заповнити classification для item  ${item.classification.id}  ${item.classification.scheme}  ${item.classification.description}
+  \  Заповнити quantity для item  ${item.quantity}
+  \  Заповнити items.unit для item  ${item.unit.name}
+  \  Заповнити postalCode для item  ${item.address.postalCode}
+  \  Заповнити countryName для item  ${item.address.countryName}
+  \  Заповнити locality для item  ${item.address.locality}
+  \  Заповнити streetAddress для item  ${item.address.streetAddress}
+  \  Заповнити registrationDetails.status для item  ${item.registrationDetails.status}
+
+  Створити об'єкт приватизації
+  debug
   [Return]  ${tender_uaid}
+
+Додати assetHolder
+  Click Element  css=.ivu-icon.ivu-icon-plus
+  Wait Until Page Contains Element  css=.ivu-icon.ivu-icon-minus
 
 Відкрити бланк дя створення об’єкту
   Go to  http://test.smarttender.biz/cabinet/registry/privatization-objects/
   Click Element  xpath=//button/*[contains(text(), "Створити об'єкт приватизації")]
+
+Створити об'єкт приватизації
+  Click Element  css=.empty-space .hidden-xs button[type='button']
+  wait_for_loading_assets
+  log to console  Створити об'єкт приватизації
+  debug
 
 Заповнити title для assets
   [Arguments]  ${text}
@@ -1659,7 +1675,11 @@ Wait For Loading
 
 Заповнити scheme для assetHolder
   [Arguments]  ${text}
-  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[3]//input)[2]  ${text}
+  ${locator}  Set Variable  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[3]//input)[2]
+  Click Element  ${locator}
+  Input text  ${locator}  ${text}
+  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
 
 Заповнити id для assetHolder
   [Arguments]  ${text}
@@ -1671,11 +1691,19 @@ Wait For Loading
 
 Заповнити countryName для assetHolder
   [Arguments]  ${text}
-  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[4]//input)[3]  ${text}
+  ${locator}  Set Variable  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[4]//input)[3]
+  Click Element  ${locator}
+  Input text  ${locator}  ${text}
+  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
 
 Заповнити locality для assetHolder
   [Arguments]  ${text}
-  Input text  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[4]//input)[5]  ${text}
+  ${locator}   Set Variable  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[4]//input)[5]
+  Click Element  ${locator}
+  Input text  ${locator}  ${text}
+  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
 
 Заповнити streetAddress для assetHolder
   [Arguments]  ${text}
@@ -1711,30 +1739,68 @@ Wait For Loading
 
 Заповнити decisionDate для decision
   [Arguments]  ${text}
-  Input text  xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../div[2]/div/div/div[3]//input  ${text}
+  ${data}  convert_datetime_to_smarttender_form  ${text}
+  Input text  xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../div[2]/div/div/div[3]//input  ${data}
 
 Заповнити description для item
   [Arguments]  ${text}
   Input Text  xpath=//*[contains(text(), "Об'єкт що продається")]/../div[1]//textarea  ${text}
 
 Заповнити classification для item
+  [Arguments]  ${id}  ${scheme}  ${description}
+  Click Element  xpath=//*[contains(text(), "Об'єкт що продається")]/../div[2]//a
+  Click Element  xpath=//*[contains(text(), "${scheme}")]
+  ${locator}  Run Keyword If  "${scheme}" == "ДК021"
+  ...        Set Variable  css=.ivu-tabs-tabpane:nth-child(1) input
+  ...  ELSE  Set Variable  css=.ivu-tabs-tabpane:nth-child(2) input
+  Input Text  ${locator}  ${id}
+  Click Element  xpath=//a[contains(text(), "${id}") and contains(text(), "${description}")]
+  Click Element  css=.ivu-modal-footer button
 
 Заповнити quantity для item
+  [Arguments]  ${text}
+  ${str_text}  Evaluate  str(${text})
+  Input Text  xpath=//*[contains(text(), "Об'єкт що продається")]/../div[3]//input[1]  ${str_text}
+
 Заповнити items.unit для item
+  [Arguments]  ${text}
+  ${locator}  Set Variable  xpath=//*[contains(text(), "Об'єкт що продається")]/../div[3]/div/div/div[2]
+  Click Element  ${locator}
+  Input Text  ${locator}//input[2]  ${text}
+  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+
 Заповнити postalCode для item
+  [Arguments]  ${text}
+  Input Text  xpath=(//*[contains(text(), "Об'єкт що продається")]/../div[4]/div[1]//input)[1]  ${text}
+
 Заповнити countryName для item
+  [Arguments]  ${text}
+  ${locator}  Set Variable  xpath=(//*[contains(text(), "Об'єкт що продається")]/../div[4]/div[1]//input)[3]
+  Click Element  ${locator}
+  Input Text  ${locator}  ${text}
+  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+
 Заповнити locality для item
+  [Arguments]  ${text}
+  ${locator}  Set Variable  xpath=(//*[contains(text(), "Об'єкт що продається")]/../div[4]/div[1]//input)[5]
+  Click Element  ${locator}
+  Input Text  ${locator}  ${text}
+  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+
 Заповнити streetAddress для item
+  [Arguments]  ${text}
+  Input Text  xpath=//*[contains(text(), "Об'єкт що продається")]/../div[4]/div[2]//input  ${text}
+
 Заповнити registrationDetails.status для item
-
-
-
-
-
-
-
-
-
+  [Arguments]  ${status}
+  ${selector}  Run Keyword If
+  ...           "${status}" == "unknown"      Set Variable  xpath=(//span[@class="semibold"])[1]
+  ...  ELSE IF  "${status}" == "registering"  Set Variable  xpath=(//span[@class="semibold"])[2]
+  ...  ELSE IF  "${status}" == "complete"     Set Variable  xpath=(//span[@class="semibold"])[3]
+  Click Element  ${selector}
 
 
 
@@ -1955,3 +2021,7 @@ Wait For Loading
   :FOR  ${INDEX}  IN RANGE  ${lots amount}
   \  ${n}  Evaluate  ${INDEX}+2
   \  Click Element  ${block}[${n}]//button
+
+wait_for_loading_assets
+  Run Keyword And Ignore Error  Wait Until Page Contains Element  css=.ivu-message .ivu-load-loop
+  Run Keyword And Ignore Error  Wait Until Page Does Not Contain Element  css=.ivu-message .ivu-load-loop  120

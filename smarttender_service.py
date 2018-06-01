@@ -489,6 +489,24 @@ def adapt_data(tender_data):
             item.deliveryAddress['locality'] = u"Кривий ріг"
     return tender_data
 
+def adapt_data_assets(tender_data):
+    tender_data.data.assetCustodian.name = u"Демо организатор (государственные торги)"
+    tender_data.data.assetCustodian.identifier.legalName = u"Демо организатор (государственные торги)"
+    tender_data.data.assetCustodian.identifier.id = u"111111111111111"
+    tender_data.data.assetCustodian.contactPoint.name = u"Прохоров И.А."
+    tender_data.data.assetCustodian.contactPoint.phone = u"044-222-15-48"
+    tender_data.data.assetCustodian.contactPoint.email = u"kliukvin@it.ua"
+    for item in tender_data.data['items']:
+        if item.address.locality == u"Дніпропетровськ":
+            item.address.locality = u"Дніпро"
+        elif item.unit.name == u"метри квадратні":
+            item.unit.name = u"м.кв."
+        elif item.unit.name == u"штуки":
+            item.unit.name = u"шт"
+        elif item.unit.name == u"послуга":
+            item.unit.name = u"умов."
+    return tender_data
+
 
 def get_question_data(id):
     return smarttender_munchify({'data': {'id': id}})
