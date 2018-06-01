@@ -256,15 +256,14 @@ ${ss_id}                                None
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Оновлює сторінку з лотом для отримання потенційно оновлених даних.
   log  ${mode}
-  log to console  Оновити сторінку з тендером
-  Run Keyword If  "${ss_id}" != "None"  Run Keywords
-  ...  Go To  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.CALLSYNCHRONIZER.PRIVAS&args={"IDCDB":"${ss_id}"}
-  ...  AND  Wait Until Page Contains  <string xmlns="http://tempuri.org/">True</string>  60
-  ...  AND  Go Back
-  #${last_modification_date}  convert_datetime_to_kot_format  ${TENDER.LAST_MODIFICATION_DATE}
-  #Open Browser  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.GET.LAST.SYNCHRONIZATION&args={"SEGMENT":3}  chrome
-  #Wait Until Keyword Succeeds  10 min  5 sec  waiting_for_synch  ${last_modification_date}
-  #Reload Page
+  #Run Keyword If  "${ss_id}" != "None"  Run Keywords
+  #...  debug
+  #...  AND  Go To  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.CALLSYNCHRONIZER.PRIVAS&args={"IDCDB":"${ss_id}"}
+  #...  AND  Wait Until Page Contains  <string xmlns="http://tempuri.org/">True</string>  60
+  #...  AND  Go Back
+  ${last_modification_date}  convert_datetime_to_kot_format  ${TENDER.LAST_MODIFICATION_DATE}
+  Open Browser  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.GET.LAST.SYNCHRONIZATION&args={"SEGMENT":7}  chrome
+  Wait Until Keyword Succeeds  10min  5sec  waiting_for_synch  ${last_modification_date}
   #Run Keyword And Ignore Error  Select Frame  ${iframe}
   #Run Keyword And Ignore Error  Розгорнути детальніше
 
@@ -1605,7 +1604,7 @@ Wait For Loading
 Створити об'єкт МП
   [Arguments]  ${username}  ${tender_data}
   [Documentation]  Створює об’єкт МП з початковими даними tender_data  return:  (ідентифікатор новоствореного об’єкта МП)
-  Відкрити бланк дя створення об’єкту
+  Відкрити бланк для створення об’єкту
   Заповнити title для assets  ${tender_data.data.title}
   Заповнити description для assets  ${tender_data.data.description}
   Додати assetHolder
@@ -1640,22 +1639,31 @@ Wait For Loading
   \  Заповнити registrationDetails.status для item  ${item.registrationDetails.status}
 
   Створити об'єкт приватизації
-  debug
+  ${tender_uaid}  smarttender.Отримати інформацію із об'єкта МП  assetID  assetID  assetID
   [Return]  ${tender_uaid}
 
 Додати assetHolder
   Click Element  css=.ivu-icon.ivu-icon-plus
   Wait Until Page Contains Element  css=.ivu-icon.ivu-icon-minus
 
-Відкрити бланк дя створення об’єкту
+Відкрити бланк для створення об’єкту
   Go to  http://test.smarttender.biz/cabinet/registry/privatization-objects/
-  Click Element  xpath=//button/*[contains(text(), "Створити об'єкт приватизації")]
+  Click Element  xpath=//button/*[contains(text(), "Створити об'єкт у реєстрі")]
+  Wait Until Element Is Not Visible  css=.skeleton-wrapper  60
 
 Створити об'єкт приватизації
+  Зберегти asset
+  Натиснути Коригувати asset
+  Click Element  xpath=//*[contains(text(), "Опублікувати")]
+  Wait Until Page Contains  Об'єкт приватизації було успішно опубліковано
+
+Зберегти asset
   Click Element  css=.empty-space .hidden-xs button[type='button']
   wait_for_loading_assets
-  log to console  Створити об'єкт приватизації
-  debug
+  Sleep  2
+
+Натиснути Коригувати asset
+  Click Element  xpath=//*[contains(text(), "Коригування об'єкту приватизації")]
 
 Заповнити title для assets
   [Arguments]  ${text}
@@ -1678,8 +1686,7 @@ Wait For Loading
   ${locator}  Set Variable  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[3]//input)[2]
   Click Element  ${locator}
   Input text  ${locator}  ${text}
-  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
-  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=//ul[@class="ivu-select-dropdown-list"]//li[contains(text(), '${text}')]
 
 Заповнити id для assetHolder
   [Arguments]  ${text}
@@ -1694,16 +1701,14 @@ Wait For Loading
   ${locator}  Set Variable  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[4]//input)[3]
   Click Element  ${locator}
   Input text  ${locator}  ${text}
-  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
-  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=//ul[@class="ivu-select-dropdown-list"]//li[contains(text(), '${text}')]
 
 Заповнити locality для assetHolder
   [Arguments]  ${text}
   ${locator}   Set Variable  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[4]//input)[5]
   Click Element  ${locator}
   Input text  ${locator}  ${text}
-  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
-  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=//ul[@class="ivu-select-dropdown-list"]//li[contains(text(), '${text}')]
 
 Заповнити streetAddress для assetHolder
   [Arguments]  ${text}
@@ -1760,15 +1765,17 @@ Wait For Loading
 Заповнити quantity для item
   [Arguments]  ${text}
   ${str_text}  Evaluate  str(${text})
-  Input Text  xpath=//*[contains(text(), "Об'єкт що продається")]/../div[3]//input[1]  ${str_text}
+  ${locator}  Set Variable  xpath=//*[contains(text(), "Об'єкт що продається")]/../div[3]//input[1]
+  Double Click Element   ${locator}
+  Press Key  ${locator}  127
+  Input Text  ${locator}  ${str_text}
 
 Заповнити items.unit для item
   [Arguments]  ${text}
   ${locator}  Set Variable  xpath=//*[contains(text(), "Об'єкт що продається")]/../div[3]/div/div/div[2]
   Click Element  ${locator}
   Input Text  ${locator}//input[2]  ${text}
-  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
-  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=//ul[@class="ivu-select-dropdown-list"]//li[contains(text(), '${text}')]
 
 Заповнити postalCode для item
   [Arguments]  ${text}
@@ -1779,16 +1786,14 @@ Wait For Loading
   ${locator}  Set Variable  xpath=(//*[contains(text(), "Об'єкт що продається")]/../div[4]/div[1]//input)[3]
   Click Element  ${locator}
   Input Text  ${locator}  ${text}
-  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
-  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=(//ul[@class="ivu-select-dropdown-list"]/li[text()="${text}"])[2]
 
 Заповнити locality для item
   [Arguments]  ${text}
   ${locator}  Set Variable  xpath=(//*[contains(text(), "Об'єкт що продається")]/../div[4]/div[1]//input)[5]
   Click Element  ${locator}
   Input Text  ${locator}  ${text}
-  Wait Until Page Contains Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
-  Click Element  xpath=//*[@class="ivu-select-item" and contains(text(), "${text}")]
+  Click Element  xpath=(//ul[@class="ivu-select-dropdown-list"]/li[text()="${text}"])[2]
 
 Заповнити streetAddress для item
   [Arguments]  ${text}
@@ -1801,12 +1806,6 @@ Wait For Loading
   ...  ELSE IF  "${status}" == "registering"  Set Variable  xpath=(//span[@class="semibold"])[2]
   ...  ELSE IF  "${status}" == "complete"     Set Variable  xpath=(//span[@class="semibold"])[3]
   Click Element  ${selector}
-
-
-
-
-
-
 
 
 
@@ -1827,6 +1826,7 @@ Wait For Loading
   ${privatization assets page}  Get Element Attribute  xpath=//p[contains(text(), "${tender_uaid}")]/..//a[@href]@href
   Go To  ${privatization assets page}
   Set Global Variable  ${privatization assets page}
+  Log  ${privatization assets page}  WARN
   Знайти id активу
 
 Знайти id активу
@@ -1837,15 +1837,14 @@ Wait For Loading
 Отримати інформацію із об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
   [Documentation]  Отримує значення поля field_name для об’єкту МП tender_uaid. return: tender['field_name'] (значення поля).
-  #log to console  Отримати інформацію із об'єкта МП
-  #log to console  ${field_name}
-  #debug
   ${result}  Отримати та обробити дані із об'єкта МП  ${field_name}
   [Return]  ${result}
 
 Отримати та обробити дані із об'єкта МП
   [Arguments]  ${field_name}
   ${selector}  object_field_info  ${field_name}
+  log to console  Отримати та обробити дані із об'єкта МП
+  #Run Keyword If  "items[0].classification.scheme" == "${field_name}" or "items[0].classification.id" == "${field_name}" or "items[0].registrationDetails.status" == "${field_name}"  debug
   ${value}  Get Text  ${selector}
   ${length}  Get Length  ${value}
   Run Keyword If  ${length} == 0  Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
@@ -1855,10 +1854,6 @@ Wait For Loading
 Отримати інформацію з активу об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${item_id}  ${field_name}
   [Documentation]  Отримує значення поля field_name з активу з item_id в описі об’єкта МП tender_uaid. Return: item['field_name'] (значення поля).
-  #log to console  Отримати інформацію з активу об'єкта МП
-  #log to console  ${field_name}
-  #log to console  ${item_id}
-  #debug
   ${result}  Отримати та обробити дані з активу об'єкта МП  ${field_name}  ${item_id}
   [Return]  ${result}
 
@@ -1873,42 +1868,44 @@ Wait For Loading
 
 Внести зміни в об'єкт МП
   [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
-  [Documentation] Змінює значення поля fieldname на fieldvalue для об’єкта МП tender_uaid.
+  [Documentation]  Змінює значення поля fieldname на fieldvalue для об’єкта МП tender_uaid.
   log to console  Внести зміни в об'єкт МП
 
 Внести зміни в актив об'єкта МП
   [Arguments]  ${username}  ${item_id}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
-  [Documentation] Змінює значення поля fieldname на fieldvalue для активу item_id об’єкта МП tender_uaid.
-  log to console  Внести зміни в актив об'єкта МП
-  debug
+  [Documentation]  Змінює значення поля fieldname на fieldvalue для активу item_id об’єкта МП tender_uaid.
+  Натиснути Коригувати asset
+  Заповнити quantity для item  ${fieldvalue}
+  Зберегти asset
 
 Завантажити ілюстрацію в об'єкт МП
   [Arguments]  ${username}   ${filepath}   ${tender_uaid}
-  [Documentation] Завантажує ілюстрацію, яка знаходиться по шляху filepath і має documentType = illustration, до об’єкта МП tender_uaid користувачем username.
+  [Documentation]  Завантажує ілюстрацію, яка знаходиться по шляху filepath і має documentType = illustration, до об’єкта МП tender_uaid користувачем username.
+  Choose File  xpath=//input[@type='file'][1]  ${filepath}
   log to console  Завантажити ілюстрацію в об'єкт МП
   debug
 
 Завантажити документ в об'єкт МП з типом
   [Arguments]  ${username}  ${filepath}  ${tender_uaid}  ${documentType}
-  [Documentation] Завантажує документ, який знаходиться по шляху filepath і має певний documentType (наприклад, notice і т.д), до об’єкта МП tender_uaid користувачем username.
+  [Documentation]  Завантажує документ, який знаходиться по шляху filepath і має певний documentType (наприклад, notice і т.д), до об’єкта МП tender_uaid користувачем username.
   log to console  Завантажити документ в об'єкт МП з типом
-  [Return] reply (словник з інформацією про документ).
+  [Return]  reply (словник з інформацією про документ).
 
 Додати актив до об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${item}
-  [Documentation] Додає дані про предмет item до об’єкта МП tender_uaid користувачем username.
+  [Documentation]  Додає дані про предмет item до об’єкта МП tender_uaid користувачем username.
   log to console  Додати актив до об'єкта МП
   debug
 
 Завантажити документ для видалення об'єкта МП
   [Arguments]  ${username}  ${filepath}  ${tender_uaid}
-  [Documentation] Завантажує документ, який знаходиться по шляху filepath і має documentType = cancellationDetails, до об’єкта МП tender_uaid користувачем username.
+  [Documentation]  Завантажує документ, який знаходиться по шляху filepath і має documentType = cancellationDetails, до об’єкта МП tender_uaid користувачем username.
   log to console  Завантажити документ для видалення об'єкта МП
   debug
 
 Видалити об'єкт МП
   [Arguments]  ${username}  ${tender_uaid}
-  [Documentation] Видаляє об’єкт МП tender_uaid користувачем username.
+  [Documentation]  Видаляє об’єкт МП tender_uaid користувачем username.
   log to console  Видалити об'єкт МП
   debug
 

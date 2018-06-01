@@ -1,4 +1,12 @@
-﻿# coding=utf-8
+﻿#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# ==============
+#      Main script file
+# ==============
+import sys
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
 from munch import munchify as smarttender_munchify
 from iso8601 import parse_date
 from dateutil.parser import parse
@@ -13,10 +21,7 @@ import ast
 
 def get_tender_data(link):
     r = requests.get(link).text
-    # s = r.replace('true', 'True')
-    # dictionary = ast.literal_eval(s)
     return r
-
 
 TZ = timezone(os.environ['TZ'] if 'TZ' in os.environ else 'Europe/Kiev')
 number_of_tabs = 1
@@ -492,10 +497,11 @@ def adapt_data(tender_data):
 def adapt_data_assets(tender_data):
     tender_data.data.assetCustodian.name = u"Демо организатор (государственные торги)"
     tender_data.data.assetCustodian.identifier.legalName = u"Демо организатор (государственные торги)"
-    tender_data.data.assetCustodian.identifier.id = u"111111111111111"
+    tender_data.data.assetCustodian.identifier.id = "111111111111111"
     tender_data.data.assetCustodian.contactPoint.name = u"Прохоров И.А."
-    tender_data.data.assetCustodian.contactPoint.phone = u"044-222-15-48"
-    tender_data.data.assetCustodian.contactPoint.email = u"kliukvin@it.ua"
+    tender_data.data.assetCustodian.contactPoint.phone = "044-222-15-48"
+    tender_data.data.assetCustodian.contactPoint.telephone = "044-222-15-48"
+    tender_data.data.assetCustodian.contactPoint.email = "kliukvin@it.ua"
     for item in tender_data.data['items']:
         if item.address.locality == u"Дніпропетровськ":
             item.address.locality = u"Дніпро"
@@ -627,6 +633,9 @@ def object_field_info(field):
         "assetCustodian.address.countryName": '????????????????????????????????',
         "documents[0].documentType": "xpath=(//*[contains(text(), 'Документи')]/..//*[@class='ivu-row']//p)[3]",
         "items[0].address.countryName": "xpath=(//*[contains(text(), 'Документи')]/..//*[@class='ivu-row']//p)[3]",
+        "items[0].classification.scheme": "css=span",
+        "items[0].classification.id": "css=span",
+        "items[0].registrationDetails.status": "css=span",
     }
     return map[field]
 
