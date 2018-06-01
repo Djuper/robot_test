@@ -1297,7 +1297,7 @@ Ignore error
   [Documentation]  Отримати значення поля field_name з документу doc_id до скарги/вимоги
   ...  complaintID для тендера tender_uaid.
   log to console  Отримати інформацію із документа до скарги
-  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}
+  ${title}  Отримати title по complaintID із ЦБД  ${complaintID}  0
   Розгорнути потрібну скаргу  ${title}
   ${selector}  claim_file_field_info  ${field_name}  ${doc_id}
   ${response}  Get Text  ${selector}
@@ -1368,9 +1368,11 @@ Ignore error
 # Отримати title по complaintID із ЦБД
 Отримати title по complaintID із ЦБД
   [Arguments]  ${complaintID}  ${award_index}=None
+  log  ${award_index}
+  ${award_index}  Run Keyword If  "${award_index}" == "Complaints"  Set Variable  None
   ${data}  get_tender_data  ${API_HOST_URL}/api/${API_VERSION}/tenders/${info_idcbd}
   ${data}  evaluate  json.loads($data)  json
-  ${title}  Run Keyword If  '${award_index}' == 'None' or '${award_index}' == 0
+  ${title}  Run Keyword If  '${award_index}' == 'None'
   ...        Отримати title по complaintID із ЦБД на умові закупівлі  ${data}  ${complaintID}
   ...  ELSE  Отримати title по complaintID із ЦБД на award  ${data}  ${complaintID}  ${award_index}
   [Return]  ${title}
