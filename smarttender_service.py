@@ -500,7 +500,8 @@ def adapt_data(tender_data):
 
 def adapt_data_assets(tender_data):
     tender_data.data.assetCustodian.name = u'ООО "Эксприм"'
-    tender_data.data.assetCustodian.identifier.legalName = u'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ "ЕКСПРІМ"'
+    tender_data.data.assetCustodian.identifier.legalName = u'ООО "Эксприм"'
+    #tender_data.data.assetCustodian.identifier.legalName = u'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ "ЕКСПРІМ"'
     tender_data.data.assetCustodian.identifier.id = "30441106"
     tender_data.data.assetCustodian.contactPoint.name = u"Прохоров И.А."
     tender_data.data.assetCustodian.contactPoint.telephone = "044-222-15-48"
