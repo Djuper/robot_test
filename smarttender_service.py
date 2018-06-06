@@ -505,15 +505,6 @@ def adapt_data_assets(tender_data):
     tender_data.data.assetCustodian.contactPoint.name = u"Прохоров И.А."
     tender_data.data.assetCustodian.contactPoint.telephone = "044-222-15-48"
     tender_data.data.assetCustodian.contactPoint.email = "kliukvin@it.ua"
-    if  tender_data.data.assetHolder.address.locality == u"Яготин":
-        tender_data.data.assetHolder.address.locality = u"ЯГОТИН"
-    elif tender_data.data.assetHolder.address.locality == u"Дніпропетровськ":
-        tender_data.data.assetHolder.address.locality = u"Дніпро"
-    for item in tender_data.data['items']:
-        if item.address.locality == u"Дніпропетровськ":
-            item.address.locality = u"Дніпро"
-        elif item.address.locality == u"Яготин":
-            item.address.locality = u"ЯГОТИН"
     return tender_data
 
 

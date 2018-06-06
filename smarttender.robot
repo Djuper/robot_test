@@ -1791,8 +1791,9 @@ Wait For Loading
   [Arguments]  ${text}  ${number}=1
   ${locator}  Set Variable  xpath=(//*[@data-qa="item"][${number}]//*[@class="ivu-card-body"]/div[4]//input)[3]
   Click Element  ${locator}
-  Sleep  2
+  Sleep  1
   Input Text  ${locator}  ${text}
+  Sleep  1
   Click Element  xpath=(//ul[@class="ivu-select-dropdown-list"]//li[contains(text(), '${text}')])[${number}]
 
 Заповнити postalCode для item
