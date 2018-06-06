@@ -445,7 +445,7 @@ def convert_claim_status(value):
     return map[value]
 
 
-def convert_datetime_to_smarttender_format(isodate):
+def convert_datetime_to_smarttender_format_minute(isodate):
     iso_dt = parse_date(isodate)
     date_string = iso_dt.strftime("%d.%m.%Y %H:%M")
     return date_string
@@ -472,6 +472,9 @@ def convert_date(s):
     dt = parse(s, parserinfo(True, False))
     return dt.strftime('%Y-%m-%dT%H:%M:%S+03:00')
 
+def convert_date_asset(s):
+    dt = parse(s, parserinfo(True, False))
+    return dt.strftime('%Y-%m-%dT%H:%M+03:00')
 
 def adapt_data(tender_data):
     tender_data.data.procuringEntity[
@@ -494,23 +497,23 @@ def adapt_data(tender_data):
             item.deliveryAddress['locality'] = u"Кривий ріг"
     return tender_data
 
+
 def adapt_data_assets(tender_data):
-    tender_data.data.assetCustodian.name = u"Демо организатор (государственные торги)"
-    tender_data.data.assetCustodian.identifier.legalName = u"Демо организатор (государственные торги)"
-    tender_data.data.assetCustodian.identifier.id = "111111111111111"
+    tender_data.data.assetCustodian.name = u'ООО "Эксприм"'
+    tender_data.data.assetCustodian.identifier.legalName = u'ТОВАРИСТВО З ОБМЕЖЕНОЮ ВІДПОВІДАЛЬНІСТЮ "ЕКСПРІМ"'
+    tender_data.data.assetCustodian.identifier.id = "30441106"
     tender_data.data.assetCustodian.contactPoint.name = u"Прохоров И.А."
-    tender_data.data.assetCustodian.contactPoint.phone = "044-222-15-48"
     tender_data.data.assetCustodian.contactPoint.telephone = "044-222-15-48"
     tender_data.data.assetCustodian.contactPoint.email = "kliukvin@it.ua"
+    if  tender_data.data.assetHolder.address.locality == u"Яготин":
+        tender_data.data.assetHolder.address.locality = u"ЯГОТИН"
+    elif tender_data.data.assetHolder.address.locality == u"Дніпропетровськ":
+        tender_data.data.assetHolder.address.locality = u"Дніпро"
     for item in tender_data.data['items']:
         if item.address.locality == u"Дніпропетровськ":
             item.address.locality = u"Дніпро"
-        elif item.unit.name == u"метри квадратні":
-            item.unit.name = u"м.кв."
-        elif item.unit.name == u"штуки":
-            item.unit.name = u"шт"
-        elif item.unit.name == u"послуга":
-            item.unit.name = u"умов."
+        elif item.address.locality == u"Яготин":
+            item.address.locality = u"ЯГОТИН"
     return tender_data
 
 
@@ -618,24 +621,22 @@ def object_field_info(field):
         "status": "css=.action-block-item.text-center.bold",
         "title": "css=h3>span",
         "description": "css=div.ivu-card-body .ivu-row>span",
-        "decisions[0].title": 'xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../../div[2]/span',
-        "decisions[0].decisionDate": 'xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../../div[2]/span',
-        "decisions[0].decisionID": 'xpath=//*[contains(text(), "Рішення про приватизацію активу")]/../../div[2]/span',
+        "decisions[0].title": 'xpath=//*[contains(text(), "Загальна інформація")]/../div[3]/div[2]/span',
+        "decisions[0].decisionDate": 'xpath=//*[contains(text(), "Загальна інформація")]/../div[3]/div[2]/span',
+        "decisions[0].decisionID": 'xpath=//*[contains(text(), "Загальна інформація")]/../div[3]/div[2]/span',
         "assetHolder.name": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[1]/div[2]/span',
         "assetHolder.identifier.scheme": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[2]/div[2]/span',
         "assetHolder.identifier.id": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[3]/div[2]/span',
         "assetCustodian.identifier.scheme": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[2]/div[2]/span',
-        "assetCustodian.identifier.id": 'xpath=//*[contains(text(), "Розпорядник активу")]/../div[2]/div[2]',
-        "assetCustodian.identifier.legalName": 'xpath=//*[contains(text(), "Розпорядник активу")]/../div[1]/div[2]',
-        "assetCustodian.contactPoint.name": 'xpath=//*[contains(text(), "Розпорядник активу")]/../div[3]/div[2]',
-        "assetCustodian.contactPoint.telephone": 'xpath=//*[contains(text(), "Розпорядник активу")]/../div[4]/div[2]',
-        "assetCustodian.contactPoint.email": 'xpath=//*[contains(text(), "Розпорядник активу")]/../div[5]/div[2]',
+        "assetCustodian.identifier.id": """xpath=//*[contains(text(), "Орган приватизації")]/../div[2]/div[2]""",
+        "assetCustodian.identifier.legalName": """xpath=//*[contains(text(), "Орган приватизації")]/../div[1]/div[2]""",
+        "assetCustodian.contactPoint.name": """xpath=//*[contains(text(), "Орган приватизації")]/../div[3]/div[2]""",
+        "assetCustodian.contactPoint.telephone": """xpath=//*[contains(text(), "Орган приватизації")]/../div[4]/div[2]""",
+        "assetCustodian.contactPoint.email": """xpath=//*[contains(text(), "Орган приватизації")]/../div[5]/div[2]""",
         "assetCustodian.address.countryName": '????????????????????????????????',
-        "documents[0].documentType": "xpath=(//*[contains(text(), 'Документи')]/..//*[@class='ivu-row']//p)[3]",
+        "documents[0].documentType": "xpath=//*[contains(text(), 'Загальна інформація')]/../div[4]/div[1]",
         "items[0].address.countryName": "xpath=(//*[contains(text(), 'Документи')]/..//*[@class='ivu-row']//p)[3]",
-        "items[0].classification.scheme": "css=span",
-        "items[0].classification.id": "css=span",
-        "items[0].registrationDetails.status": "css=span",
+        "dateModified": 'xpath=//*[contains(text(), "Загальна інформація")]/ancestor::*[@class="ivu-card-body"]/div[2]/div[2]/span',
     }
     return map[field]
 
@@ -645,21 +646,25 @@ def convert_object_result(field, value):
         list = re.search(u'\з\s(?P<start_date>[\d\.\s\:]+)\s\по\s(?P<end_date>[\d\.\s\:]+)', value)
         start_date = list.group('start_date')
         end_date = list.group('end_date')
-        if 'end_date' in field:
+        if 'endDate' in field:
             response = convert_date(end_date)
         else:
             response = convert_date(start_date)
     elif field == "status":
         response = map_object_status(value)
     elif "decisions[0]" in field:
-        list = re.search(u'(?P<decisions>.+?)\.\s(?P<decisionID>.+)\.\s\від\s(?P<date>.+)\.', value)
+        list = re.search(u'(?P<decisions>.+\.)\s\№(?P<decisionID>[\d\-]+)\s\від\s(?P<date>[\d\.\s\:]+)\.', value)
         if "title" in field:
             response = list.group("decisions")
         elif "decisionDate" in field:
             date = list.group("date")
-            response = convert_date_offset_naive(date)
+            response = convert_date(date)
         elif "decisionID" in field:
             response = list.group("decisionID")
+    elif "documentType" in field:
+        response = map_documentType(value)
+    elif "dateModified" == field:
+        response = convert_date(value)
     else:
         response = value
     return response
@@ -667,11 +672,27 @@ def convert_object_result(field, value):
 
 def map_object_status(doctype):
     map = {
-        u"Опубліковано. Очікування інформаційного повідомлення": u"pending",
-        u"Об'єкт реєструється.": u"registering",
+        u"Опубліковано. Очікування інформаційного повідомлення": "pending",
+        u"Об'єкт реєструється.": "registering",
+        u"Об'єкт зареєстровано": "complete",
+        u"Виключено з переліку": "deleted",
     }
     return map[doctype]
 
+def map_documentType(doctype, reverse=None):
+    map = {
+        u"Ілюстрація": "illustration",
+        u"Інформація про об’єкт малої приватизації": "technicalSpecifications",
+        u"Рішення про затвердження переліку об’єктів, що підлягають приватизації (внесення змін до переліку об’єктів)": "notice",
+        u"Інформація про оприлюднення інформаційного повідомлення": "informationDetails",
+        u"Презентація": "x_presentation",
+    }
+    if reverse != None:
+        for key, value in map.items():
+            if value == doctype:
+                return key
+    else:
+        return map[doctype]
 
 def asset_field_info(field, id):
     map = {
@@ -680,6 +701,9 @@ def asset_field_info(field, id):
         "unit.name": "xpath=//*[contains(text(), '{0}')]/../../../div[3]/div[2]".format(id),
         "quantity": "xpath=//*[contains(text(), '{0}')]/../../../div[3]/div[2]".format(id),
         "registrationDetails.status": "xpath=//*[contains(text(), '{0}')]/../../../div[5]/div/div[2]".format(id),
+        "classification.scheme": "xpath=//*[contains(text(), '{0}')]/../../../div[2]/div[2]".format(id),
+        "classification.id": "xpath=//*[contains(text(), '{0}')]/../../../div[2]/div[2]".format(id),
+        "classification.description": "xpath=//*[contains(text(), '{0}')]/../../../div[2]/div[2]".format(id),
     }
     return map[field]
 
@@ -692,14 +716,22 @@ def convert_asset_result(field, value):
         if "countryName" in field:
             response = list.group("countryName")
     elif "unit" in field or "quantity" == field:
-        list = re.search(u'(?P<quantity>[\d\.]+)\s\.(?P<name>.+)', value)
+        list = re.search(u'(?P<quantity>[\d\.]+)\s(?P<name>.+)', value)
         if "name" in field:
-            name = list.group("name")
-            response = convert_unit_from_smarttender_format(name, 'name')
+            response = list.group("name")
+            #response = convert_unit_from_smarttender_format(name, 'name')
         else:
             response = float(list.group("quantity"))
     elif "registrationDetails.status" == field:
         response = map_object_status(value)
+    elif "classification" in field:
+        list = re.search(u'(?P<scheme>.+)\:\s(?P<id>[\d\-]+)\s\-\s(?P<description>.+)', value)
+        if "scheme" in field:
+            response = list.group("scheme")
+        elif "id" in field:
+            response = list.group("id")
+        elif "description" in field:
+            response = list.group("description")
     else:
         response = value
     return response
@@ -708,3 +740,6 @@ def get_id_from_tender_href(href):
     id = re.search(u'.+\/assets/(?P<id>.+)', href)
     id = id.group('id')
     return id
+
+def first_letter_upper_case(value):
+    return value[0].upper() + value[1:]
