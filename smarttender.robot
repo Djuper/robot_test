@@ -266,7 +266,7 @@ waiting_for_synch
   ${DateEnd}  Set Variable  ${dict[1]}
   ${WorkStatus}  Set Variable  ${dict[2]}
   ${Success}  Set Variable  ${dict[3]}
-  ${status}  Run Keyword if  '${last_modification_date}' < '${DateStart}' and '${DateEnd}' != '${EMPTY}' and '${WorkStatus}' != 'working' and '${Success}' == 'true'
+  ${status}  Run Keyword if  '${last_modification_date}' < '${DateStart}' and '${DateEnd}' != '${EMPTY}' and '${WorkStatus}' != 'working' and '${WorkStatus}' != 'fail' and '${Success}' == 'true'
   ...  Set Variable  Pass
   ...  ELSE  Reload Page
   Should Be Equal  ${status}  Pass
