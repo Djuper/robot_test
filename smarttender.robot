@@ -1658,16 +1658,17 @@ Wait For Loading
 
 Створити об'єкт приватизації
   Зберегти asset
-  Click Element  xpath=//*[contains(text(), "Опублікувати")]
-  Wait Until Page Contains  Об'єкт приватизації було успішно опубліковано
+  wait until keyword succeeds  30s  5s  Опублікувати asset
   wait_for_loading_assets
-  Sleep  2
 
 Зберегти asset
   ${status}  Run Keyword And Return Status  Click Element  xpath=//*[contains(text(), "Внести зміни")]
   Run Keyword If  "${status}" == "False"  Click Element  xpath=//*[contains(text(), "Зберегти")]
   Wait Until Page Contains Element  css=.ivu-notice>div.ivu-notice-notice  120
 
+Опублікувати asset
+  Click Element  xpath=//*[contains(text(), "Опублікувати")]
+  Wait Until Page Contains  Об'єкт приватизації було успішно опубліковано
 
 Натиснути Коригувати asset
   Wait Until Keyword Succeeds  30s  5  Run Keywords
