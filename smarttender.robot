@@ -1696,7 +1696,9 @@ Wait For Loading
   [Arguments]  ${text}
   ${locator}  Set Variable  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[2]//input)[2]
   Click Element  ${locator}
+  Sleep  .5
   Input text  ${locator}  ${text}
+  Sleep  .5
   Click Element  xpath=//ul[@class="ivu-select-dropdown-list"]//li[contains(text(), '${text}')]
 
 Заповнити id для assetHolder
@@ -1711,14 +1713,18 @@ Wait For Loading
   [Arguments]  ${text}
   ${locator}  Set Variable  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[3]//input)[3]
   Click Element  ${locator}
+  Sleep  .5
   Input text  ${locator}  ${text}
+  Sleep  .5
   Click Element  xpath=//ul[@class="ivu-select-dropdown-list"]//li[contains(text(), '${text}')]
 
 Заповнити locality для assetHolder
   [Arguments]  ${text}
   ${locator}   Set Variable  xpath=(//*[contains(text(), "Балансоутримувач")]/../../../div[3]/div[3]//input)[5]
   Click Element  ${locator}
+  Sleep  .5
   Input text  ${locator}  ${text}
+  Sleep  .5
   Click Element  xpath=//ul[@class="ivu-select-dropdown-list"]//li[contains(text(), '${text}')]
 
 Заповнити streetAddress для assetHolder
@@ -1770,12 +1776,12 @@ Wait For Loading
   [Arguments]  ${id}  ${scheme}  ${description}  ${number}=1
   Click Element  xpath=//*[@data-qa="item"][${number}]//div[1]//a
   Wait Until Keyword Succeeds  15  3  Click Element  xpath=(//*[contains(text(), "${scheme}")])[last()]
-  Sleep  2
+  Sleep  1
   ${locator}  Run Keyword If  "${scheme}" == "ДК021"
   ...        Set Variable  css=.ivu-tabs-tabpane:nth-child(1) input
   ...  ELSE  Set Variable  css=.ivu-tabs-tabpane:nth-child(2) input
   Input Text  ${locator}  ${id}
-  Sleep  2
+  Sleep  1
   Wait Until Keyword Succeeds  15  3  Click Element  xpath=(//a[contains(text(), "${id}") and contains(text(), "${description}")])[last()]
   Click Element  css=.ivu-modal-footer button
 
@@ -1784,8 +1790,11 @@ Wait For Loading
   ${str_text}  Evaluate  str(${text})
   ${locator}  Set Variable  xpath=//*[@data-qa="item"][${number}]//*[@class="ivu-card-body"]/div[4]//input
   Double Click Element   ${locator}
+  Sleep  .5
   Press Key  ${locator}  \\127
+  Sleep  .5
   Input Text  ${locator}  ${str_text}
+  Sleep  .5
 
 Заповнити items.unit для item
   [Arguments]  ${text}  ${number}=1
@@ -1806,13 +1815,16 @@ Wait For Loading
   Click Element  ${locator}
   Sleep  .5
   Input Text  ${locator}  ${text}
+  Sleep  .5
   Click Element  xpath=(//ul[@class="ivu-select-dropdown-list"]/li[text()="${text}"])[last()]
 
 Заповнити locality для item
   [Arguments]  ${text}  ${number}=1
   ${locator}  Set Variable  xpath=(//*[@data-qa="item"][${number}]//*[@class="ivu-card-body"]/div[5]//input)[5]
   Click Element  ${locator}
+  Sleep  .5
   Input Text  ${locator}  ${text}
+  Sleep  .5
   Click Element  xpath=//*[@data-qa="item"][${number}]//div//ul[@class="ivu-select-dropdown-list"]/li[contains(text(), "${text}")]
 
 Заповнити streetAddress для item
