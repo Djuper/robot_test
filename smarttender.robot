@@ -74,6 +74,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
 
 # Privatization
 ${privatization_start_page}             http://test.smarttender.biz/small-privatization/registry/privatization-objects
+${privatization_lot_start_page}         http://test.smarttender.biz/small-privatization/registry/privatization-lots
 ${search input field privatization}     css=.ivu-card-body input[type=text]
 ${do search privatization}              css=.ivu-card-body button>i
 ${ss_id}                                None
@@ -255,7 +256,6 @@ ${ss_id}                                None
 Оновити сторінку з тендером
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Оновлює сторінку з лотом для отримання потенційно оновлених даних.
-  log to console  report: Оновити сторінку з тендером
   Оновити сторінку з об'єктом МП  ${username}  ${tender_uaid}
 
 waiting_for_synch
@@ -286,11 +286,11 @@ waiting_for_synch
 #Отримати інформацію із лоту
 #  [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${field_name}
 #  [Documentation]  Отримати значення поля field_name з лоту з lot_id в описі для тендера tender_uaid.
-#  ...  [Повертає] lot['field_name']
-#  Відкрити сторінку  ${field_name}  ${tender_uaid}
-#  Відкрити сторінку с потрібним лотом за необхідністю  ${lot_id}
-#  ${response}=  Отримати та обробити дані із лоту_  ${field_name}  ${lot_id}
-#  Повернутися до тендеру від лоту за необхідністю
+  ...  [Повертає] lot['field_name']
+  #Відкрити сторінку  ${field_name}  ${tender_uaid}
+  #Відкрити сторінку с потрібним лотом за необхідністю  ${lot_id}
+  #${response}=  Отримати та обробити дані із лоту_  ${field_name}  ${lot_id}
+  #Повернутися до тендеру від лоту за необхідністю
 #  [Return]  ${response}
 
 Внести зміни в тендер
@@ -549,7 +549,8 @@ Get title by lotid
   [Documentation]  Завантажує файл з doc_id в заголовку з лоту tender_uaid в директорію ${OUTPUT_DIR}
   ...  для перевірки вмісту цього файлу.
   ...  [Повертає] filename (ім'я завантаженого файлу)
-  Run Keyword If  "${mode}" != "assets"  Відкрити сторінку  tender  ${tender_uaid}
+  log  ${mode}
+  Run Keyword If  "${mode}" != "assets" and "${mode}" != "lots"  Відкрити сторінку  tender  ${tender_uaid}
   ${fileUrl}=  Get Element Attribute  xpath=//*[contains(text(), '${doc_id}')]@href
   ${filename}=  Get Text  xpath=//*[contains(text(), '${doc_id}')]
   smarttender_service.download_file  ${fileUrl}  ${OUTPUT_DIR}/${filename}
@@ -1597,14 +1598,17 @@ Wait For Loading
   Run Keyword If  "${username}" != "SmartTender_Owner"  Оновити сторінку з об'єктом МП continue
 
 Оновити сторінку з об'єктом МП continue
+  Log  ${mode}
+  ${n}    Run Keyword If  '${mode}' == 'asset'    Set Variable  7
+  ...     ELSE IF         '${mode}' == 'lots'     Set Variable  8
   ${last_modification_date}  convert_datetime_to_kot_format  ${TENDER.LAST_MODIFICATION_DATE}
-  Open Browser  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.GET.LAST.SYNCHRONIZATION&args={"SEGMENT":7}  chrome
+  Open Browser  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.GET.LAST.SYNCHRONIZATION&args={"SEGMENT":${n}}  chrome
   Wait Until Keyword Succeeds  10min  5sec  waiting_for_synch  ${last_modification_date}
 
 Оновити сторінку з лотом
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Оновлює сторінку з лотом для отримання потенційно оновлених даних.
-  Оновити сторінку з об'єктом МП  ${username}  ${tender_uaid}
+  smarttender.Оновити сторінку з об'єктом МП  ${username}  ${tender_uaid}
 
 Створити об'єкт МП
   [Arguments]  ${username}  ${tender_data}
@@ -1856,12 +1860,14 @@ Wait For Loading
   Go To  ${privatization assets page}
   Set Global Variable  ${privatization assets page}
   Log  ${privatization assets page}  WARN
-  Знайти id активу
+  ${ss_id}  Знайти id активу
 
 Знайти id активу
+  [Arguments]  ${lot}=None
   ${href}  get element attribute  css=h4>a[href]@href
-  ${ss_id}  get_id_from_tender_href  ${href}
+  ${ss_id}  get_id_from_tender_href  ${href}  ${lot}
   Set Global Variable  ${ss_id}
+  [Return]  ${ss_id}
 
 Отримати інформацію із об'єкта МП
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
@@ -1979,29 +1985,71 @@ Wait For Loading
 Пошук лоту по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Шукає лот з uaid = tender_uaid. return: tender_uaid (словник з інформацією про лот)
-  log to console  Пошук лоту по ідентифікатору
-  debug
-  [Return]  ${tender_uaid} (словник з інформацією про лот)
+  Go to  ${privatization_start_page}
+  Go to  ${privatization_lot_start_page}
+  Input Text  ${search input field privatization}  ${tender_uaid}
+  Click Element  ${do search privatization}
+  Wait Until Page Contains Element  xpath=//span[contains(text(), "${tender_uaid}")]
+  ${privatization lot page}  Get Element Attribute  xpath=//*[contains(text(), "${tender_uaid}")]/..//a[@href]@href
+  Go To  ${privatization lot page}
+  Set Global Variable  ${privatization lot page}
+  Log  ${privatization lot page}  WARN
+  ${ss_id}  Знайти id активу  lot
+  [Return]  ${tender_uaid}
 
 Отримати інформацію із лоту
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
-  [Documentation] Отримує значення поля field_name для лоту tender_uaid. return: tender['field_name'] (значення поля).
-  log to console  Отримати інформацію із лоту
-  debug
+  [Documentation]  Отримує значення поля field_name для лоту tender_uaid. return: tender['field_name'] (значення поля).
+  #log to console  Отримати інформацію із лоту
+  #debug
+  #${result}  Отримати asset_id для лоту
+  #${result}  ss Отримати та обробити дані із лоту  ${field_name}
+  ${result}  Run Keyword If  "assets" in "${field_name}"  Отримати asset_id для лоту
+  ...  ELSE IF  "${field_name}" == "auctions[2].minimalStep.amount"  Evaluate  float(0)
+  ...  ELSE  ss Отримати та обробити дані із лоту  ${field_name}
   [Return]  ${result}
+
+ss Отримати та обробити дані із лоту
+  [Arguments]  ${field_name}
+  ${selector}  ss_lot_field_info  ${field_name}
+  Focus  ${selector}
+  ${value}  Get Text  ${selector}
+  ${length}  Get Length  ${value}
+  Run Keyword If  ${length} == 0  Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
+  ${result}=  convert_lot_result  ${fieldname}  ${value}
+  [Return]  ${result}
+
+Отримати asset_id для лоту
+  Click Element  xpath=//*[contains(text(), 'Загальна інформація')]/..//*[text()="Зв'язаний об'єкт приватизації"]/../following-sibling::div
+  ${href}  get element attribute  css=h4>a[href]@href
+  ${ss_id}  get_id_from_tender_href  ${href}
+  Go Back
+  [Return]  ${ss_id}
 
 Отримати інформацію з активу лоту
   [Arguments]  ${username}  ${tender_uaid}   ${item_id}  ${field_name}
   [Documentation]  Отримує значення поля field_name з активу з item_id в описі лоту tender_uaid. return: item['field_name'] (значення поля).
-  log to console  Отримати інформацію з активу лоту
-  debug
+  #log to console  Отримати інформацію з активу лоту!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  #debug
+  ${result}  Отримати та обробити дані з активу об'єкта МП  ${field_name}  ${item_id}
   [Return]  ${result}
+
+#Отримати та обробити дані із активу лоту
+#  [Arguments]  ${field_name}  ${item_id}
+#  ${selector}  asset_field_info  ${field_name}  ${item_id}
+#  Focus  ${selector}
+#  ${value}  Get Text  ${selector}
+#  ${length}  Get Length  ${value}
+#  Run Keyword If  ${length} == 0  Capture Page Screenshot  ${OUTPUTDIR}/my_screen{index}.png
+#  ${result}=  convert_asset_result  ${fieldname}  ${value}
+#  [Return]  ${result}
 
 Внести зміни в лот
   [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
   [Documentation]  Змінює значення поля fieldname на fieldvalue для лоту tender_uaid.
-  log to console  Внести зміни в лот
-  debug
+  log to console  ${fieldname}
+  #log to console  Внести зміни в лот
+  #debug
 
 Внести зміни в актив лоту
   [Arguments]  ${username}  ${item_id}   ${tender_uaid}  ${fieldname}  ${fieldvalue}
