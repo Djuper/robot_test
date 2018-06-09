@@ -615,22 +615,22 @@ def object_field_info(field):
         "status": "css=.action-block-item.text-center.bold",
         "title": "css=h3>span",
         "description": "css=div.ivu-card-body .ivu-row>span",
-        "decisions[0].title": 'xpath=//*[contains(text(), "Загальна інформація")]/../div[3]/div[2]/span',
-        "decisions[0].decisionDate": 'xpath=//*[contains(text(), "Загальна інформація")]/../div[3]/div[2]/span',
-        "decisions[0].decisionID": 'xpath=//*[contains(text(), "Загальна інформація")]/../div[3]/div[2]/span',
-        "assetHolder.name": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[1]/div[2]/span',
-        "assetHolder.identifier.scheme": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[2]/div[2]/span',
-        "assetHolder.identifier.id": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[3]/div[2]/span',
-        "assetCustodian.identifier.scheme": 'xpath=//*[contains(text(), "Балансоутримувач")]/../div[2]/div[2]/span',
-        "assetCustodian.identifier.id": """xpath=//*[contains(text(), "Орган приватизації")]/../div[2]/div[2]""",
-        "assetCustodian.identifier.legalName": """xpath=//*[contains(text(), "Орган приватизації")]/../div[1]/div[2]""",
-        "assetCustodian.contactPoint.name": """xpath=//*[contains(text(), "Орган приватизації")]/../div[3]/div[2]""",
-        "assetCustodian.contactPoint.telephone": """xpath=//*[contains(text(), "Орган приватизації")]/../div[4]/div[2]""",
-        "assetCustodian.contactPoint.email": """xpath=//*[contains(text(), "Орган приватизації")]/../div[5]/div[2]""",
-        "assetCustodian.address.countryName": '????????????????????????????????',
+        "decisions[0].title": """xpath=//*[contains(text(), "Загальна інформація")]/..//*[contains(text(), "Рішення про приватизацію об'єкту")]/../following-sibling::div""",
+        "decisions[0].decisionDate": """xpath=//*[contains(text(), "Загальна інформація")]/..//*[contains(text(), "Рішення про приватизацію об'єкту")]/../following-sibling::div""",
+        "decisions[0].decisionID": """xpath=//*[contains(text(), "Загальна інформація")]/..//*[contains(text(), "Рішення про приватизацію об'єкту")]/../following-sibling::div""",
+        "assetHolder.name": """xpath=//*[contains(text(), "Балансоутримувач")]/..//*[contains(text(), "Назва")]/..//following-sibling::div""",
+        "assetHolder.identifier.scheme": """xpath=//*[contains(text(), "Балансоутримувач")]/..//*[contains(text(), "Код агентства реєстрації")]/..//following-sibling::div""",
+        "assetHolder.identifier.id": """xpath=//*[contains(text(), "Балансоутримувач")]/..//*[contains(text(), "Код ЄДРПОУ")]/..//following-sibling::div""",
+        "assetCustodian.identifier.scheme": """xpath=//*[contains(text(), "Орган приватизації")]/..//*[contains(text(), "Код агентства реєстрації")]/..//following-sibling::div""",
+        "assetCustodian.identifier.id": """xpath=//*[contains(text(), "Орган приватизації")]/..//*[contains(text(), "Код ЄДРПОУ")]/..//following-sibling::div""",
+        "assetCustodian.identifier.legalName": """xpath=//*[contains(text(), "Орган приватизації")]/..//*[contains(text(), "Найменування")]/..//following-sibling::div""",
+        "assetCustodian.contactPoint.name": """xpath=//*[contains(text(), "Орган приватизації")]/..//*[contains(text(), "ПІБ")]/..//following-sibling::div""",
+        "assetCustodian.contactPoint.telephone": """xpath=//*[contains(text(), "Орган приватизації")]/..//*[contains(text(), "Телефон")]/..//following-sibling::div""",
+        "assetCustodian.contactPoint.email": """xpath=//*[contains(text(), "Орган приватизації")]/..//*[contains(text(), "Email")]/..//following-sibling::div""",
+        "assetCustodian.address.countryName": """xpath=//*[contains(text(), "Орган приватизації")]/..//*[contains(text(), "Адреса")]/..//following-sibling::div""",
         "documents[0].documentType": "xpath=//*[contains(text(), 'Загальна інформація')]/../div[4]/div[1]",
         "items[0].address.countryName": "xpath=(//*[contains(text(), 'Документи')]/..//*[@class='ivu-row']//p)[3]",
-        "dateModified": 'xpath=//*[contains(text(), "Загальна інформація")]/ancestor::*[@class="ivu-card-body"]/div[2]/div[2]/span',
+        "dateModified": """xpath=//*[contains(text(), "Загальна інформація")]/ancestor::*[@class="ivu-card-body"]//*[contains(text(), "Дата модифікації у ЦБД")]/../following-sibling::div""",
     }
     return map[field]
 
@@ -724,6 +724,7 @@ def ss_lot_field_info(field):
     map = {
         "lotID": "css=h4>a[href]",
         "title": "css=h3>span",
+        "status": "css=.action-block-item.text-center.bold",
         "description": "css=div.ivu-card-body .ivu-row>span",
         "date": """xpath=//*[contains(text(), 'Загальна інформація')]/..//*[text()="Дата створення лоту"]/../following-sibling::div""",
         "rectificationPeriod.endDate": """xpath=//*[contains(text(), 'Загальна інформація')]/..//*[text()="Період коригування"]/../following-sibling::div""",
@@ -770,6 +771,8 @@ def convert_lot_result(field, value):
         response_ = convert_date(date)
     elif "date" in field:
         response_ = convert_date(value)
+    elif "status" in field:
+        response_ = map_object_status(value)
     elif "decisions" in field:
         list = re.search(u'(?P<title>.+\.)? ?№(?P<decisionID>[\d-]+) від (?P<decisionDate>[\d\s:.]+)\.', value)
         if "title" in field:
@@ -793,7 +796,7 @@ def convert_lot_result(field, value):
             response_= float(list.group('amount'))
         elif "tenderingDuration" in field:
             if "30" in value:
-                response_ = "P1M"
+                response_ = "P30D"
         elif "auctionPeriod.startDate" in field:
             response_ = convert_date(value)
     elif "dateModified" == field:
@@ -816,6 +819,8 @@ def object_lot_field_info(field, id):
 def map_object_status(doctype):
     map = {
         u"Опубліковано. Очікування інформаційного повідомлення": "pending",
+        u"Опубліковано": "pending",
+        u"Перевірка доступності об'єкту": "verification",
         u"Об'єкт реєструється.": "registering",
         u"Об'єкт зареєстровано": "complete",
         u"Виключено з переліку": "deleted",
@@ -847,6 +852,26 @@ def map_documentType(doctype, reverse=None):
                 return key
     else:
         return map[doctype]
+
+def map_documentType_lot(doctype, reverse=None):
+    map = {
+        u"Рішення про внесення змін до інформаційного повідомлення": "informationDetails",
+        u"Рішення аукціонної комісії": "notice",
+
+
+        u"Умови продажу та/або експлуатації об’єкта приватизації": "technicalSpecifications",
+        u"Рішення про затвердження переліку об’єктів, що підлягають приватизації (внесення змін до переліку об’єктів)": "technicalSpecifications",
+
+        u"Ілюстрація": "illustration",
+        u"Презентація": "x_presentation",
+    }
+    if reverse is not None:
+        for key, value in map.items():
+            if value == doctype:
+                return key
+    else:
+        return map[doctype]
+
 
 
 def get_id_from_tender_href(href, lot=None):

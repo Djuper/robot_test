@@ -73,8 +73,8 @@ ${choice file path}                     xpath=//*[@type='file'][1]
 ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]//span[text()='Завантаження документації']
 
 # Privatization
-${privatization_start_page}             http://test.smarttender.biz/small-privatization/registry/privatization-objects
-${privatization_lot_start_page}         http://test.smarttender.biz/small-privatization/registry/privatization-lots
+${privatization_start_page}             http://test.smarttender.biz/cabinet/registry/privatization-objects
+${privatization_lot_start_page}         http://test.smarttender.biz/cabinet/registry/privatization-lots
 ${search input field privatization}     css=.ivu-card-body input[type=text]
 ${do search privatization}              css=.ivu-card-body button>i
 ${ss_id}                                None
@@ -1793,7 +1793,7 @@ Wait For Loading
 Заповнити quantity для item
   [Arguments]  ${text}  ${number}=1
   ${str_text}  Evaluate  str(${text})
-  ${locator}  Set Variable  xpath=//*[@data-qa="item"][${number}]//*[@class="ivu-card-body"]/div[4]//input
+  ${locator}  Set Variable  xpath=((//*[contains(text(), "Загальна інформація")]/ancestor::*[@class="ivu-card-body"]//*[contains(text(), "Об'єм")])[${number}]/following-sibling::div//input)[1]
   Double Click Element   ${locator}
   Sleep  .5
   Press Key  ${locator}  \\127
@@ -1830,7 +1830,7 @@ Wait For Loading
   Sleep  .5
   Input Text  ${locator}  ${text}
   Sleep  .5
-  Click Element  xpath=//*[@data-qa="item"][${number}]//div//ul[@class="ivu-select-dropdown-list"]/li[contains(text(), "${text}")]
+  wait until keyword succeeds  15s  3s  Click Element  xpath=//*[@data-qa="item"][${number}]//div//ul[@class="ivu-select-dropdown-list"]/li[contains(text(), "${text}")]
 
 Заповнити streetAddress для item
   [Arguments]  ${text}  ${number}=1
@@ -1860,7 +1860,7 @@ Wait For Loading
   Go To  ${privatization assets page}
   Set Global Variable  ${privatization assets page}
   Log  ${privatization assets page}  WARN
-  ${ss_id}  Знайти id активу
+  #${ss_id}  Знайти id активу
 
 Знайти id активу
   [Arguments]  ${lot}=None
@@ -1936,7 +1936,8 @@ Wait For Loading
   [Arguments]  ${documentType}
   Focus  xpath=(//*[@data-toggle="dropdown"])[last()]
   Click Element  xpath=(//*[@data-toggle="dropdown"])[last()]
-  ${type}  map_documentType  ${documentType}  reverse
+  ${type}  Run Keyword If  '${mode}' == 'asset'  map_documentType  ${documentType}  reverse
+  ...  ELSE IF  '${mode}' == 'lots'    map_documentType_lot  ${documentType}  reverse
   Click Element  xpath=(//*[contains(text(), "${type}")])[last()]
 
 Додати актив до об'єкта МП
@@ -1976,11 +1977,43 @@ Wait For Loading
 
 ######Лоти:
 Створити лот
-  [Arguments]  ${username}  ${tender_data}
-  [Documentation]  Створює об’єкт МП з початковими даними tender_data
-  log to console  Створити лот
-  debug
-  [Return]  tender_uaid (ідентифікатор новоствореного лоту)
+  [Arguments]  ${username}  ${tender_data}  ${asset_uaid}
+  [Documentation]  Створює лот з початковими даними tender_data і прив’язаним до нього об’єктом МП asset_uaid
+  Відкрити бланк створення лоту
+  Заповнити asset_uaid для lots  ${asset_uaid}
+  Заповинити decisionDate для lots  ${tender_data.data.decisions[0].decisionDate}
+  Заповинити decisionID для lots  ${tender_data.data.decisions[0].decisionID}
+  Заповинити decisionName для lots  Something
+  Створити об'єкт приватизації
+  ${tender_uaid}  smarttender.Отримати інформацію із об'єкта МП  assetID  assetID  assetID
+  [Return]  ${tender_uaid}
+
+Відкрити бланк створення лоту
+  Go To  http://test.smarttender.biz/cabinet/registry/privatization-objects/
+  Click Element  xpath=//*[contains(text(), "Створити інформаційне повідомлення")]
+  waiting skeleton
+
+Заповнити asset_uaid для lots
+  [Arguments]  ${data}
+  ${selector}  Set Variable  xpath=(//*[contains(text(), "Загальна інформація")]/ancestor::*[@class="ivu-card-body"]//input)[1]
+  Input Text  ${selector}  ${data}
+
+Заповинити decisionDate для lots
+  [Arguments]  ${data}
+  ${selector}  Set Variable  xpath=(//*[contains(text(), "Рішення про затверждення умов продажу лоту")]/following-sibling::*//input)[3]
+  ${text}  convert_datetime_to_smarttender_format_minute  ${data}
+  Input Text  ${selector}  ${text}
+  Press Key  ${selector}  \\09
+
+Заповинити decisionID для lots
+  [Arguments]  ${data}
+  ${selector}  Set Variable  xpath=(//*[contains(text(), "Рішення про затверждення умов продажу лоту")]/following-sibling::*//input)[2]
+  Input Text  ${selector}  ${data}
+
+Заповинити decisionName для lots
+  [Arguments]  ${data}
+  ${selector}  Set Variable  xpath=(//*[contains(text(), "Рішення про затверждення умов продажу лоту")]/following-sibling::*//input)[1]
+  Input Text  ${selector}  ${data}
 
 Пошук лоту по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
@@ -2000,10 +2033,7 @@ Wait For Loading
 Отримати інформацію із лоту
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
   [Documentation]  Отримує значення поля field_name для лоту tender_uaid. return: tender['field_name'] (значення поля).
-  #log to console  Отримати інформацію із лоту
-  #debug
-  #${result}  Отримати asset_id для лоту
-  #${result}  ss Отримати та обробити дані із лоту  ${field_name}
+  Reload Page
   ${result}  Run Keyword If  "assets" in "${field_name}"  Отримати asset_id для лоту
   ...  ELSE IF  "${field_name}" == "auctions[2].minimalStep.amount"  Evaluate  float(0)
   ...  ELSE  ss Отримати та обробити дані із лоту  ${field_name}
@@ -2029,8 +2059,6 @@ ss Отримати та обробити дані із лоту
 Отримати інформацію з активу лоту
   [Arguments]  ${username}  ${tender_uaid}   ${item_id}  ${field_name}
   [Documentation]  Отримує значення поля field_name з активу з item_id в описі лоту tender_uaid. return: item['field_name'] (значення поля).
-  #log to console  Отримати інформацію з активу лоту!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  #debug
   ${result}  Отримати та обробити дані з активу об'єкта МП  ${field_name}  ${item_id}
   [Return]  ${result}
 
@@ -2047,29 +2075,52 @@ ss Отримати та обробити дані із лоту
 Внести зміни в лот
   [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}
   [Documentation]  Змінює значення поля fieldname на fieldvalue для лоту tender_uaid.
-  log to console  ${fieldname}
+  #log to console  ${fieldname}
   #log to console  Внести зміни в лот
   #debug
+  Натиснути Коригувати lot
+  Внести зміни в лот продовження  ${fieldname}  ${fieldvalue}
+  Run Keyword  Заповнити ${fieldname} для assets  ${fieldvalue}
+  Зберегти asset
+
+Внести зміни в лот продовження
+  [Arguments]  ${fieldname}  ${fieldvalue}
+  Run Keyword If
+  ...  "${fieldname}" == "title"
+  ...  Run Keyword  Заповнити ${fieldname} для assets  ${fieldvalue}
+  ...  ELSE IF  "${fieldname}" == "description"
+  ...  Input Text  xpath=//*[contains(text(), "Опис інформаційного повідомлення")]/following-sibling::div//textarea  ${fieldvalue}
 
 Внести зміни в актив лоту
   [Arguments]  ${username}  ${item_id}   ${tender_uaid}  ${fieldname}  ${fieldvalue}
   [Documentation]  Змінює значення поля fieldname на fieldvalue для активу item_id лоту tender_uaid.
-  log to console  Внести зміни в актив лоту
-  debug
+  Натиснути Коригувати lot
+  Run Keyword  Заповнити ${fieldname} для item  ${fieldvalue}
+  Зберегти asset
 
 Завантажити ілюстрацію в лот
-  [Arguments]  ${username}  ${filepath}  ${tender _uaid}
+  [Arguments]  ${username}  ${tender _uaid}  ${filepath}
   [Documentation]  Завантажує ілюстрацію, яка знаходиться по шляху filepath і має documentType = illustration, до лоту tender_uaid користувачем username.
-  log to console  Завантажити ілюстрацію в лот
-  debug
+  Натиснути Коригувати lot
+  Choose File  xpath=//input[@type='file'][1]  ${filepath}
+  Вибрати тип документу для asset  illustration
+  Зберегти asset
 
 Завантажити документ в лот з типом
-  [Arguments]  ${username}  ${filepath}  ${tender_uaid}  ${documentType}
+  [Arguments]  ${username}  ${tender_uaid}  ${filepath}  ${documentType}
   [Documentation]  Завантажує документ, який знаходиться по шляху filepath і має певний documentType (наприклад, notice і т.д), до лоту tender_uaid користувачем username.
   ...  return: reply (словник з інформацією про документ).
   log to console  Завантажити документ в лот з типом
-  debug
-  [Return]  ${reply}
+  log to console  ${documentType}
+  #debug
+  log to console  ${documentType}
+  #Можливість завантажити публічний паспорт активу лоту
+  #Можливість завантажити публічний паспорт до умов проведення аукціону
+  Натиснути Коригувати lot
+  Choose File  xpath=(//input[@type='file'][1])[last()]  ${filepath}
+  Вибрати тип документу для asset  ${documentType}
+  Зберегти asset
+  Run Keyword If  "${TESTNAME}" == "Можливість завантажити публічний паспорт активу лоту"  Sleep  120
 
 Завантажити документ для видалення лоту
   [Arguments]  ${username}  ${filepath}  ${tender _uaid}
@@ -2083,12 +2134,93 @@ ss Отримати та обробити дані із лоту
   log to console  Видалити лот
 
 Додати умови проведення аукціону
-  [Arguments]  ${username}  ${auction}
+  [Arguments]  ${username}  ${auction}  ${auction_index}  ${tender_uaid}
   [Documentation]  Додає умови проведення аукціону auction користувачем username  return: reply (словник з інформацією про умови проведення аукціону).
   ...  (викликається двічі, окремо для вказання умов проведення першого аукціону і окремо для другого)
-  log to console  Додати умови проведення аукціону
-  debug
-  [Return]  ${reply}
+  Run Keyword  Додати умови проведення аукціону ${auction_index}  ${auction}  ${tender_uaid}
+
+Додати умови проведення аукціону 0
+  [Arguments]  ${auction}  ${tender_uaid}
+  Натиснути Коригувати lot
+  Заповнити auctionPeriod.startDate для auction  ${auction.auctionPeriod.startDate}
+  Заповнити value.amount для auction  ${auction.value.amount}
+  Заповнити valueAddedTaxIncluded для auction  ${auction.value.valueAddedTaxIncluded}
+  Заповнити minimalStep.amount для auction  ${auction.minimalStep.amount}
+  Заповнити guarantee.amount для auction  ${auction.guarantee.amount}
+
+Додати умови проведення аукціону 1
+  [Arguments]  ${auction}  ${tender_uaid}
+  ${duration}  Set Variable  ${auction.tenderingDuration}
+  ${duration}  Run Keyword if  "${duration}" == "P1M"  Set Variable  30
+  Заповнити duration для auction  ${duration}
+  Зберегти asset
+  Передати на перевірку лот
+
+Передати на перевірку лот
+  Click Element  xpath=//*[contains(text(), "Передати на перевірку")]
+  Wait Until Page Contains Element  css=.ivu-notice>div.ivu-notice-notice  120
+
+Заповнити auctionPeriod.startDate для auction
+  [Arguments]  ${data}
+  ${selector}  Set Variable  xpath=//*[contains(text(), "Умови аукціону")]/..//*[contains(text(), "Дата проведення аукціону")]/..//input
+  ${text}  convert_datetime_to_kot_format  ${data}
+  Input Text  ${selector}  ${text}
+  Press Key  ${selector}  \\09
+
+Заповнити duration для auction
+  [Arguments]  ${data}
+  ${selector}  Set Variable  xpath=//*[contains(text(), "Умови аукціону")]/..//*[contains(text(), "Період між аукціонами")]/..//input
+  Input Text  ${selector}  ${data}
+
+Заповнити value.amount для auction
+  [Arguments]  ${data}
+  ${text}  Evaluate  str(${data})
+  ${selector}  Set Variable  xpath=(//*[contains(text(), "Умови аукціону")]/..//*[contains(text(), "Стартова ціна об’єкта")]/..//input)[1]
+  Input Text  ${selector}  ${text}
+
+Заповнити valueAddedTaxIncluded для auction
+  [Arguments]  ${data}
+  ${selector}  Set Variable  xpath=(//*[contains(text(), "Умови аукціону")]/..//*[contains(text(), "Стартова ціна об’єкта")]/..//input)[3]
+  Run Keyword If  "${data}" == "True"    Select Checkbox    ${selector}
+  ...  ELSE                              Unselect Checkbox  ${selector}
+
+Заповнити minimalStep.amount для auction
+  [Arguments]  ${data}
+  ${text}  Evaluate  str(${data})
+  ${selector}  Set Variable  xpath=(//*[contains(text(), "Умови аукціону")]/..//*[contains(text(), "Крок аукціону")]/..//input)[1]
+  Input Text  ${selector}  ${text}
+
+Заповнити guarantee.amount для auction
+  [Arguments]  ${data}
+  ${text}  Evaluate  str(${data})
+  ${selector}  Set Variable  xpath=(//*[contains(text(), "Умови аукціону")]/..//*[contains(text(), "Розмір гарантійного внеску")]/..//input)[1]
+  Input Text  ${selector}  ${text}
+
+
+Натиснути Коригувати lot
+  Wait Until Keyword Succeeds  30s  5  Run Keywords
+  ...       Click Element  xpath=//button/span[contains(text(), "Коригування інформаційного повідомлення")]
+  ...  AND  Sleep  1
+  ...  AND  waiting skeleton
+  ...  AND  Element Should Not Be Visible  xpath=//button/span[contains(text(), "Коригування інформаційного повідомлення")]
+
+Внести зміни в умови проведення аукціону
+  [Arguments]  ${username}  ${tender_uaid}  ${fieldname}  ${fieldvalue}  ${auction_index}
+  [Documentation]  Змінює значення поля fieldname на fieldvalue для аукціону auction_index лоту tender_uaid.
+  Натиснути Коригувати lot
+  Run Keyword  Заповнити ${fieldname} для auction  ${fieldvalue}
+  Зберегти asset
+
+Завантажити документ в умови проведення аукціону
+  [Arguments]  ${username}  ${tender_uaid}  ${filepath}  ${documentType}  ${auction_index}
+  [Documentation]  Завантажує документ, який знаходиться по шляху filepath і має певний documentType (наприклад, notice і т.д), до умов проведення аукціону з індексом auction_index лоту tender_uaid.
+  log to console  ${documentType}
+  Натиснути Коригувати lot
+  Choose File  xpath=//input[@type='file'][1]  ${filepath}
+  Вибрати тип документу для asset  ${documentType}
+  Зберегти asset
+  Run Keyword If  "${TESTNAME}" == "Можливість завантажити публічний паспорт до умов проведення аукціону"  Sleep  120
+  #[Повертає] reply (словник з інформацією про документ).
 
 ####################################
 #             LEGACY               #
