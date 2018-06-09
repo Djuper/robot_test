@@ -728,7 +728,7 @@ def ss_lot_field_info(field):
         "description": "css=div.ivu-card-body .ivu-row>span",
         "date": """xpath=//*[contains(text(), 'Загальна інформація')]/..//*[text()="Дата створення лоту"]/../following-sibling::div""",
         "rectificationPeriod.endDate": """xpath=//*[contains(text(), 'Загальна інформація')]/..//*[text()="Період коригування"]/../following-sibling::div""",
-        "u'dateModified": """xpath=//*[contains(text(), "Загальна інформація")]/ancestor::*[@class="ivu-card-body"]//*[text()="Дата модифікації у ЦБД"]/../following-sibling::div""",
+        "dateModified": """xpath=//*[contains(text(), "Загальна інформація")]/ancestor::*[@class="ivu-card-body"]//*[text()="Дата модифікації у ЦБД"]/../following-sibling::div""",
 
         "lotHolder.name": 'xpath=//*[text()="Балансоутримувач"]/..//*[text()="Назва"]/../following-sibling::div',
         "lotHolder.identifier.scheme": 'xpath=//*[text()="Балансоутримувач"]/..//*[text()="Код агентства реєстрації"]/../following-sibling::div',
@@ -853,15 +853,11 @@ def map_documentType(doctype, reverse=None):
     else:
         return map[doctype]
 
-def map_documentType_lot(doctype, reverse=None):
+def map_documentType_auction(doctype, reverse=None):
     map = {
-        u"Рішення про внесення змін до інформаційного повідомлення": "informationDetails",
+        u"Умови продажу та/або експлуатації об’єкта приватизації": "evaluationCriteria",
         u"Рішення аукціонної комісії": "notice",
-
-
-        u"Умови продажу та/або експлуатації об’єкта приватизації": "technicalSpecifications",
-        u"Рішення про затвердження переліку об’єктів, що підлягають приватизації (внесення змін до переліку об’єктів)": "technicalSpecifications",
-
+        u"Рішення про внесення змін до інформаційного повідомлення": "technicalSpecifications",
         u"Ілюстрація": "illustration",
         u"Презентація": "x_presentation",
     }
