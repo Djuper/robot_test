@@ -2049,7 +2049,7 @@ Wait For Loading
   ${result}  Run Keyword If  "assets" in "${field_name}"  Отримати asset_id для лоту
   ...  ELSE IF  "${field_name}" == "auctions[2].minimalStep.amount"  Evaluate  float(0)
   ...  ELSE  ss Отримати та обробити дані із лоту  ${field_name}
-  ${result}  Run Keyword If  "${result}" == "P30D" and "${username}" == "SmartTender_Viewer"  Set Variable  P1M
+  ${result}  Run Keyword If  """${result}""" == """P30D""" and "${username}" == "SmartTender_Viewer"  Set Variable  P1M
   ...  ELSE  Set Variable  ${result}
   [Return]  ${result}
 
