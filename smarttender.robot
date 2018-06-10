@@ -73,8 +73,8 @@ ${choice file path}                     xpath=//*[@type='file'][1]
 ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]//span[text()='Завантаження документації']
 
 # Privatization
-${privatization_start_page}             http://test.smarttender.biz/cabinet/registry/privatization-objects
-${privatization_lot_start_page}         http://test.smarttender.biz/cabinet/registry/privatization-lots
+${privatization_start_page}             http://test.smarttender.biz/small-privatization/registry/privatization-objects
+${privatization_lot_start_page}         http://test.smarttender.biz/small-privatization/registry/privatization-lots
 ${search input field privatization}     css=.ivu-card-body input[type=text]
 ${do search privatization}              css=.ivu-card-body button>i
 ${ss_id}                                None
@@ -1599,9 +1599,11 @@ Wait For Loading
 
 Оновити сторінку з об'єктом МП continue
   Log  ${mode}
-  ${n}    Run Keyword If  '${mode}' == 'asset'    Set Variable  7
+  ${n}    Run Keyword If  '${mode}' == 'assets'    Set Variable  7
   ...     ELSE IF         '${mode}' == 'lots'     Set Variable  8
-  ${last_modification_date}  convert_datetime_to_kot_format  ${TENDER.LAST_MODIFICATION_DATE}
+  ${time}  Get Current Date
+  ${last_modification_date}  convert_datetime_to_kot_format  ${time}
+  #${last_modification_date}  convert_datetime_to_kot_format  ${TENDER.LAST_MODIFICATION_DATE}
   Open Browser  http://test.smarttender.biz/ws/webservice.asmx/Execute?calcId=_QA.GET.LAST.SYNCHRONIZATION&args={"SEGMENT":${n}}  chrome
   Wait Until Keyword Succeeds  10min  5sec  waiting_for_synch  ${last_modification_date}
 
@@ -2026,7 +2028,11 @@ Wait For Loading
 Пошук лоту по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Шукає лот з uaid = tender_uaid. return: tender_uaid (словник з інформацією про лот)
-  Go to  ${privatization_start_page}
+  Wait Until Keyword Succeeds  10 min  5 sec  Пошук лоту по ідентифікатору продовження  ${tender_uaid}
+  [Return]  ${tender_uaid}
+
+Пошук лоту по ідентифікатору продовження
+  [Arguments]  ${tender_uaid}
   Go to  ${privatization_lot_start_page}
   Input Text  ${search input field privatization}  ${tender_uaid}
   Click Element  ${do search privatization}
@@ -2035,8 +2041,6 @@ Wait For Loading
   Go To  ${privatization lot page}
   Set Global Variable  ${privatization lot page}
   Log  ${privatization lot page}  WARN
-  ${ss_id}  Знайти id активу  lot
-  [Return]  ${tender_uaid}
 
 Отримати інформацію із лоту
   [Arguments]  ${username}  ${tender_uaid}  ${field_name}
@@ -2045,6 +2049,8 @@ Wait For Loading
   ${result}  Run Keyword If  "assets" in "${field_name}"  Отримати asset_id для лоту
   ...  ELSE IF  "${field_name}" == "auctions[2].minimalStep.amount"  Evaluate  float(0)
   ...  ELSE  ss Отримати та обробити дані із лоту  ${field_name}
+  ${result}  Run Keyword If  "${result}" == "P30D" and "${username}" == "SmartTender_Viewer"  Set Variable  P1M
+  ...  ELSE  Set Variable  ${result}
   [Return]  ${result}
 
 ss Отримати та обробити дані із лоту
@@ -2121,15 +2127,18 @@ ss Отримати та обробити дані із лоту
   Run Keyword If  "${TESTNAME}" == "Можливість завантажити публічний паспорт активу лоту"  Sleep  180
 
 Завантажити документ для видалення лоту
-  [Arguments]  ${username}  ${filepath}  ${tender _uaid}
+  [Arguments]  ${username}  ${tender_uaid}  ${filepath}
   [Documentation]  Завантажує документ, який знаходиться по шляху filepath і має documentType = cancellationDetails, до лоту tender_uaid користувачем username.
-  log to console  Завантажити документ для видалення лоту
-  debug
+  Click Element  xpath=//button//*[contains(text(), " Видалити інформаційне повідомлення")]
+  Choose File    xpath=//input[1]  ${filepath}
+  Page Should Contain Element  xpath=//*[contains(@class, "file")]//a
 
 Видалити лот
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Видаляє лот tender_uaid користувачем username.
-  log to console  Видалити лот
+  Click Element  xpath=(//button//*[contains(text(), "Видалити інформаційне повідомлення")])[last()]
+  Wait Until Page Contains Element  xpath=//h4[contains(text(), "Об’єкт виключено")]  60
+
 
 Додати умови проведення аукціону
   [Arguments]  ${username}  ${auction}  ${auction_index}  ${tender_uaid}

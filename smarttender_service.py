@@ -834,6 +834,7 @@ def map_object_status(doctype):
         u"Аукціон відбувся": "complete",
         u"Торги скасовано": "cancelled",
         u"Торги не відбулися": "unsuccessful",
+        u"Об’єкт виключено": "deleted",
     }
     return map[doctype]
 
