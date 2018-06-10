@@ -549,6 +549,8 @@ Get title by lotid
   [Documentation]  Завантажує файл з doc_id в заголовку з лоту tender_uaid в директорію ${OUTPUT_DIR}
   ...  для перевірки вмісту цього файлу.
   ...  [Повертає] filename (ім'я завантаженого файлу)
+  Sleep  180
+  Reload Page
   log  ${mode}
   Run Keyword If  "${mode}" != "assets" and "${mode}" != "lots"  Відкрити сторінку  tender  ${tender_uaid}
   ${fileUrl}=  Get Element Attribute  xpath=//*[contains(text(), '${doc_id}')]@href
@@ -560,6 +562,8 @@ Get title by lotid
   [Arguments]  ${username}  ${tender_uaid}  ${lot_id}  ${doc_id}
   [Documentation]  Завантажити файл doc_id до лоту з lot_id в описі для тендера tender_uaid в директорію ${OUTPUT_DIR} для перевірки вмісту цього файлу.
   ...  [Повертає] filename (ім'я завантаженого файлу)
+  Sleep  180
+  Reload Page
   Відкрити сторінку  tender  ${tender_uaid}
   ${fileUrl}=  Get Element Attribute  xpath=//*[contains(text(), '${doc_id}')]@href
   ${filename}=  Get Text  xpath=//*[contains(text(), '${doc_id}')]
@@ -1849,12 +1853,14 @@ Wait For Loading
 Пошук об’єкта МП по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Шукає об’єкт МП з uaid = tender_uaid.  return: (словник з інформацією про об’єкт МП)
-  Wait Until Keyword Succeeds  10 min  5 sec  Пошук об’єкта МП по ідентифікатору продовження  ${tender_uaid}
+  Wait Until Keyword Succeeds  10 min  5 sec  Пошук об’єкта МП по ідентифікатору продовження  ${tender_uaid}  ${username}
   #[Return]  ${tender}
 
 Пошук об’єкта МП по ідентифікатору продовження
-  [Arguments]  ${tender_uaid}
-  Go to  ${privatization_start_page}
+  [Arguments]  ${tender_uaid}  ${username}
+  Run Keyword If  "${username}" == "SmartTender_Owner"
+  ...  Go to  http://test.smarttender.biz/cabinet/registry/privatization-objects
+  ...  ELSE  Go to  http://test.smarttender.biz/small-privatization/registry/privatization-objects
   Input Text  ${search input field privatization}  ${tender_uaid}
   Click Element  ${do search privatization}
   Wait Until Page Contains Element  xpath=//span[contains(text(), "${tender_uaid}")]
@@ -2028,12 +2034,14 @@ Wait For Loading
 Пошук лоту по ідентифікатору
   [Arguments]  ${username}  ${tender_uaid}
   [Documentation]  Шукає лот з uaid = tender_uaid. return: tender_uaid (словник з інформацією про лот)
-  Wait Until Keyword Succeeds  10 min  5 sec  Пошук лоту по ідентифікатору продовження  ${tender_uaid}
+  Wait Until Keyword Succeeds  10 min  5 sec  Пошук лоту по ідентифікатору продовження  ${tender_uaid}  ${username}
   [Return]  ${tender_uaid}
 
 Пошук лоту по ідентифікатору продовження
-  [Arguments]  ${tender_uaid}
-  Go to  ${privatization_lot_start_page}
+  [Arguments]  ${tender_uaid}  ${username}
+  Run Keyword If  "${username}" == "SmartTender_Owner"
+  ...  Go to        http://test.smarttender.biz/cabinet/registry/privatization-lots
+  ...  ELSE  Go to  http://test.smarttender.biz/small-privatization/registry/privatization-lots
   Input Text  ${search input field privatization}  ${tender_uaid}
   Click Element  ${do search privatization}
   Wait Until Page Contains Element  xpath=//span[contains(text(), "${tender_uaid}")]
@@ -2049,7 +2057,7 @@ Wait For Loading
   ${result}  Run Keyword If  "assets" in "${field_name}"  Отримати asset_id для лоту
   ...  ELSE IF  "${field_name}" == "auctions[2].minimalStep.amount"  Evaluate  float(0)
   ...  ELSE  ss Отримати та обробити дані із лоту  ${field_name}
-  ${result}  Run Keyword If  """${result}""" == """P30D""" and "${username}" == "SmartTender_Viewer"  Set Variable  P1M
+  ${result}  Run Keyword If  "${username}" == "SmartTender_Viewer" and '${result}' == 'P30D'  Set Variable  P1M
   ...  ELSE  Set Variable  ${result}
   [Return]  ${result}
 
@@ -2162,11 +2170,11 @@ ss Отримати та обробити дані із лоту
   ${duration}  Run Keyword if  "${duration}" == "P1M"  Set Variable  30
   Заповнити duration для auction  ${duration}
   Зберегти asset
-  Передати на перевірку лот
+  Wait Until Keyword Succeeds  15  5  Передати на перевірку лот
 
 Передати на перевірку лот
-  Wait Until Keyword Succeeds  15  5  Click Element  xpath=//*[contains(text(), "Передати на перевірку")]
-  Wait Until Page Contains Element  css=.ivu-notice>div.ivu-notice-notice  120
+  Run Keyword And Ignore Error  Click Element  xpath=//*[contains(text(), "Передати на перевірку")]
+  Wait Until Page Does Not Contain Element  xpath=//*[contains(text(), "Передати на перевірку")]  10
 
 Заповнити auctionPeriod.startDate для auction
   [Arguments]  ${data}
