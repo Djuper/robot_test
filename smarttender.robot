@@ -31,7 +31,7 @@ ${block}                                xpath=.//*[@class='ivu-card ivu-card-bor
 ${cancellation offers button}           ${block}[last()]//div[@class="ivu-poptip-rel"]/button
 ${cancel. offers confirm button}        ${block}[last()]//div[@class="ivu-poptip-footer"]/button[2]
 ${ok button}                            xpath=.//div[@class="ivu-modal-body"]/div[@class="ivu-modal-confirm"]//button
-${loading}                              css=.smt-load div.box
+${loading}                              css=div.smt-load
 ${your request is sending}              css=.ivu-message-notice-content-textddd
 ${wraploading}                          css=#wrapLoading .load-icon-div i
 ${send offer button}                    css=button#submitBidPlease
@@ -646,8 +646,9 @@ Get title by lotid
   [Arguments]  ${user}  ${tenderId}  ${objectId}  ${field}
   [Documentation]  Отримує значення поля field_name із запитання з question_id в описі для тендера tender_uaid.
   ...  [Повертає] question['field_name'] (значення поля).
-  ${selector}=  question_field_info  ${field}  ${objectId}
-  ${ret}  Get Text  ${selector}
+  debug
+  #${selector}=  question_field_info  ${field}  ${objectId}
+  #${ret}  Get Text  ${selector}
   [Return]  ${ret}
 
 Відповісти на запитання
@@ -686,14 +687,15 @@ Get title by lotid
 #       Цінові пропозиції          #
 ####################################
 Подати цінову пропозицію
-  [Arguments]  ${username}  ${tender_uaid}  ${bid}  @{ARGUMENTS}
-  [Documentation]
-  ...  ${ARGUMENTS[0]}  lots_ids=None
-  ...  ${ARGUMENTS[1]}  features_ids=None
-  ...  Подає цінову пропозицію bid до лоту tender_uaid користувачем username.
+  [Arguments]  ${username}  ${tender_uaid}  ${bid}  ${lots_ids}=None  ${features_ids}=None
+  [Documentation]  Подає цінову пропозицію bid до лоту tender_uaid користувачем username.
   ...  [Повертає] reply (словник з інформацією про цінову пропозицію).
   Відкрити сторінку  proposal  ${tender_uaid}
-  ${amount}=  Run Keyword If  'open' in '${mode}' or "${NUMBER_OF_LOTS}"  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
+  log  ${mode}
+  log  ${bid}
+  log  ${lots_ids}
+  log  ${features_ids}
+  ${amount}=  Run Keyword If  'open' in '${mode}' or '${mode}' == 'belowThreshold'  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
   ...  ELSE  Get From Dictionary  ${bid.data.value}  amount
   ${amount}=  convert to string  ${amount}
   ${parameters}=  Run Keyword If  '${mode}' != 'belowThreshold'  Get From Dictionary  ${bid.data}  parameters
