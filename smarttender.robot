@@ -1273,7 +1273,7 @@ Ignore error
   ...  якщо award_index != None).
   Run Keyword If  '${award_index}' == 'None'  Відкрити сторінку  claims
   ...  ELSE  Відкрити сторінку  award_claims  ${award_index}  ${award_index}
-  Run Keyword If  '${field_name}' == 'satisfied' or '${field_name}' == 'status' or "${TESTNAME}" == "Відображення кінцевих статусів двох останніх вимог"  smarttender.Оновити сторінку з тендером  ${username}  ${tender_uaid}
+  #Run Keyword If  '${field_name}' == 'satisfied' or '${field_name}' == 'status' or "${TESTNAME}" == "Відображення кінцевих статусів двох останніх вимог"  smarttender.Оновити сторінку з тендером  ${username}  ${tender_uaid}
   Run Keyword If  "${TESTNAME}" == "Відображення кінцевих статусів двох останніх вимог"  Sleep  60
   Reload Page
   ${title}  Отримати title по complaintID із ЦБД  ${complaintID}  ${award_index}
