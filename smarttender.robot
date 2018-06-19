@@ -1303,12 +1303,18 @@ Ignore error
 Вибрати тип вимоги у фільтрі
   [Arguments]  ${type}=None
   Unselect Frame
+  Wait Until Keyword Succeeds  10x  3s  Вибрати тип вимоги у фільтрі Reloading
   Click Element  xpath=//*[@data-qa="filter"]
   Sleep  1
   Run Keyword If  "${type}" == "None"
   ...        Click Element  xpath=//*[@data-qa="filter"]//ul[2]/li[1]
   ...  ELSE  Click Element  xpath=//*[contains(text(), "${type}")]
   Wait Until Element Is Not Visible  xpath=//*[@data-qa="filter"]//ul[2]/li[1]
+
+Вибрати тип вимоги у фільтрі Reloading
+  ${status}  Run Keyword and Return Status  Wait Until Page Contains Element  xpath=//*[@data-qa="filter"]
+  Run Keyword If  '${status}' == 'False'  Reload Page
+  Should Be Equal  ${status}  ${True}
 
 Подати вимогу авторизованим користувачем
   [Arguments]  ${title}  ${description}  ${document}=None  ${award_index}=None
@@ -1580,39 +1586,3 @@ Ignore error
 Wait For Loading
   Run Keyword And Ignore Error  Wait Until Element Is Visible  ${loading}  10
   Run Keyword And Ignore Error  Wait Until Element Is Not Visible  ${loading}  600
-
-####################################
-#             LEGACY               #
-####################################
-Отримати текст із поля і показати на сторінці
-  [Arguments]  ${fieldname}
-  wait until page contains element  ${wait}
-  ${return_value}=  Get Text  ${locator.${fieldname}}${locator.${fieldname}}
-  [Return]  ${return_value}
-
-Підтвердити наявність протоколу аукціону
-  [Arguments]  ${user}  ${tenderId}  ${bidIndex}
-  Run Keyword  smarttender.Підготуватися до редагування  ${user}  ${tenderId}
-  Click Element  jquery=#MainSted2TabPageHeaderLabelActive_1
-  ${normalizedIndex}=  normalize_index  ${bidIndex}  1
-  Click Element  jquery=div[data-placeid='BIDS'] div.objbox.selectable.objbox-scrollable table tbody tr:eq(${normalizedIndex}) td:eq(2)
-  Wait Until Page Contains Element  xpath=//*[@data-name="OkButton"]  ${wait}
-  Click Element  xpath=//*[@data-name="OkButton"]
-
-Завантажити протокол аукціону в авард
-  [Arguments]  ${username}  ${tender_uaid}  ${filepath}  ${award_index}
-  smarttender.Завантажити документ рішення кваліфікаційної комісії  ${username}  ${filepath}  ${tender_uaid}  ${award_index}
-  Click Element  jquery=div.dxbButton_DevEx:eq(2)
-  Click Element  xpath=//span[text()="Зберегти"]
-  Click Element  id=IMMessageBoxBtnYes_CD
-
-Розгорнути всі лоти
-  [Documentation]  expand all lots
-  Sleep  1
-  ${blocks amount}=  Get Matching Xpath Count  .//*[@class='ivu-card ivu-card-bordered']
-  Run Keyword If  '${blocks amount}'<'3'
-  ...  fatal error  Нету нужных елементов на странице(не та страница)
-  ${lots amount}  Evaluate  ${blocks amount}-2
-  :FOR  ${INDEX}  IN RANGE  ${lots amount}
-  \  ${n}  Evaluate  ${INDEX}+2
-  \  Click Element  ${block}[${n}]//button
