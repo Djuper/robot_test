@@ -1195,6 +1195,17 @@ Click Input Enter Wait
   Заповнити дані для подачі пропозиції_  ${amount}
   Подати пропозицію
 
+Розгорнути всі лоти
+  [Documentation]  expand all lots
+  Sleep  1
+  ${blocks amount}=  Get Matching Xpath Count  .//*[@class='ivu-card ivu-card-bordered']
+  Run Keyword If  '${blocks amount}'<'3'
+  ...  fatal error  Нету нужных елементов на странице(не та страница)
+  ${lots amount}  Evaluate  ${blocks amount}-2
+  :FOR  ${INDEX}  IN RANGE  ${lots amount}
+  \  ${n}  Evaluate  ${INDEX}+2
+  \  Click Element  ${block}[${n}]//button
+
 Подати пропозицію
   ${message}  Натиснути надіслати пропозицію та вичитати відповідь
   Виконати дії відповідно повідомленню  ${message}
