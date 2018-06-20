@@ -1537,10 +1537,11 @@ Ignore error
 Скасувати вимогу
   [Arguments]  ${cancellationReason}
   Click Element  xpath=//*[@data-qa="cancel-complaint"]
-  Input Text  xpath=//*[@data-qa="cancel-reason"]//input  ${cancellationReason}
-  Click Element  xpath=//*[@data-qa="cancel-modal-submit"]
-  Wait For Loading
-  Wait Until Element Is Not Visible   xpath=//*[@data-qa="cancel-modal-submit"]
+  Wait Until Keyword Succeeds  1m  5  Run Keywords
+  ...  Input Text  xpath=//*[@data-qa="cancel-reason"]//input  ${cancellationReason}
+  ...  AND  Click Element  xpath=//*[@data-qa="cancel-modal-submit"]
+  ...  AND  Wait For Loading
+  ...  AND  Wait Until Element Is Not Visible   xpath=//*[@data-qa="cancel-modal-submit"]
 
 Скасувати вимогу про виправлення умов лоту
   [Arguments]  ${username}  ${tender_uaid}  ${complaintID}  ${cancellation_data}
