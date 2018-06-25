@@ -374,7 +374,9 @@ waiting_for_synch
   [Arguments]  ${id}
   ${data}  get_tender_data  ${API_HOST_URL}/api/${API_VERSION}/tenders/${info_idcbd}
   ${data}  evaluate  json.loads($data)  json
-  ${number_of_lots}  Get Length  ${data['data']['lots']}
+  ${status}  ${number_of_lots}  Run Keyword And Ignore Error  Get Length  ${data['data']['lots']}
+  ${number_of_lots}  Run Keyword If  '${status}' == 'FAIL'  Set Variable  1
+  ...  ELSE  Set Variable   ${number_of_lots}
   ${title}  Run Keyword If  '${number_of_lots}' > '1'  Отримати title лоту  ${id}  ${data}
   Run Keyword If  '${number_of_lots}' > '1'  Відкрити сторінку multiple_items  ${title}  ${title}
 
@@ -685,7 +687,9 @@ Get title by lotid
   [Documentation]  Відкриває вкладку із запитаннями за необхідністю
   ${status}=  Run Keyword and return Status  Page Should Contain Element  xpath=//*[contains(text(), 'Запитання')]/ancestor::li[not(@class='active')]  3s
   Run Keyword If  '${status}' == "True"  Run Keywords
-  ...  Click Element  xpath=//a[@data-toggle='tab' and text()='Запитання ']
+  ...  Reload Page
+  ...  AND  Select Frame  css=iframe
+  ...  AND  Click Element  xpath=//a[@data-toggle='tab' and text()='Запитання ']
   ...  AND  Select frame  css=iframe#iframeQuestions
 
 Закрити вкладку із запитаннями
@@ -693,8 +697,8 @@ Get title by lotid
   ${status}  Run Keyword And Return Status  Page Should Contain Element  xpath=//*[contains(text(), 'Тендер')]/ancestor::li[not(@class='active')]  3s
   Run Keyword If  '${status}' == "True"  Run Keywords
   ...  Unselect Frame
-  ...  Select Frame  css=iframe
-  ...  Click Element  xpath=//a[@data-toggle='tab' and text()='Тендер']
+  ...  AND  Select Frame  css=iframe
+  ...  AND  Click Element  xpath=//a[@data-toggle='tab' and text()='Тендер']
   ...  AND  Розгорнути детальніше
 
 ####################################
@@ -709,11 +713,10 @@ Get title by lotid
   log  ${bid}
   log  ${lots_ids}
   log  ${features_ids}
-  ${amount}=  Run Keyword If  'open' in '${mode}' or '${mode}' == 'belowThreshold'  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
-  ...  ELSE  Get From Dictionary  ${bid.data.value}  amount
+  ${status}  ${amount}  Run Keyword And Ignore Error  Get From Dictionary  ${bid.data.lotValues[0].value}  amount
+  ${amount}  Run Keyword If  '${status}' == 'FAIL'  Get From Dictionary  ${bid.data.value}  amount
+  ...  ELSE  Set Variable  ${amount}
   ${amount}=  convert to string  ${amount}
-  ${parameters}=  Run Keyword If  '${mode}' != 'belowThreshold'  Get From Dictionary  ${bid.data}  parameters
-  #Пройти кваліфікацію для подачі пропозиції_  ${username}  ${tender_uaid}  ${bid}
   Прийняти участь в тендері  ${username}  ${tender_uaid}  ${amount}
   ${response}=  Get Value  css=#lotAmount0>input
   ${response}=  smarttender_service.delete_spaces  ${response}
@@ -1219,7 +1222,7 @@ Click Input Enter Wait
   ${lots amount}  Evaluate  ${blocks amount}-2
   :FOR  ${INDEX}  IN RANGE  ${lots amount}
   \  ${n}  Evaluate  ${INDEX}+2
-  \  Click Element  ${block}[${n}]//button
+  \  Run Keyword And Ignore Error  Click Element  ${block}[${n}]//button
 
 Подати пропозицію
   ${message}  Натиснути надіслати пропозицію та вичитати відповідь
