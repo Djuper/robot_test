@@ -27,7 +27,7 @@ def tender_field_info(field):
         item_id = int(list.group('id')) + 1
         result = list.group('map')
         map = {
-            "description": "xpath=//*[@class='table-items'][{0}]//td[1]",
+            "description": "xpath=(//*[contains(@href, '/government/lot/')])[{0}]",
             "deliveryDate.startDate": "xpath=(//*[@class='smaller-font'])[{0}]/div[3]",
             "deliveryDate.endDate": "xpath=(//*[@class='smaller-font'])[{0}]/div[3]",
             "deliveryLocation.latitude": "xpath=(//*[@class='smaller-font']//a)[{0}]@href",
@@ -208,7 +208,7 @@ def question_field_info(field, id):
     map = {
         "title": "xpath=//*[@class='ivu-row']//*[descendant::*[contains(text(), '{0}')]]//span",
         "description": "xpath=//*[@class='ivu-row']//*[descendant::*[contains(text(), '{0}')]]//div[@class='break-word']",
-        "answer": "div.answer div:eq(2)",
+        "answer": "//*[contains(text(), '{0}')]/ancestor::*[@class='ivu-card-body']/div[3]",
     }
     return (map[field]).format(id)
 
@@ -372,6 +372,7 @@ def convert_unit_to_smarttender_format(unit):
 def convert_unit_from_smarttender_format(unit, field):
     map = {
         u"шт": {"code": "H87", "name": u"шт"},
+        u"шт": {"code": "H87", "name": u"штуки"},
         u"кг": {"code": "KGM", "name": u"кілограми"},
         u"умов.": {"code": "E48", "name": u"послуга"},
         u"м.кв.": {"code": "MTK", "name": u"метри квадратні"},
@@ -459,8 +460,6 @@ def adapt_data(tender_data):
             item.unit['name'] = u"усл."
         elif item.unit['name'] == u"метри квадратні":
             item.unit['name'] = u"м.кв."
-        elif item.unit['name'] == u"штуки":
-            item.unit['name'] = u"шт"
     for item in tender_data.data['items']:
         if item.deliveryAddress['region'] == u"місто Київ":
             item.deliveryAddress['region'] = u"Київська обл."
@@ -504,7 +503,7 @@ def location_converter(value):
     if "cancellation" in value:
         response = "/cancellation/", "cancellation"
     elif "questions" in value:
-        response = "/publichni-zakupivli-prozorro", "questions"
+        response = "/publichni-zakupivli-prozorro/", "questions"
     elif "proposal" in value:
         response = "/bid/edit/", "proposal"
     elif "awards" in value and "documents" in value:

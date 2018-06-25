@@ -376,7 +376,7 @@ waiting_for_synch
   ${data}  evaluate  json.loads($data)  json
   ${number_of_lots}  Get Length  ${data['data']['lots']}
   ${title}  Run Keyword If  '${number_of_lots}' > '1'  Отримати title лоту  ${id}  ${data}
-  Run Keyword If  '${number_of_lots}' > '1'  Відкрити сторінку  multiple_items  ${title}  ${title}
+  Run Keyword If  '${number_of_lots}' > '1'  Відкрити сторінку multiple_items  ${title}  ${title}
 
 Отримати title лоту
   [Arguments]  ${id}  ${data}
@@ -406,11 +406,12 @@ Get title by lotid
   [Return]  ${title}
 
 Повернутися до тендеру від лоту за необхідністю
-  ${location status}  Run Keyword And Return Status  Location Should Contain  /webparts/
+  ${location status}  Run Keyword And Return Status  Location Should Contain  /lot/details/
   Run Keyword If  '${location status}' == '${True}'  Run Keywords
   ...  Go Back
   ...  AND  Select Frame  ${iframe}
   ...  AND  Розгорнути детальніше
+  Location Should Contain  publichni-zakupivli
 
 ####################################
 #      Робота з документами        #
@@ -626,8 +627,6 @@ Get title by lotid
   ...  [Повертає] reply (словник з інформацією про запитання).  discuss
   ${title}=  Get From Dictionary  ${question.data}  title
   ${description}=  Get From Dictionary  ${question.data}  description
-  debug
-  log to console  Задати запитання на предмет
   #Відкрити сторінку  questions  ${tender_uaid}
   #${question_data}=  Задати запитання_  ${title}  ${description}  ${item_id}
   [Return]  ${question_data}
@@ -646,9 +645,10 @@ Get title by lotid
   [Arguments]  ${user}  ${tenderId}  ${objectId}  ${field}
   [Documentation]  Отримує значення поля field_name із запитання з question_id в описі для тендера tender_uaid.
   ...  [Повертає] question['field_name'] (значення поля).
-  debug
-  #${selector}=  question_field_info  ${field}  ${objectId}
-  #${ret}  Get Text  ${selector}
+  Відкрити вкладку із запитаннями
+  ${selector}=  question_field_info  ${field}  ${objectId}
+  ${ret}  Get Text  ${selector}
+  Закрити вкладку із запитаннями
   [Return]  ${ret}
 
 Відповісти на запитання
@@ -677,11 +677,25 @@ Get title by lotid
   [Documentation]  Створити запитання з даними question до лоту з lot_id в описі для тендера tender_uaid.
   ${title}=  Get From Dictionary  ${question.data}  title
   ${description}=  Get From Dictionary  ${question.data}  description
-  log to console  Задати запитання на лот
-  debug
-  #Відкрити сторінку  questions  ${tender_uaid}
-  #Задати запитання_  ${title}  ${description}  no_id
+  Відкрити вкладку із запитаннями
+  Задати запитання_  ${title}  ${description}  no_id
+  Закрити вкладку із запитаннями
 
+Відкрити вкладку із запитаннями
+  [Documentation]  Відкриває вкладку із запитаннями за необхідністю
+  ${status}=  Run Keyword and return Status  Page Should Contain Element  xpath=//*[contains(text(), 'Запитання')]/ancestor::li[not(@class='active')]  3s
+  Run Keyword If  '${status}' == "True"  Run Keywords
+  ...  Click Element  xpath=//a[@data-toggle='tab' and text()='Запитання ']
+  ...  AND  Select frame  css=iframe#iframeQuestions
+
+Закрити вкладку із запитаннями
+  [Documentation]  Повертає з вкладки із запитаннями на вкладку тендер за необхідністю
+  ${status}  Run Keyword And Return Status  Page Should Contain Element  xpath=//*[contains(text(), 'Тендер')]/ancestor::li[not(@class='active')]  3s
+  Run Keyword If  '${status}' == "True"  Run Keywords
+  ...  Unselect Frame
+  ...  Select Frame  css=iframe
+  ...  Click Element  xpath=//a[@data-toggle='tab' and text()='Тендер']
+  ...  AND  Розгорнути детальніше
 
 ####################################
 #       Цінові пропозиції          #
@@ -990,9 +1004,10 @@ Get title by lotid
   Location Should Contain  /AppealNew/
 
 Відкрити сторінку multiple_items
-  [Arguments]  ${tender_uaid}  ${lot_title}=None
-  ${href}  Get Element Attribute  xpath=//a[contains(text(), '${lot_title}')]@href
+  [Arguments]  ${tender_uaid}=None  ${lot_title}=None
+  ${href}  Get Element Attribute  xpath=//a[contains(text(), "${lot_title}")]@href
   Go To  ${href}
+  Select Frame  css=iFrame
 
 ################################################
 #            SMARTTENDER KEYWORDS              #
