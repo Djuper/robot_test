@@ -247,7 +247,7 @@ ${add files tab}                        xpath=//li[contains(@class, 'dxtc-tab')]
   Відкрити сторінку  tender  ${tender_uaid}
 
 Оновити сторінку з тендером
-  [Arguments]  ${username}  ${tender_uaid}
+  [Arguments]  ${username}=NONE  ${tender_uaid}=NONE
   [Documentation]  Оновлює сторінку з лотом для отримання потенційно оновлених даних.
   log  ${mode}
   ${last_modification_date}  convert_datetime_to_kot_format  ${TENDER.LAST_MODIFICATION_DATE}
@@ -687,8 +687,7 @@ Get title by lotid
   [Documentation]  Відкриває вкладку із запитаннями за необхідністю
   ${status}=  Run Keyword and return Status  Page Should Contain Element  xpath=//*[contains(text(), 'Запитання')]/ancestor::li[not(@class='active')]  3s
   Run Keyword If  '${status}' == "True"  Run Keywords
-  ...  Reload Page
-  ...  AND  Select Frame  css=iframe
+  ...  Оновити сторінку з тендером
   ...  AND  Click Element  xpath=//a[@data-toggle='tab' and text()='Запитання ']
   ...  AND  Select frame  css=iframe#iframeQuestions
 
