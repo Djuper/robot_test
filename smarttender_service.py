@@ -183,6 +183,7 @@ def lot_field_info(field, id):
 def item_field_info(field, id):
     map = {
         "description": "xpath=//*[@class='table-items']//td[contains(text(), '{0}')]",
+        "unit.name": "xpath=//*[contains(text(), '{0}')]/following-sibling::td",
     }
     return map[field].format(id)
 
@@ -372,7 +373,7 @@ def convert_unit_to_smarttender_format(unit):
 def convert_unit_from_smarttender_format(unit, field):
     map = {
         u"шт": {"code": "H87", "name": u"шт"},
-        u"шт": {"code": "H87", "name": u"штуки"},
+        u"штуки": {"code": "H87", "name": u"штуки"},
         u"кг": {"code": "KGM", "name": u"кілограми"},
         u"умов.": {"code": "E48", "name": u"послуга"},
         u"м.кв.": {"code": "MTK", "name": u"метри квадратні"},
@@ -462,6 +463,8 @@ def adapt_data(tender_data):
             item.unit['name'] = u"м.кв."
     for item in tender_data.data['items']:
         if item.deliveryAddress['region'] == u"місто Київ":
+            item.deliveryAddress['region'] = u"Київська обл."
+        elif item.deliveryAddress['region'] == u"Київська область":
             item.deliveryAddress['region'] = u"Київська обл."
         elif item.deliveryAddress['locality'] == u"Дніпро":
             item.deliveryAddress['locality'] = u"Кривий ріг"
