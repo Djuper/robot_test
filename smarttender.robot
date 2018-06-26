@@ -595,7 +595,6 @@ Get title by lotid
 
 Отримати та обробити дані із предмету
   [Arguments]  ${fieldname}  ${id}
-  Run Keyword If  ${TEST_NAME} == 'Відображення назви одиниці номенклатур тендера'  Debug
   ${selector}  item_field_info  ${fieldname}  ${id}
   ${value}=  Get Text  ${selector}
   ${length}  Get Length  ${value}
