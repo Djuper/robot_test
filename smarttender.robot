@@ -595,6 +595,7 @@ Get title by lotid
 
 Отримати та обробити дані із предмету
   [Arguments]  ${fieldname}  ${id}
+  Run Keyword If  ${TEST_NAME} == 'Відображення назви одиниці номенклатур тендера'  Debug
   ${selector}  item_field_info  ${fieldname}  ${id}
   ${value}=  Get Text  ${selector}
   ${length}  Get Length  ${value}
@@ -687,7 +688,7 @@ Get title by lotid
   [Documentation]  Відкриває вкладку із запитаннями за необхідністю
   ${status}=  Run Keyword and return Status  Page Should Contain Element  xpath=//*[contains(text(), 'Запитання')]/ancestor::li[not(@class='active')]  3s
   Run Keyword If  '${status}' == "True"  Run Keywords
-  ...  Оновити сторінку з тендером
+  ...  smarttender.Оновити сторінку з тендером
   ...  AND  Click Element  xpath=//a[@data-toggle='tab' and text()='Запитання ']
   ...  AND  Select frame  css=iframe#iframeQuestions
 
