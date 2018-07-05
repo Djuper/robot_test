@@ -1527,6 +1527,10 @@ Ignore error
   ${satisfied}  Set Variable  ${confirmation_data['data']['satisfied']}
   ${title}  Отримати title по complaintID із ЦБД  ${complaintID}
   Натиснути коригувати  ${title}
+  Wait Until Keyword Succeeds  3m  3  Відправити статус задоволенності  ${satisfied}
+
+Відправити статус задоволенності
+  [Arguments]  ${satisfied}
   Run Keyword If  "${satisfied}" == "True"  Click Element  xpath=//*[@data-qa="satisfied-decision"]
   ...  ELSE  Click Element  xpath=//*[@data-qa="unsatisfied-decision"]
   Wait For Loading
